@@ -3,6 +3,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import FAQ from "./pages/FAQ";
 import Dashboard from "./pages/Dashboard";
+import Donations from "./pages/Donations";
 import SignupSuccess from "./pages/SignupSuccess";
 import SignupModal from "./components/SignupModal";
 import LoginModal from "./components/LoginModal";
@@ -86,6 +87,7 @@ const App: React.FC = () => {
       <Route path="/" element={<Layout><HomePage /></Layout>} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/donations" element={<Donations />} />
       <Route path="/signup-success" element={<SignupSuccess />} />
     </Routes>
   );

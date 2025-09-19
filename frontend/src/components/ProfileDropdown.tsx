@@ -99,6 +99,14 @@ const ProfileDropdown: React.FC = () => {
             </Link>
 
             <Link
+              to="/donations"
+              className="dropdown-item"
+              onClick={() => setIsOpen(false)}
+            >
+              Donations
+            </Link>
+
+            <Link
               to="/faq"
               className="dropdown-item"
               onClick={() => setIsOpen(false)}
