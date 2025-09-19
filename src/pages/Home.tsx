@@ -6,7 +6,7 @@ const Home: React.FC = () => (
       <div className="kicker">introducing dductly</div>
       <h1>Turn everyday giving into real tax savings.</h1>
       <p className="sub">
-        dductly helps you record donations and write-offs in one place,
+        Our team at dductly aims to help you record donations in one place,
         turning everyday giving into real tax savings making tax season
         simple, secure, and stress-free.
       </p>

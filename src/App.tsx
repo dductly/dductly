@@ -7,7 +7,10 @@ import Contact from "./pages/Contact";
 const Nav: React.FC = () => (
   <header className="nav-wrap">
     <nav className="nav" aria-label="Main">
-      <a className="brand" href="#home">dductly</a>
+      <a className="brand" href="#home">
+        <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
+        dductly
+      </a>
       <div className="menu">
         <a href="#services">Services</a>
         <a href="#subscriptions">Subscriptions</a>
