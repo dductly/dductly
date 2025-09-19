@@ -95,7 +95,6 @@ const ProfileDropdown: React.FC = () => {
               className="dropdown-item"
               onClick={() => setIsOpen(false)}
             >
-              <span className="dropdown-icon">🏠</span>
               Dashboard
             </Link>
 
@@ -104,7 +103,6 @@ const ProfileDropdown: React.FC = () => {
               className="dropdown-item"
               onClick={() => setIsOpen(false)}
             >
-              <span className="dropdown-icon">❓</span>
               FAQ
             </Link>
           </div>
@@ -115,7 +113,6 @@ const ProfileDropdown: React.FC = () => {
             className="dropdown-item logout-item"
             onClick={handleLogout}
           >
-            <span className="dropdown-icon">🚪</span>
             Logout
           </button>
         </div>

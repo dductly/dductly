@@ -46,7 +46,7 @@
   height: 32px;
   object-fit: contain;
 }
-  .menu{display:flex; gap:10px}
+  .menu{display:flex; gap:24px; align-items:center}
   .menu a{color:var(--nav-cream); text-decoration:none; font-weight:500; opacity:.95; font-size:14px;}
   .menu a:hover{opacity:1; text-decoration:underline}
   
@@ -442,11 +442,382 @@
   }
 
   .menu {
-    gap: 8px;
+    gap: 16px;
   }
 
   .nav-button {
     padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Back link styles */
+.back-link {
+  color: var(--cream-text);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.back-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Contact form message styles */
+.contact-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 16px 0;
+}
+
+.contact-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.contact-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Disabled button styles */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dashboard and Success Page Styles */
+.dashboard-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.welcome-card h2 {
+  margin: 0 0 16px;
+  color: var(--cream-text);
+  font-size: 2rem;
+}
+
+.welcome-card p {
+  color: var(--cream-text);
+  opacity: 0.9;
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+}
+
+.user-info, .dashboard-actions, .dashboard-info {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.user-info h3, .dashboard-actions h3, .dashboard-info h3 {
+  margin: 0 0 12px;
+  color: var(--cream-text);
+  font-size: 1.2rem;
+}
+
+.user-info p {
+  margin: 8px 0;
+  color: var(--cream-text);
+  opacity: 0.9;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.dashboard-info ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--cream-text);
+  opacity: 0.9;
+}
+
+.dashboard-info li {
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+/* Success Page Styles */
+.success-page {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.success-content {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.success-content h2 {
+  color: var(--cream-text);
+  margin: 0 0 16px;
+  font-size: 1.8rem;
+}
+
+.success-content p {
+  color: var(--cream-text);
+  opacity: 0.9;
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.next-steps {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.next-steps h3 {
+  margin: 0 0 16px;
+  color: var(--cream-text);
+  font-size: 1.3rem;
+}
+
+.next-steps ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--cream-text);
+  opacity: 0.9;
+}
+
+.next-steps li {
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.important-note {
+  background: rgba(255, 204, 102, 0.1);
+  border: 1px solid rgba(255, 204, 102, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 24px 0;
+}
+
+.important-note h4 {
+  margin: 0 0 8px;
+  color: var(--cream-text);
+  font-size: 1.1rem;
+}
+
+.important-note p {
+  margin: 0;
+  color: var(--cream-text);
+  opacity: 0.95;
+  font-size: 0.95rem;
+}
+
+.help-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-section p {
+  color: var(--cream-text);
+  opacity: 0.8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.help-section a {
+  color: var(--cream-btn);
+  text-decoration: none;
+}
+
+.help-section a:hover {
+  text-decoration: underline;
+}
+
+/* Profile Dropdown Styles */
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.profile-button:hover {
+  transform: scale(1.05);
+}
+
+.profile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--cream-btn);
+  color: var(--grey-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-bluegrey);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 250px;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s ease-out;
+  overflow: hidden;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cream-btn);
+  color: var(--grey-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdown-name {
+  font-weight: 600;
+  color: var(--cream-text);
+  font-size: 14px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-email {
+  color: var(--nav-cream);
+  opacity: 0.8;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0;
+}
+
+.dropdown-items {
+  padding: 8px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--nav-cream);
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+
+.logout-item {
+  color: #ff6b6b;
+  opacity: 0.9;
+}
+
+.logout-item:hover {
+  background: rgba(255, 107, 107, 0.1);
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .dropdown-menu {
+    min-width: 220px;
+    right: -8px;
+  }
+
+  .profile-icon {
+    width: 32px;
+    height: 32px;
     font-size: 13px;
   }
 }
