@@ -1,6 +1,14 @@
+import 'dotenv/config'
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://waxtxjnhrrcyxcvuaujn.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndheHR4am5ocnJjeXhjdnVhdWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNTQ4NTUsImV4cCI6MjA3MzYzMDg1NX0.3Zm-FfXjAofjYSMBNB6LhJRDYTx08lAFWYQtZquxGfw'
+const supabaseUrl = process.env.VITE_SUPABASE_URL as string
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY as string
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing SUPABASE env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.")
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export default supabase
+  
