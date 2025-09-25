@@ -33,7 +33,10 @@ const Home: React.FC = () => {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseKey,
         urlValue: supabaseUrl,
-        isPlaceholder: supabaseUrl?.includes('placeholder')
+        urlLength: supabaseUrl?.length,
+        keyLength: supabaseKey?.length,
+        isPlaceholder: supabaseUrl?.includes('placeholder'),
+        allEnvVars: Object.keys(import.meta.env)
       });
       console.log('Testing with updated env vars');
       
