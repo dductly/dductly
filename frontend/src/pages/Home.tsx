@@ -11,8 +11,8 @@ const Home: React.FC = () => (
         simple, secure, and stress-free.
       </p>
       <div className="cta-row">
-        <a className="btn btn-primary" href="#subscriptions">Get Started</a>
-        <a className="btn btn-ghost" href="#contact">Join the Waitlist</a>
+        <a className="btn btn-primary" href="#services">Get Started</a>
+        <a className="btn btn-ghost" href="#contact">Contact Us</a>
       </div>
     </div>
     <figure className="hero-right" aria-label="Preview panel">
