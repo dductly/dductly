@@ -38,8 +38,7 @@ const Home: React.FC = () => {
           .from('waitlist')
           .insert([
             {
-              first_name: formData.fullName.split(' ')[0] || '',
-              last_name: formData.fullName.split(' ').slice(1).join(' ') || '',
+              name: formData.fullName,
               phone: formData.phone,
               email: formData.email
             }
