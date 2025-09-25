@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import meditateImg from "../img/meditate.png";
 import coinsImg from "../img/coins.png";
 import handImg from "../img/hand.png";
@@ -21,6 +22,9 @@ const Services: React.FC = () => (
           <p className="service-subtext">{s.subtext}</p>
         </div>
       ))}
+    </div>
+    <div className="services-cta">
+      <Link className="btn btn-primary" to="/faq">Learn More</Link>
     </div>
   </section>
 );
