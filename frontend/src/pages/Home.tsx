@@ -27,7 +27,7 @@ const Home: React.FC = () => {
       
       // Check if Supabase is properly configured
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY;
 
       console.log('Environment check:', {
         hasUrl: !!supabaseUrl,
