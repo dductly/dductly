@@ -481,6 +481,111 @@
   margin: 16px 0 0;
 }
 
+/* Email Confirmation Styles */
+.confirmation-container {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.confirmation-content {
+  background: rgba(255,255,255,.04);
+  border-radius: 12px;
+  padding: 48px 32px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.confirmation-content.success {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,.1);
+  border-top: 4px solid var(--cream-btn);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(34, 197, 94, 0.2);
+  border: 2px solid rgba(34, 197, 94, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #22c55e;
+  margin: 0 auto 24px;
+}
+
+.email-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.confirmation-content p {
+  color: var(--cream-text);
+  opacity: 0.9;
+  line-height: 1.6;
+  margin: 16px 0;
+}
+
+.confirmation-content strong {
+  color: var(--cream-btn);
+  font-weight: 600;
+}
+
+/* Contact Form Styles */
+.contact-status {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.contact-status.success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.contact-status.error {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
+.contact-form input:disabled,
+.contact-form textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.contact-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .signup-container {
@@ -505,4 +610,11 @@
   .services-list{grid-template-columns: 1fr}
   .contact{grid-template-columns: 1fr}
   .circle-img{width: 280px; height: 280px}
+  .confirmation-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .confirmation-content {
+    padding: 32px 24px;
+  }
 }

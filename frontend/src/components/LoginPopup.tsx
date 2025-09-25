@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 interface LoginPopupProps {
   isOpen: boolean;
@@ -6,12 +7,30 @@ interface LoginPopupProps {
 }
 
 const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuth();
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login form submitted");
+    setLoading(true);
+    setError(null);
+
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      onClose();
+      setEmail("");
+      setPassword("");
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -25,12 +44,21 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
         </div>
         
         <form className="login-form" onSubmit={handleSubmit}>
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
           <div className="form-group">
             <label>Email Address</label>
             <input 
               type="email" 
               placeholder="you@example.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required 
+              disabled={loading}
             />
           </div>
           
@@ -39,7 +67,10 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
             <input 
               type="password" 
               placeholder="Enter your password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required 
+              disabled={loading}
             />
           </div>
           
@@ -51,8 +82,8 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
             <a href="#" className="forgot-password">Forgot password?</a>
           </div>
           
-          <button className="btn btn-primary btn-large" type="submit">
-            Sign In
+          <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
           </button>
           
           <p className="signup-link">
