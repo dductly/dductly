@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { sendContactEmailAPI, type ContactFormData } from "../services/contactService";
+import { sendContactEmail, type ContactFormData } from "../services/contactService";
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -28,7 +28,7 @@ const Contact: React.FC = () => {
     setSubmitStatus({ type: null, message: '' });
 
     try {
-      const result = await sendContactEmailAPI(formData);
+      const result = await sendContactEmail(formData);
       
       if (result.success) {
         setSubmitStatus({
