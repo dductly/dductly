@@ -80,7 +80,7 @@ const Home: React.FC = () => {
         </p>
         <div className="cta-row">
           <a className="btn btn-primary" href="#services">Get Started</a>
-          <a className="btn btn-ghost" href="#contact">Contact Us</a>
+          <a className="btn btn-primary" href="#contact">Contact Us</a>
         </div>
       </div>
       <div className="hero-right" aria-label="Waitlist panel">
