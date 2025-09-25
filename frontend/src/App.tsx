@@ -1,7 +1,8 @@
 import React from "react";
 import Home from "./pages/Home";
 import Services from "./pages/Services";
-import Subs from "./pages/Subs";
+// hide subscriptions for now
+// import Subs from "./pages/Subs";
 import Contact from "./pages/Contact";
 
 const Nav: React.FC = () => (
@@ -13,7 +14,8 @@ const Nav: React.FC = () => (
       </a>
       <div className="menu">
         <a href="#services">Services</a>
-        <a href="#subscriptions">Subscriptions</a>
+        {/* hide subscriptions for now */}
+        {/* <a href="#subscriptions">Subscriptions</a> */}
         <a href="#contact">Contact</a>
       </div>
     </nav>
@@ -33,7 +35,8 @@ const App: React.FC = () => (
     <main>
       <Home />
       <Services />
-      <Subs />
+      {/* hide subscriptions for now */}
+      {/* <Subs /> */}
       <Contact />
     </main>
     <Footer />
