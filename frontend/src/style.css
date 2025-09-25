@@ -252,6 +252,11 @@
   font-size: 1rem;
   line-height: 1.4;
 }
+.services-cta{
+  text-align: center;
+  margin-top: 64px;
+  padding-top: 32px;
+}
 .card{
   background:rgba(255,255,255,.04);
   border-radius:12px; overflow:hidden; box-shadow:var(--shadow);
@@ -306,6 +311,102 @@
 /* Active nav link */
 .menu a.active{text-decoration:underline}
 
+/* FAQ Styles */
+.faq-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.faq-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faq-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.faq-question {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 20px 24px;
+  color: var(--cream-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.faq-question:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.faq-icon {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--cream-btn);
+  transition: transform 0.2s ease;
+}
+
+.faq-question[aria-expanded="true"] .faq-icon {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  padding: 0 24px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.faq-answer p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 20px 0 0;
+}
+
+.faq-cta {
+  text-align: center;
+  margin-top: 48px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.faq-cta h3 {
+  color: var(--cream-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.faq-cta p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  margin: 0 0 20px;
+}
+
 /* Responsive tweaks */
 @media (max-width: 1024px){
   .cards{grid-template-columns: repeat(2, 1fr)}
@@ -317,4 +418,18 @@
   .services-list{grid-template-columns: 1fr}
   .contact{grid-template-columns: 1fr}
   .circle-img{width: 280px; height: 280px}
+  
+  .faq-question {
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+  
+  .faq-answer {
+    padding: 0 20px 20px;
+  }
+  
+  .faq-cta {
+    margin-top: 32px;
+    padding: 24px;
+  }
 }
