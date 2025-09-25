@@ -28,6 +28,13 @@ const Home: React.FC = () => {
       // Check if Supabase is properly configured
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      console.log('Environment check:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        urlValue: supabaseUrl,
+        isPlaceholder: supabaseUrl?.includes('placeholder')
+      });
       
       if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
         console.log('Supabase not configured, simulating success for demo');
