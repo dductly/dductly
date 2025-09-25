@@ -35,6 +35,7 @@ const Home: React.FC = () => {
         urlValue: supabaseUrl,
         isPlaceholder: supabaseUrl?.includes('placeholder')
       });
+      console.log('Testing with updated env vars');
       
       if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
         console.log('Supabase not configured, simulating success for demo');
