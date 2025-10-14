@@ -113,7 +113,10 @@ const Import: React.FC = () => {
               Loaded {importedData.length} records. Here's a preview of the first 3 rows:
             </p>
           </div>
-          <DataTable data={importedData.slice(0, 3)} />
+          <DataTable
+            data={importedData.slice(0, 3)}
+            onSave={isSaving ? undefined : () => handleSaveToDatabase(importedData)}
+          />
           <div className="preview-actions">
             <button className="btn btn-primary" onClick={handleViewAll}>
               View All {importedData.length} Records

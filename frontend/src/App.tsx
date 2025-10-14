@@ -1,28 +1,39 @@
 import React from "react";
-import Home from "./pages/Home";
-import Services from "./pages/Services";
-// hide subscriptions for now
-// import Subs from "./pages/Subs";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
+import Landing from "./pages/Landing";
 import Import from "./pages/Import";
-import Contact from "./pages/Contact";
 
-const Nav: React.FC = () => (
-  <header className="nav-wrap">
-    <nav className="nav" aria-label="Main">
-      <a className="brand" href="#home">
-        <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
-        dductly
-      </a>
-      <div className="menu">
-        <a href="#services">Services</a>
-        <a href="#import">Import Data</a>
-        {/* hide subscriptions for now */}
-        {/* <a href="#subscriptions">Subscriptions</a> */}
-        <a href="#contact">Contact</a>
-      </div>
-    </nav>
-  </header>
-);
+const Nav: React.FC = () => {
+  const location = useLocation();
+  const isImportPage = location.pathname === "/import";
+
+  return (
+    <header className="nav-wrap">
+      <nav className="nav" aria-label="Main">
+        <Link className="brand" to="/">
+          <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
+          dductly
+        </Link>
+        <div className="menu">
+          {!isImportPage ? (
+            <>
+              <a href="#services">Services</a>
+              <Link to="/import">Import Data</Link>
+              {/* hide subscriptions for now */}
+              {/* <a href="#subscriptions">Subscriptions</a> */}
+              <a href="#contact">Contact</a>
+            </>
+          ) : (
+            <>
+              <Link to="/">Home</Link>
+              <Link to="/import">Import Data</Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
+};
 
 const Footer: React.FC = () => (
   <footer className="footer">
@@ -35,12 +46,10 @@ const App: React.FC = () => (
   <div className="site">
     <Nav />
     <main>
-      <Home />
-      <Services />
-      <Import />
-      {/* hide subscriptions for now */}
-      {/* <Subs /> */}
-      <Contact />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/import" element={<Import />} />
+      </Routes>
     </main>
     <Footer />
   </div>
