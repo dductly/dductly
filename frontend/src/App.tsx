@@ -20,6 +20,14 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
   const handleLogout = async () => {
     await signOut();
   };
+import React from "react";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Import from "./pages/Import";
+
+const Nav: React.FC = () => {
+  const location = useLocation();
+  const isImportPage = location.pathname === "/import";
 
   return (
     <header className="nav-wrap">
@@ -43,6 +51,23 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
               </span>
               <button className="btn btn-ghost btn-small" onClick={handleLogout}>Logout</button>
             </div>
+        <Link className="brand" to="/">
+          <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
+          dductly
+        </Link>
+        <div className="menu">
+          {!isImportPage ? (
+            <>
+              <Link to="/import">Import Data</Link>
+              {/* hide subscriptions for now */}
+              {/* <a href="#subscriptions">Subscriptions</a> */}
+              <a href="#contact">Contact</a>
+            </>
+          ) : (
+            <>
+              <Link to="/">Home</Link>
+              <Link to="/import">Import Data</Link>
+            </>
           )}
         </div>
       </nav>
@@ -214,5 +239,17 @@ const App: React.FC = () => {
     </AuthProvider>
   );
 };
+const App: React.FC = () => (
+  <div className="site">
+    <Nav />
+    <main>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/import" element={<Import />} />
+      </Routes>
+    </main>
+    <Footer />
+  </div>
+);
 
 export default App;
