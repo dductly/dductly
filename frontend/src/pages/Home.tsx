@@ -80,19 +80,19 @@ const Home: React.FC = () => {
 
   return (
     <section id="home" className="hero">
-      <div className="hero-left">
-        <div className="kicker">introducing dductly</div>
-        <h1>Turn everyday giving into real tax savings.</h1>
-        <p className="sub">
-          Our team at dductly aims to help you record donations in one place,
-          turning everyday giving into real tax savings making tax season
-          simple, secure, and stress-free.
-        </p>
-        <div className="cta-row">
-          <a className="btn btn-primary" href="#services">Get Started</a>
-          <a className="btn btn-primary" href="#contact">Contact Us</a>
+        <div className="hero-left">
+          <div className="kicker">introducing dductly</div>
+          <h1>Turn everyday giving into real tax savings.</h1>
+          <p className="sub">
+            Our team at dductly aims to help you record donations in one place,
+            turning everyday giving into real tax savings making tax season
+            simple, secure, and stress-free.
+          </p>
+          <div className="cta-row">
+            <a className="btn btn-primary" href="#services">Get Started</a>
+            <a className="btn btn-primary" href="#contact">Contact Us</a>
+          </div>
         </div>
-      </div>
       <div className="hero-right" aria-label="Waitlist panel">
         {showSuccess ? (
           <div className="waitlist-success">
