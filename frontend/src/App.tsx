@@ -4,6 +4,7 @@ import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import Import from "./pages/Import";
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/MockAuthContext";
@@ -30,6 +31,9 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
         </a>
         <div className="menu">
           <a href="#contact" onClick={(e) => { e.preventDefault(); onNavigate('contact'); }}>Contact</a>
+          {user && (
+            <a href="#import" onClick={(e) => { e.preventDefault(); onNavigate('import'); }}>Import Data</a>
+          )}
           {!user && (
             <>
               <button className="btn btn-ghost btn-small" onClick={onSignInClick}>Sign In</button>
@@ -168,6 +172,8 @@ const AppContent: React.FC = () => {
         return <SignUp onNavigate={handleNavigate} />;
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
+      case 'import':
+        return <Import />;
       default:
         return (
           <>
