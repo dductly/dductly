@@ -81,12 +81,14 @@ const Home: React.FC = () => {
   return (
     <section id="home" className="hero">
       <div className="hero-left">
-        <div className="kicker">introducing dductly</div>
-        <h1>Turn everyday giving into real tax savings.</h1>
+        <div className="bubble-1"></div>
+        <div className="bubble-2"></div>
+        <div className="kicker">Built for Farmers Market Vendors</div>
+        <h1>Track expenses, maximize deductions, grow your business.</h1>
         <p className="sub">
-          Our team at dductly aims to help you record donations in one place,
-          turning everyday giving into real tax savings making tax season
-          simple, secure, and stress-free.
+          dductly helps farmers market vendors easily track business expenses, 
+          manage receipts, and maximize tax deductions. Turn your market sales 
+          into organized financial records that save you money and time.
         </p>
         <div className="cta-row">
           <a className="btn btn-primary" href="#services">Get Started</a>
@@ -94,6 +96,8 @@ const Home: React.FC = () => {
         </div>
       </div>
       <div className="hero-right" aria-label="Waitlist panel">
+        <div className="bubble-1"></div>
+        <div className="bubble-2"></div>
         {showSuccess ? (
           <div className="waitlist-success">
             <h2>Thank you for your interest!</h2>
@@ -107,7 +111,8 @@ const Home: React.FC = () => {
           </div>
         ) : (
           <div className="waitlist-form-container">
-            <h2>Join the Waitlist</h2>
+            <h2>Start Your Free Trial</h2>
+            <p>Get early access to dductly and transform your farmers market business finances.</p>
             <form onSubmit={handleSubmit} className="waitlist-form">
               <input
                 type="text"
@@ -138,7 +143,7 @@ const Home: React.FC = () => {
                 className="btn btn-primary"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                {isSubmitting ? 'Starting Trial...' : 'Start Free Trial'}
               </button>
             </form>
           </div>
