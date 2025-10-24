@@ -69,11 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
       return { error };
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Sign up error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unable to connect to authentication service. Please check your network connection or try again later.';
       return { 
         error: { 
-          message: 'Unable to connect to authentication service. Please check your network connection or try again later.',
+          message: errorMessage,
           name: 'ConnectionError',
           status: 500
         } as AuthError 
@@ -88,11 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       return { error };
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Sign in error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unable to connect to authentication service. Please check your network connection or try again later.';
       return { 
         error: { 
-          message: 'Unable to connect to authentication service. Please check your network connection or try again later.',
+          message: errorMessage,
           name: 'ConnectionError',
           status: 500
         } as AuthError 

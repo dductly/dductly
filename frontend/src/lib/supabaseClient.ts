@@ -9,7 +9,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('For production, these should be set in your Vercel environment variables.');
 }
 
+// Create Supabase client with environment-specific options
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      // Auto-refresh tokens
+      autoRefreshToken: true,
+      // Persist session in localStorage
+      persistSession: true,
+      // Detect session from URL (for email confirmations)
+      detectSessionInUrl: true,
+      // Flow type for authentication
+      flowType: 'pkce'
+    }
+  }
 );
