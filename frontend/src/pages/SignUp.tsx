@@ -67,7 +67,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
        <div className="signup-container">
          <div className="signup-left">
            <h1 className="section-title">Create Your Account</h1>
-           <p>Join dductly today and start maximizing your tax savings through better donation tracking.</p>
+           <p>Join dductly today and make managing your business effortless, so you can focus on what truly matters.</p>
          </div>
 
 

@@ -84,11 +84,9 @@ const Home: React.FC = () => {
         <div className="bubble-1"></div>
         <div className="bubble-2"></div>
         <div className="kicker">Built for Farmers Market Vendors</div>
-        <h1>Track expenses, maximize deductions, grow your business.</h1>
+        <h1>Making market life easier, one expense at a time.</h1>
         <p className="sub">
-          dductly helps farmers market vendors easily track business expenses, 
-          manage receipts, and maximize tax deductions. Turn your market sales 
-          into organized financial records that save you money and time.
+          At dductly we believe thriving markets build thriving communities. Our mission is to make running your business effortless so you can focus on what matters most: growing your craft and connecting with your community.
         </p>
         <div className="cta-row">
           <a className="btn btn-primary" href="#services">Get Started</a>
@@ -112,7 +110,7 @@ const Home: React.FC = () => {
         ) : (
           <div className="waitlist-form-container">
             <h2>Start Your Free Trial</h2>
-            <p>Get early access to dductly and transform your farmers market business finances.</p>
+            <p>Take the stress out of managing your business, we'll handle the details!</p>
             <form onSubmit={handleSubmit} className="waitlist-form">
               <input
                 type="text"

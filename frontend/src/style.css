@@ -199,13 +199,12 @@
     50% { transform: rotate(1deg); }
   }
   h1{
-    margin:0; 
-    font-size: clamp(2.5rem, 6vw, 4.5rem); 
-    line-height:1.1; 
-    color: var(--market-brown); 
+    margin:0;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height:1.1;
+    color: var(--market-brown);
     font-weight:900;
     text-shadow: 2px 2px 4px rgba(255, 215, 0, 0.3);
-    transform: rotate(-1deg);
   }
   .sub{
     margin:0; 
@@ -366,7 +365,6 @@
     font-size: clamp(1.3rem, 3vw, 1.8rem);
     font-weight: 900;
     margin: 0 0 6px;
-    transform: rotate(-1deg);
     text-shadow: 2px 2px 4px rgba(255, 182, 193, 0.3);
   }
 
@@ -513,7 +511,6 @@
   margin: 0 0 16px;
   text-align: center;
   text-shadow: 3px 3px 6px rgba(255, 215, 0, 0.3);
-  transform: rotate(-0.5deg);
 }
 .section-subtitle {
   color: var(--text-medium);
@@ -763,7 +760,6 @@
   color: var(--market-brown) !important;
   font-weight: 900;
   text-shadow: 2px 2px 4px rgba(255, 215, 0, 0.3);
-  transform: rotate(-0.5deg);
 }
 
 .section-subtitle {
@@ -1317,12 +1313,8 @@
 }
 
 .signup-left h1 {
-  color: var(--primary-green);
+  color: var(--text-medium);
   margin-bottom: 20px;
-  background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .signup-left p {
