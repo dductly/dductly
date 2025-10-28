@@ -5,15 +5,15 @@ import handImg from "../img/hand.png";
 
 interface Service { title: string; subtext: string; img: string; }
 const services: Service[] = [
-  { title: "Track Expenses", subtext: "Easily log market booth fees, supplies, equipment, and other business expenses throughout the year.", img: handImg },
-  { title: "Maximize Deductions", subtext: "Automatically categorize expenses and ensure you claim every eligible tax deduction for your farming business.", img: coinsImg },
-  { title: "Simplify Taxes", subtext: "Generate organized reports and export data directly to your accountant or tax software for seamless filing.", img: meditateImg},
+  { title: "Your Business", subtext: "Easily track your market expenses, from booth fees to supplies, all in one simple place designed for small vendors like you.", img: handImg },
+  { title: "Your Market", subtext: "Stay organized with automatic expense sorting and clear insights that help your business thrive at every market.", img: coinsImg },
+  { title: "Made Effortless", subtext: "Export everything you need at tax time with just a click, giving you peace of mind and more time for your craft and community.", img: meditateImg},
 ];
 
 const Services: React.FC = () => (
   <section id="services" className="section">
-    <h2 className="section-title">Everything you need to manage your farmers market business</h2>
-    <p className="section-subtitle">From tracking daily expenses to maximizing tax deductions, dductly makes financial management simple and stress-free for farmers market vendors.</p>
+    <h2 className="section-title">Simplify your business and focus on what you love.</h2>
+    <p className="section-subtitle">Built for local makers and market sellers, dductly helps you spend less time on paperwork and more time doing what you love: creating, connecting, and growing your business.</p>
     <div className="services-list">
       {services.map((s) => (
         <div className="service-item" key={s.title}>
