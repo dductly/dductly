@@ -180,6 +180,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
 
              <h3>5. Intellectual Property</h3>
              <p>The service and its original content, features, and functionality are owned by dductly and are protected by international copyright, trademark, and other intellectual property laws.</p>
+             <p>Free icons from <a href="https://www.streamlinehq.com/" target="_blank" rel="noopener noreferrer" className="link">Streamline</a>.</p>
 
              <h3>6. Limitation of Liability</h3>
              <p>dductly shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service.</p>
