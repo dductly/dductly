@@ -5,14 +5,15 @@ import handImg from "../img/hand.png";
 
 interface Service { title: string; subtext: string; img: string; }
 const services: Service[] = [
-  { title: "Track Savings", subtext: "See your donations add up all year long. Every dollar you donate is captured in one place.", img: handImg },
-  { title: "Save Money", subtext: "Maximize your deductions and keep more in your pocket when tax season arrives.", img: coinsImg },
-  { title: "Stress Less", subtext: "Compile the year's donations into a clean report for your accountant or tax software.", img: meditateImg},
+  { title: "Track Expenses", subtext: "Easily log market booth fees, supplies, equipment, and other business expenses throughout the year.", img: handImg },
+  { title: "Maximize Deductions", subtext: "Automatically categorize expenses and ensure you claim every eligible tax deduction for your farming business.", img: coinsImg },
+  { title: "Simplify Taxes", subtext: "Generate organized reports and export data directly to your accountant or tax software for seamless filing.", img: meditateImg},
 ];
 
 const Services: React.FC = () => (
   <section id="services" className="section">
-    <h2 className="section-title">Maximize savings. Minimize hassle.</h2>
+    <h2 className="section-title">Everything you need to manage your farmers market business</h2>
+    <p className="section-subtitle">From tracking daily expenses to maximizing tax deductions, dductly makes financial management simple and stress-free for farmers market vendors.</p>
     <div className="services-list">
       {services.map((s) => (
         <div className="service-item" key={s.title}>
