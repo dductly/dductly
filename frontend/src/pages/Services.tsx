@@ -1,13 +1,13 @@
 import React from "react";
-import meditateImg from "../img/meditate.png";
-import coinsImg from "../img/coins.png";
-import handImg from "../img/hand.png";
+import stocksImg from "../img/stocks.svg";
+import shoppingbasketImg from "../img/shoppingbasket.svg";
+import storefrontImg from "../img/storefront.svg";
 
 interface Service { title: string; subtext: string; img: string; }
 const services: Service[] = [
-  { title: "Your Business", subtext: "Easily track your market expenses, from booth fees to supplies, all in one simple place designed for small vendors like you.", img: handImg },
-  { title: "Your Market", subtext: "Stay organized with automatic expense sorting and clear insights that help your business thrive at every market.", img: coinsImg },
-  { title: "Made Effortless", subtext: "Export everything you need at tax time with just a click, giving you peace of mind and more time for your craft and community.", img: meditateImg},
+  { title: "Your Business", subtext: "Easily track your market expenses, from booth fees to supplies, all in one simple place designed for small vendors like you.", img: storefrontImg },
+  { title: "Your Market", subtext: "Stay organized with automatic expense sorting and clear insights that help your business thrive at every market.", img: shoppingbasketImg },
+  { title: "Made Effortless", subtext: "Export everything you need at tax time with just a click, giving you peace of mind and more time for your craft and community.", img: stocksImg},
 ];
 
 const Services: React.FC = () => (
