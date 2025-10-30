@@ -5,6 +5,7 @@ import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import Import from "./pages/Import";
+import Dashboard from "./pages/Dashboard";
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/MockAuthContext";
@@ -62,9 +63,9 @@ const Footer: React.FC<FooterProps> = ({ onLegalClick }) => (
   <footer className="footer">
     <span>© {new Date().getFullYear()} dductly | All rights reserved</span>
     <span>
-      <a href="#" onClick={(e) => { e.preventDefault(); onLegalClick('privacy'); }} className="link" style={{ color: 'var(--sunflower-yellow)', fontWeight: 700, textDecoration: 'none' }}>Privacy</a>
+      <a href="#" onClick={(e) => { e.preventDefault(); onLegalClick('privacy'); }} className="link" style={{ color: 'var(--primary-purple)', fontWeight: 700, textDecoration: 'none' }}>Privacy</a>
       {' · '}
-      <a href="#" onClick={(e) => { e.preventDefault(); onLegalClick('tos'); }} className="link" style={{ color: 'var(--sunflower-yellow)', fontWeight: 700, textDecoration: 'none' }}>Terms</a>
+      <a href="#" onClick={(e) => { e.preventDefault(); onLegalClick('tos'); }} className="link" style={{ color: 'var(--primary-purple)', fontWeight: 700, textDecoration: 'none' }}>Terms</a>
     </span>
   </footer>
 );
@@ -155,7 +156,7 @@ const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | null>(null);
-  const { loading } = useAuth();
+  const { loading, user } = useAuth();
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
@@ -184,6 +185,10 @@ const AppContent: React.FC = () => {
       case 'import':
         return <Import />;
       default:
+        // Show dashboard if user is logged in, otherwise show public home page
+        if (user) {
+          return <Dashboard onNavigate={handleNavigate} />;
+        }
         return (
           <>
             <Home />
