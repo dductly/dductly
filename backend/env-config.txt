@@ -1,0 +1,19 @@
+# Backend Environment Configuration
+# Copy this content to backend/.env
+
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://waxtxjnhrrcyxcvuaujn.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndheHR4am5ocnJjeXhjdnVhdWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNTQ4NTUsImV4cCI6MjA3MzYzMDg1NX0.3Zm-FfXjAofjYSMBNB6LhJRDYTx08lAFWYQtZquxGfw
+
+# Service Role Key (REQUIRED for admin operations like deleting users)
+# Get this from: Supabase Dashboard > Project Settings > API > service_role key (secret)
+# IMPORTANT: Never commit this key to git! Keep it secret!
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# To create the .env file, run this command from the dductly directory:
+# cat backend/env-config.txt | grep -v '^#' | grep -v '^$' | grep -v '^To create' > backend/.env
+
