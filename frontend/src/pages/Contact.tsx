@@ -63,8 +63,7 @@ const Contact: React.FC = () => {
     <section id="contact" className="section contact">
       <div className="contact-left">
         <h2 className="section-title">Contact Us</h2>
-        <p>Interested in using our service? 
-          <br />Fill out some info and we will be in touch shortly. We can't wait to hear from you!</p>
+        <p>Interested in using our service? Fill out some info and we will be in touch shortly. We can't wait to hear from you!</p>
       </div>
 
       <form className="contact-form" onSubmit={handleSubmit}>
