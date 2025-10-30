@@ -6,9 +6,15 @@ import SignUp from "./pages/SignUp";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import Import from "./pages/Import";
 import Dashboard from "./pages/Dashboard";
-// Using real Supabase authentication
-import { AuthProvider } from "./contexts/AuthContext";
+import AddData from "./pages/AddData";
+import Expenses from "./pages/Expenses";
+// Using MockAuthContext for testing without Supabase
+// To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/MockAuthContext";
 import { useAuth } from "./hooks/useAuth";
+import { ExpensesProvider } from "./contexts/ExpensesContext";
+import openEyeIcon from "./img/open-eye.svg";
+import closedEyeIcon from "./img/closed-eye.svg";
 
 interface NavProps {
   onNavigate: (page: string) => void;
@@ -77,6 +83,7 @@ interface SignInModalProps {
 const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
@@ -125,14 +132,28 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => 
           
           <div className="form-group">
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <img
+                  src={showPassword ? openEyeIcon : closedEyeIcon}
+                  alt={showPassword ? "Hide password" : "Show password"}
+                  className="eye-icon"
+                />
+              </button>
+            </div>
           </div>
           
           <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
@@ -154,7 +175,7 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isSignInOpen, setIsSignInOpen] = useState(false);
-  const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | null>(null);
+  const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | null>(null);
   const { loading, user } = useAuth();
 
   const handleNavigate = (page: string) => {
@@ -183,10 +204,14 @@ const AppContent: React.FC = () => {
         return <EmailConfirmation onNavigate={handleNavigate} />;
       case 'import':
         return <Import />;
+      case 'add-data':
+        return <AddData onNavigate={handleNavigate} />;
+      case 'expenses':
+        return <Expenses onNavigate={handleNavigate} />;
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {
-          return <Dashboard onNavigate={handleNavigate} />;
+          return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} />;
         }
         return (
           <>
@@ -312,6 +337,80 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* FAQ Modal */}
+      {legalModal === 'faq' && (
+        <div className="modal-overlay" onClick={() => setLegalModal(null)}>
+          <div className="modal-content modal-legal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setLegalModal(null)} aria-label="Close">×</button>
+            <h2 className="modal-title">Frequently Asked Questions</h2>
+            <div className="modal-body">
+              <h3>General Questions</h3>
+
+              <h4>What is dductly?</h4>
+              <p>dductly is an expense tracking and financial management platform designed specifically for farmers market vendors and small business owners. We help you organize your business expenses, track receipts, and generate reports for tax time.</p>
+
+              <h4>Who is dductly for?</h4>
+              <p>dductly is built for farmers market vendors, craft fair sellers, local makers, and small business owners who need a simple way to track expenses and stay organized for tax season.</p>
+
+              <h4>How much does dductly cost?</h4>
+              <p>We offer flexible pricing plans to fit your needs. Contact us for current pricing information and to find the plan that works best for your business.</p>
+
+              <h3>Getting Started</h3>
+
+              <h4>How do I create an account?</h4>
+              <p>Click the "Sign Up" button in the navigation menu, fill out the registration form with your details, and verify your email address. Once verified, you can start using dductly right away!</p>
+
+              <h4>What information do I need to provide?</h4>
+              <p>You'll need to provide your name, email address, and create a password. Additional business information can be added later in your account settings.</p>
+
+              <h3>Using dductly</h3>
+
+              <h4>How do I import my expense data?</h4>
+              <p>You can import expense data through our Import Data feature. We support various file formats including CSV and Excel. Simply click "Import Data" from your dashboard and follow the prompts.</p>
+
+              <h4>Can I manually add expenses?</h4>
+              <p>Yes! Use the "Add Data" button on your dashboard to manually enter individual expenses. This is perfect for adding receipts on the go.</p>
+
+              <h4>What types of expenses can I track?</h4>
+              <p>You can track all business-related expenses including booth fees, supplies, materials, travel costs, equipment, marketing expenses, and more.</p>
+
+              <h4>Can I categorize my expenses?</h4>
+              <p>Yes, dductly allows you to categorize expenses to help you understand where your money is going and make tax time easier.</p>
+
+              <h3>Reports & Exports</h3>
+
+              <h4>How do I generate reports?</h4>
+              <p>Navigate to your dashboard and use the reporting tools to generate expense summaries, tax reports, and custom reports for any date range.</p>
+
+              <h4>What export formats are available?</h4>
+              <p>You can export your data in multiple formats including PDF, CSV, and Excel, making it easy to share with your accountant or use with other software.</p>
+
+              <h3>Account & Security</h3>
+
+              <h4>Is my data secure?</h4>
+              <p>Yes! We take data security seriously. All data is encrypted and stored securely. We never share your personal or business information with third parties. See our Privacy Policy for more details.</p>
+
+              <h4>How do I reset my password?</h4>
+              <p>Click "Sign In" and then "Forgot Password" to receive a password reset link via email.</p>
+
+              <h4>Can I delete my account?</h4>
+              <p>Yes, you can delete your account at any time from your account settings. Please note that this action is permanent and cannot be undone.</p>
+
+              <h3>Support</h3>
+
+              <h4>How do I contact support?</h4>
+              <p>You can reach our support team through the Contact page. We typically respond within 24 hours during business days.</p>
+
+              <h4>Do you offer tutorials or guides?</h4>
+              <p>Yes! Check out our User Guide and tutorial videos to learn how to make the most of dductly's features.</p>
+
+              <h4>What if I have a feature request?</h4>
+              <p>We love hearing from our users! Contact us with your feature requests and suggestions. We're constantly improving dductly based on user feedback.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -319,7 +418,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <ExpensesProvider>
+        <AppContent />
+      </ExpensesProvider>
     </AuthProvider>
   );
 };
