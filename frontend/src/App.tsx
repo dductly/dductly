@@ -5,6 +5,7 @@ import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import Import from "./pages/Import";
+import Dashboard from "./pages/Dashboard";
 // Using real Supabase authentication
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
