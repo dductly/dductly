@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import openEyeIcon from "../img/open-eye.svg";
+import closedEyeIcon from "../img/closed-eye.svg";
 
 interface SignUpProps {
   onNavigate?: (page: string) => void;
@@ -11,6 +13,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -117,26 +121,54 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
           
            <div className="form-group">
              <label>Password <span className="req">(required)</span></label>
-             <input
-               type="password"
-               placeholder="Create a strong password"
-               value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               required
-               disabled={loading}
-             />
+             <div className="password-input-wrapper">
+               <input
+                 type={showPassword ? "text" : "password"}
+                 placeholder="Create a strong password"
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 required
+                 disabled={loading}
+               />
+               <button
+                 type="button"
+                 className="password-toggle"
+                 onClick={() => setShowPassword(!showPassword)}
+                 aria-label={showPassword ? "Hide password" : "Show password"}
+               >
+                 <img
+                   src={showPassword ? openEyeIcon : closedEyeIcon}
+                   alt={showPassword ? "Hide password" : "Show password"}
+                   className="eye-icon"
+                 />
+               </button>
+             </div>
            </div>
-          
+
            <div className="form-group">
              <label>Confirm Password <span className="req">(required)</span></label>
-             <input
-               type="password"
-               placeholder="Confirm your password"
-               value={confirmPassword}
-               onChange={(e) => setConfirmPassword(e.target.value)}
-               required
-               disabled={loading}
-             />
+             <div className="password-input-wrapper">
+               <input
+                 type={showConfirmPassword ? "text" : "password"}
+                 placeholder="Confirm your password"
+                 value={confirmPassword}
+                 onChange={(e) => setConfirmPassword(e.target.value)}
+                 required
+                 disabled={loading}
+               />
+               <button
+                 type="button"
+                 className="password-toggle"
+                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+               >
+                 <img
+                   src={showConfirmPassword ? openEyeIcon : closedEyeIcon}
+                   alt={showConfirmPassword ? "Hide password" : "Show password"}
+                   className="eye-icon"
+                 />
+               </button>
+             </div>
            </div>
         
            <div className="form-group">

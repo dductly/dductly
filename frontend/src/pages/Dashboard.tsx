@@ -3,9 +3,10 @@ import { useAuth } from "../hooks/useAuth";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
+  onFaqClick?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick }) => {
   const { user } = useAuth();
 
   return (
@@ -27,15 +28,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <div className="action-buttons">
               <button
                 className="btn btn-primary btn-large"
+                onClick={() => onNavigate('expenses')}
+              >
+                View Expenses
+              </button>
+              <button
+                className="btn btn-primary btn-large"
+                onClick={() => onNavigate('add-data')}
+              >
+                Add Expense
+              </button>
+              <button
+                className="btn btn-primary btn-large"
                 onClick={() => onNavigate('import')}
               >
                 Import Data
-              </button>
-              <button
-                className="btn btn-ghost btn-large"
-                onClick={() => onNavigate('contact')}
-              >
-                Get Support
               </button>
             </div>
           </div>
@@ -95,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 </a>
               </li>
               <li>
-                <a href="#" onClick={(e) => { e.preventDefault(); /* Add FAQ navigation */ }} className="link">
+                <a href="#" onClick={(e) => { e.preventDefault(); onFaqClick?.(); }} className="link">
                   FAQs
                 </a>
               </li>
