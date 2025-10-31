@@ -1,89 +1,95 @@
-import React, { createContext, useState, useContext, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
 
 export interface Expense {
-  id: number;
-  date: string;
-  amount: number;
+  id: string;
+  user_id: string;
+  expense_date: string;
   category: string;
   vendor: string;
   description: string;
-  paymentMethod: string;
+  payment_method: string;
+  amount: number;
 }
 
 interface ExpensesContextType {
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-  deleteExpense: (id: number) => void;
+  addExpense: (expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
+  loading: boolean;
 }
 
 const ExpensesContext = createContext<ExpensesContextType | undefined>(undefined);
 
-// Mock initial data
-const initialExpenses: Expense[] = [
-  {
-    id: 1,
-    date: "2025-10-28",
-    amount: 45.00,
-    category: "Booth Fees",
-    vendor: "Downtown Farmers Market",
-    description: "Weekly booth rental",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: 2,
-    date: "2025-10-27",
-    amount: 32.50,
-    category: "Supplies",
-    vendor: "Office Depot",
-    description: "Receipt paper and bags",
-    paymentMethod: "Debit Card",
-  },
-  {
-    id: 3,
-    date: "2025-10-25",
-    amount: 125.00,
-    category: "Materials",
-    vendor: "Craft Supply Co",
-    description: "Raw materials for products",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: 4,
-    date: "2025-10-24",
-    amount: 18.75,
-    category: "Travel",
-    vendor: "Gas Station",
-    description: "Fuel for market trip",
-    paymentMethod: "Cash",
-  },
-  {
-    id: 5,
-    date: "2025-10-20",
-    amount: 85.00,
-    category: "Marketing",
-    vendor: "Print Shop",
-    description: "Business cards and flyers",
-    paymentMethod: "Credit Card",
-  },
-];
-
 export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const { user } = useAuth();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addExpense = (newExpense: Omit<Expense, 'id'>) => {
-    const expense: Expense = {
-      ...newExpense,
-      id: Date.now(), // Simple ID generation
+  // Fetch expenses when user changes
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      if (!user) {
+        setExpenses([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("expense_date", { ascending: false });
+
+      if (error) console.error("Error loading expenses:", error);
+      else setExpenses(data || []);
+
+      setLoading(false);
     };
-    setExpenses(prev => [expense, ...prev]);
+
+    fetchExpenses();
+  }, [user]);
+
+  const addExpense = async (newExpense: Omit<Expense, "id" | "user_id">) => {
+    if (!user) return;
+
+    const expenseToInsert = {
+      expense_date: newExpense.expense_date,
+      amount: newExpense.amount,
+      category: newExpense.category,
+      vendor: newExpense.vendor,
+      description: newExpense.description, 
+      payment_method: newExpense.payment_method,
+      user_id: user.id,
+    };
+
+    console.log("inserting: ", expenseToInsert)
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .insert([expenseToInsert])
+      .select()
+      .single();
+
+    if (error) console.error("Error adding expense:", error);
+    else setExpenses((prev) => [data, ...prev]);
   };
 
-  const deleteExpense = (id: number) => {
-    setExpenses(prev => prev.filter(expense => expense.id !== id));
+  const deleteExpense = async (id: string) => {
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) console.error("Error deleting expense:", error);
+    else setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
   return (
-    <ExpensesContext.Provider value={{ expenses, addExpense, deleteExpense }}>
+    <ExpensesContext.Provider value={{ expenses, addExpense, deleteExpense, loading }}>
       {children}
     </ExpensesContext.Provider>
   );
@@ -91,8 +97,6 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useExpenses = () => {
   const context = useContext(ExpensesContext);
-  if (context === undefined) {
-    throw new Error('useExpenses must be used within an ExpensesProvider');
-  }
+  if (!context) throw new Error("useExpenses must be used within an ExpensesProvider");
   return context;
 };
