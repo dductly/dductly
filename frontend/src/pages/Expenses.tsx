@@ -16,8 +16,26 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
+  const [summaryView, setSummaryView] = useState<"overall" | "category" | "month">("overall");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+
+
   // Calculate total
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // const [summaryView, setSummaryView] = useState<"overall" | "category" | "month">("overall");
+  const categoryTotals: Record<string, number> = {};
+  const monthTotals: Record<string, number> = {};
+
+  expenses.forEach(expense => {
+    // Category totals
+    categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
+
+    // Month totals
+    const month = new Date(expense.expense_date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    monthTotals[month] = (monthTotals[month] || 0) + expense.amount;
+  });
 
   // Filter expenses
   const filteredExpenses = filterCategory
@@ -100,17 +118,70 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
           </div>
 
           <div className="expenses-summary">
-            <div className="summary-card">
-              <div className="summary-label">Total Expenses</div>
-              <div className="summary-value">{formatCurrency(totalExpenses)}</div>
+            <div className="control-group">
+              <label>View Totals By:</label>
+              <select
+                value={summaryView}
+                onChange={(e) => setSummaryView(e.target.value as "overall" | "category" | "month")}
+                className="expense-select"
+              >
+                <option value="overall">Overall</option>
+                <option value="category">Category</option>
+                <option value="month">Month</option>
+              </select>
             </div>
+
+            {summaryView === "category" && (
+              <div className="control-group">
+                <label>Select Category:</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="expense-select"
+                >
+                  <option value="">All Categories</option>
+                  {Object.keys(categoryTotals).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {summaryView === "month" && (
+              <div className="control-group">
+                <label>Select Month:</label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="expense-select"
+                >
+                  <option value="">All Months</option>
+                  {Object.keys(monthTotals).map(month => (
+                    <option key={month} value={month}>{month}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="summary-card">
-              <div className="summary-label">Total Entries</div>
-              <div className="summary-value">{expenses.length}</div>
-            </div>
-            <div className="summary-card">
-              <div className="summary-label">Categories</div>
-              <div className="summary-value">{categories.length}</div>
+              <div className="summary-label">
+                {summaryView === "overall" && "Total Expenses"}
+                {summaryView === "category" && `Total for ${selectedCategory || "All Categories"}`}
+                {summaryView === "month" && `Total for ${selectedMonth || "All Months"}`}
+              </div>
+              <div className="summary-value">
+                {formatCurrency(
+                  summaryView === "overall"
+                    ? totalExpenses
+                    : summaryView === "category"
+                    ? selectedCategory
+                      ? categoryTotals[selectedCategory] || 0
+                      : Object.values(categoryTotals).reduce((sum, val) => sum + val, 0)
+                    : selectedMonth
+                    ? monthTotals[selectedMonth] || 0
+                    : Object.values(monthTotals).reduce((sum, val) => sum + val, 0)
+                )}
+              </div>
             </div>
           </div>
 
