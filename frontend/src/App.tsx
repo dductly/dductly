@@ -10,7 +10,7 @@ import AddData from "./pages/AddData";
 import Expenses from "./pages/Expenses";
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
-import { AuthProvider } from "./contexts/MockAuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
 import openEyeIcon from "./img/open-eye.svg";
