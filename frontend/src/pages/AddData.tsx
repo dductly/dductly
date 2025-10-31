@@ -24,12 +24,12 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
 
     // Add expense to shared state
     addExpense({
-      date: formData.date,
+      expense_date: formData.date,
       amount: parseFloat(formData.amount),
       category: formData.category,
       vendor: formData.vendor,
       description: formData.description,
-      paymentMethod: formData.paymentMethod,
+      payment_method: formData.paymentMethod,
     });
 
     setSuccess(true);
