@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
+import type { Expense } from "../contexts/ExpensesContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
@@ -9,24 +10,35 @@ interface ExpenseProps {
 }
 
 const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
-  const { expenses, deleteExpense } = useExpenses();
+  const { expenses, updateExpense, deleteExpense } = useExpenses();
   const [filterCategory, setFilterCategory] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "amount">("date");
+  const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editForm, setEditForm] = useState({
+    expense_date: "",
+    category: "",
+    vendor: "",
+    description: "",
+    payment_method: "",
+    amount: 0,
+  });
 
   // Calculate total
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   // Filter expenses
   const filteredExpenses = filterCategory
-    ? expenses.filter(e => e.category === filterCategory)
+    ? expenses.filter((e) => e.category === filterCategory)
     : expenses;
 
   // Sort expenses
   const sortedExpenses = [...filteredExpenses].sort((a, b) => {
-    if (sortBy === "date") {
-      const comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (sortBy === "expense_date") {
+      const comparison =
+        new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime();
       return sortOrder === "asc" ? comparison : -comparison;
     } else {
       const comparison = a.amount - b.amount;
@@ -35,35 +47,79 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   });
 
   // Get unique categories for filter
-  const categories = Array.from(new Set(expenses.map(e => e.category)));
+  const categories = Array.from(new Set(expenses.map((e) => e.category)));
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-  const handleEditExpense = (expense: any) => {
-    // TODO: Implement edit functionality with a modal
-    alert(`Edit functionality coming soon!\n\nExpense: ${expense.description}\nAmount: ${formatCurrency(expense.amount)}`);
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setEditForm({
+      expense_date: expense.expense_date,
+      category: expense.category,
+      vendor: expense.vendor,
+      description: expense.description,
+      payment_method: expense.payment_method,
+      amount: expense.amount,
+    });
     setOpenMenuId(null);
   };
 
-  const handleDeleteExpense = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this expense?')) {
+  const handleSaveEdit = async () => {
+    if (editingExpense) {
+      await updateExpense(editingExpense.id, editForm);
+      setEditingExpense(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingExpense(null);
+    setEditForm({
+      expense_date: "",
+      category: "",
+      vendor: "",
+      description: "",
+      payment_method: "",
+      amount: 0,
+    });
+  };
+
+  const handleDeleteExpense = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
       deleteExpense(id);
     }
     setOpenMenuId(null);
   };
 
-  const toggleMenu = (id: number) => {
-    setOpenMenuId(openMenuId === id ? null : id);
+  const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      // Calculate position to determine if menu should open up or down
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // If there's more space above or we're in the bottom half, open upward
+      if (spaceAbove > spaceBelow || rect.bottom > viewportHeight / 2) {
+        setMenuPosition("top");
+      } else {
+        setMenuPosition("bottom");
+      }
+
+      setOpenMenuId(id);
+    }
   };
 
   // Close menu when clicking outside
@@ -71,14 +127,13 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     const handleClickOutside = (event: MouseEvent) => {
       if (openMenuId !== null) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.menu-wrapper')) {
+        if (!target.closest(".menu-wrapper")) {
           setOpenMenuId(null);
         }
       }
     };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [openMenuId]);
 
   return (
@@ -86,11 +141,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       <section className="section">
         <div className="expenses-container">
           <div className="expenses-header">
-            <button
-              className="back-button"
-              onClick={() => onNavigate('home')}
-              aria-label="Go back to dashboard"
-            >
+            <button className="back-button" onClick={() => onNavigate("home")}>
               ← Back to Dashboard
             </button>
             <h1 className="section-title">Your Expenses</h1>
@@ -123,8 +174,10 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                 className="expense-select"
               >
                 <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </div>
@@ -133,10 +186,12 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               <label>Sort by:</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "date" | "amount")}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "expense_date" | "amount")
+                }
                 className="expense-select"
               >
-                <option value="date">Date</option>
+                <option value="expense_date">Date</option>
                 <option value="amount">Amount</option>
               </select>
             </div>
@@ -153,10 +208,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </select>
             </div>
 
-            <button
-              className="btn btn-primary"
-              onClick={() => onNavigate('add-data')}
-            >
+            <button className="btn btn-primary" onClick={() => onNavigate("add-data")}>
               + Add Expense
             </button>
           </div>
@@ -178,41 +230,44 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                 <tbody>
                   {sortedExpenses.map((expense) => (
                     <tr key={expense.id}>
-                      <td className="date-cell">{formatDate(expense.date)}</td>
+                      <td>{formatDate(expense.expense_date)}</td>
                       <td>
                         <span className="category-badge">{expense.category}</span>
                       </td>
-                      <td className="vendor-cell">{expense.vendor}</td>
-                      <td className="description-cell">{expense.description}</td>
-                      <td className="payment-cell">{expense.paymentMethod}</td>
-                      <td className="amount-cell">{formatCurrency(expense.amount)}</td>
-                      <td className="actions-cell">
+                      <td>{expense.vendor}</td>
+                      <td>{expense.description}</td>
+                      <td>{expense.payment_method}</td>
+                      <td>{formatCurrency(expense.amount)}</td>
+                      <td>
                         <div className="menu-wrapper">
                           <button
                             className="menu-btn"
-                            onClick={() => toggleMenu(expense.id)}
-                            aria-label="Actions menu"
+                            onClick={(e) => toggleMenu(expense.id, e)}
                           >
-                            <img
-                              src={menuIcon}
-                              alt="Menu"
-                              className="menu-icon"
-                            />
+                            <img src={menuIcon} alt="Menu" className="menu-icon" />
                           </button>
                           {openMenuId === expense.id && (
-                            <div className="dropdown-menu">
+                            <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
                               <button
                                 className="dropdown-item"
                                 onClick={() => handleEditExpense(expense)}
                               >
-                                <img src={editIcon} alt="Edit" className="dropdown-icon" />
+                                <img
+                                  src={editIcon}
+                                  alt="Edit"
+                                  className="dropdown-icon"
+                                />
                                 Edit
                               </button>
                               <button
                                 className="dropdown-item delete-item"
                                 onClick={() => handleDeleteExpense(expense.id)}
                               >
-                                <img src={recycleIcon} alt="Delete" className="dropdown-icon" />
+                                <img
+                                  src={recycleIcon}
+                                  alt="Delete"
+                                  className="dropdown-icon"
+                                />
                                 Delete
                               </button>
                             </div>
@@ -228,13 +283,121 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                 <p>No expenses found for the selected category.</p>
                 <button
                   className="btn btn-primary btn-large"
-                  onClick={() => onNavigate('add-data')}
+                  onClick={() => onNavigate("add-data")}
                 >
                   Add Your First Expense
                 </button>
               </div>
             )}
           </div>
+
+          {editingExpense && (
+            <div className="modal-overlay" onClick={handleCancelEdit}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Edit Expense</h2>
+                  <button className="modal-close" onClick={handleCancelEdit}>
+                    ×
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Date</label>
+                    <input
+                      type="date"
+                      value={editForm.expense_date}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, expense_date: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select
+                      value={editForm.category}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, category: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="booth-fees">Booth Fees</option>
+                      <option value="supplies">Supplies</option>
+                      <option value="materials">Materials</option>
+                      <option value="equipment">Equipment</option>
+                      <option value="travel">Travel</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="packaging">Packaging</option>
+                      <option value="utilities">Utilities</option>
+                      <option value="insurance">Insurance</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Vendor</label>
+                    <input
+                      type="text"
+                      value={editForm.vendor}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, vendor: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, description: e.target.value })
+                      }
+                      className="form-input"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Payment Method</label>
+                    <select
+                      value={editForm.payment_method}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, payment_method: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="">Select payment method</option>
+                      <option value="cash">Cash</option>
+                      <option value="credit-card">Credit Card</option>
+                      <option value="debit-card">Debit Card</option>
+                      <option value="check">Check</option>
+                      <option value="bank-transfer">Bank Transfer</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editForm.amount}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, amount: parseFloat(e.target.value) })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={handleCancelEdit}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary" onClick={handleSaveEdit}>
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

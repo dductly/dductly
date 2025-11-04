@@ -71,6 +71,15 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
             <h1 className="section-title">Add Expense</h1>
             <p className="section-subtitle">
               Manually enter a new expense to keep your records up to date
+              <br />
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); onNavigate('expenses'); }}
+                className="link"
+                style={{ color: 'var(--primary-purple)', fontWeight: 600, fontSize: '1.25rem' }}
+              >
+                View all expenses →
+              </a>
             </p>
           </div>
 
