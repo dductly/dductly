@@ -63,10 +63,10 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
           <div className="add-data-header">
             <button
               className="back-button"
-              onClick={() => onNavigate('home')}
-              aria-label="Go back to dashboard"
+              onClick={() => onNavigate('expenses')}
+              aria-label="Go back to expenses"
             >
-              ← Back to Dashboard
+              ← Back to Your Expenses
             </button>
             <h1 className="section-title">Add Expense</h1>
             <p className="section-subtitle">
