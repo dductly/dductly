@@ -1,0 +1,56 @@
+.user-menu {
+    position: relative; /* ensures dropdown absolute positioning works */
+    display: inline-block;
+  }  
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 36px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    display: flex !important;       /* force flex layout */
+    flex-direction: column !important; /* stack items vertically */
+
+    min-width: 160px;
+    z-index: 100;
+    overflow: hidden;
+  }
+  
+.dropdown-menu a,
+.dropdown-menu button {
+  display: block !important;  /* ensure each item is a block */
+  width: 100% !important;     /* fill the dropdown width */
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  background-color: #f2f2f2;
+}
+
+.user-button {
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+    padding: 6px 12px;
+    background-color: var(--primary-purple);
+    color: white;
+    border-radius: 6px;
+    border: none;
+    transition: background-color 0.2s;
+    display: inline-block;
+  }
+  
+  .user-button:hover {
+    transform: scale(1.1); /* makes it 10% bigger */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* optional for extra pop */
+  }
+  
