@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Home from "./pages/Home";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import AddData from "./pages/AddData";
 import Expenses from "./pages/Expenses";
 // Using real AuthContext with Supabase
+// Using MockAuthContext for testing without Supabase
+// To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
@@ -22,35 +24,116 @@ interface NavProps {
 
 const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
   const { user, signOut } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await signOut();
+    setIsMenuOpen(false);
   };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="nav-wrap">
       <nav className="nav" aria-label="Main">
-        <a className="brand" href="#home" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
+        <a
+          className="brand"
+          href="#home"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate("home");
+          }}
+        >
           <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
           dductly
         </a>
+
         <div className="menu">
-          <a href="#contact" onClick={(e) => { e.preventDefault(); onNavigate('contact'); }}>Contact</a>
-          {user && (
-            <a href="#import" onClick={(e) => { e.preventDefault(); onNavigate('import'); }}>Import Data</a>
-          )}
           {!user && (
             <>
-              <button className="btn btn-ghost btn-small" onClick={onSignInClick}>Sign In</button>
-              <button className="btn btn-primary btn-small" onClick={() => onNavigate('signup')}>Sign Up</button>
+              <button className="btn btn-ghost btn-small" onClick={onSignInClick}>
+                Sign In
+              </button>
+              <button
+                className="btn btn-primary btn-small"
+                onClick={() => onNavigate("signup")}
+              >
+                Sign Up
+              </button>
             </>
           )}
+
           {user && (
-            <div className="user-menu">
-              <span className="user-name">
+            <div className="user-menu" ref={menuRef}>
+              <button className='btn btn-primary btn-small' onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {user.user_metadata?.first_name} {user.user_metadata?.last_name}
-              </span>
-              <button className="btn btn-ghost btn-small" onClick={handleLogout}>Logout</button>
+              </button>
+              {isMenuOpen && (
+                <div className="dropdown-menu">
+                  <a
+                    href="#contact"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate("contact");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Contact
+                  </a>
+
+                  <a
+                    href="#import"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate("import");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Import Data
+                  </a>
+
+                  <a
+                    href="#profile"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate("profile");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Profile
+                  </a>
+                  <a
+                    href="#settings"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate("settings");
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Settings
+                  </a>
+                  <a
+                    href="#logout"
+                    onClick={(e) => {
+                      e.preventDefault(); // prevent default navigation
+                      handleLogout();     // call your logout function
+                      setIsMenuOpen(false); // close the dropdown
+                    }}
+                    >
+                    Logout
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>
