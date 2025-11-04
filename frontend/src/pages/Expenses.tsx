@@ -10,11 +10,21 @@ interface ExpenseProps {
 }
 
 const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
-  const { expenses, deleteExpense } = useExpenses();
+  const { expenses, updateExpense, deleteExpense } = useExpenses();
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editForm, setEditForm] = useState({
+    expense_date: "",
+    category: "",
+    vendor: "",
+    description: "",
+    payment_method: "",
+    amount: 0,
+  });
 
   // Calculate total
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -52,12 +62,35 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
   const handleEditExpense = (expense: Expense) => {
-    alert(
-      `Edit functionality coming soon!\n\nExpense: ${expense.description}\nAmount: ${formatCurrency(
-        expense.amount
-      )}`
-    );
+    setEditingExpense(expense);
+    setEditForm({
+      expense_date: expense.expense_date,
+      category: expense.category,
+      vendor: expense.vendor,
+      description: expense.description,
+      payment_method: expense.payment_method,
+      amount: expense.amount,
+    });
     setOpenMenuId(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingExpense) {
+      await updateExpense(editingExpense.id, editForm);
+      setEditingExpense(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingExpense(null);
+    setEditForm({
+      expense_date: "",
+      category: "",
+      vendor: "",
+      description: "",
+      payment_method: "",
+      amount: 0,
+    });
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -67,8 +100,26 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     setOpenMenuId(null);
   };
 
-  const toggleMenu = (id: string) => {
-    setOpenMenuId(openMenuId === id ? null : id);
+  const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      // Calculate position to determine if menu should open up or down
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // If there's more space above or we're in the bottom half, open upward
+      if (spaceAbove > spaceBelow || rect.bottom > viewportHeight / 2) {
+        setMenuPosition("top");
+      } else {
+        setMenuPosition("bottom");
+      }
+
+      setOpenMenuId(id);
+    }
   };
 
   // Close menu when clicking outside
@@ -191,12 +242,12 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                         <div className="menu-wrapper">
                           <button
                             className="menu-btn"
-                            onClick={() => toggleMenu(expense.id)}
+                            onClick={(e) => toggleMenu(expense.id, e)}
                           >
                             <img src={menuIcon} alt="Menu" className="menu-icon" />
                           </button>
                           {openMenuId === expense.id && (
-                            <div className="dropdown-menu">
+                            <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
                               <button
                                 className="dropdown-item"
                                 onClick={() => handleEditExpense(expense)}
@@ -239,6 +290,114 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {editingExpense && (
+            <div className="modal-overlay" onClick={handleCancelEdit}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Edit Expense</h2>
+                  <button className="modal-close" onClick={handleCancelEdit}>
+                    ×
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Date</label>
+                    <input
+                      type="date"
+                      value={editForm.expense_date}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, expense_date: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select
+                      value={editForm.category}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, category: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="booth-fees">Booth Fees</option>
+                      <option value="supplies">Supplies</option>
+                      <option value="materials">Materials</option>
+                      <option value="equipment">Equipment</option>
+                      <option value="travel">Travel</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="packaging">Packaging</option>
+                      <option value="utilities">Utilities</option>
+                      <option value="insurance">Insurance</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Vendor</label>
+                    <input
+                      type="text"
+                      value={editForm.vendor}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, vendor: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, description: e.target.value })
+                      }
+                      className="form-input"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Payment Method</label>
+                    <select
+                      value={editForm.payment_method}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, payment_method: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="">Select payment method</option>
+                      <option value="cash">Cash</option>
+                      <option value="credit-card">Credit Card</option>
+                      <option value="debit-card">Debit Card</option>
+                      <option value="check">Check</option>
+                      <option value="bank-transfer">Bank Transfer</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editForm.amount}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, amount: parseFloat(e.target.value) })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={handleCancelEdit}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary" onClick={handleSaveEdit}>
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -8,6 +8,7 @@ import Import from "./pages/Import";
 import Dashboard from "./pages/Dashboard";
 import AddData from "./pages/AddData";
 import Expenses from "./pages/Expenses";
+// Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";

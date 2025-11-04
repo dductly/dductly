@@ -22,6 +22,7 @@ export interface Expense {
 interface ExpensesContextType {
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
+  updateExpense: (id: string, expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   loading: boolean;
 }
@@ -82,6 +83,27 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
     else setExpenses((prev) => [data, ...prev]);
   };
 
+  const updateExpense = async (id: string, updatedExpense: Omit<Expense, "id" | "user_id">) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .update({
+        expense_date: updatedExpense.expense_date,
+        amount: updatedExpense.amount,
+        category: updatedExpense.category,
+        vendor: updatedExpense.vendor,
+        description: updatedExpense.description,
+        payment_method: updatedExpense.payment_method,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) console.error("Error updating expense:", error);
+    else setExpenses((prev) => prev.map((e) => (e.id === id ? data : e)));
+  };
+
   const deleteExpense = async (id: string) => {
     const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) console.error("Error deleting expense:", error);
@@ -89,7 +111,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <ExpensesContext.Provider value={{ expenses, addExpense, deleteExpense, loading }}>
+    <ExpensesContext.Provider value={{ expenses, addExpense, updateExpense, deleteExpense, loading }}>
       {children}
     </ExpensesContext.Provider>
   );

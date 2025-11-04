@@ -10,6 +10,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  updateProfile: (firstName: string, lastName: string, email: string) => Promise<{ error: AuthError | null }>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,6 +102,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (firstName: string, lastName: string, email: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+        },
+      }, {
+        emailRedirectTo: window.location.origin
+      });
+      return { error };
+    } catch (err) {
+      console.error('Update profile error:', err);
+      return {
+        error: {
+          message: 'Unable to update profile. Please try again later.',
+          name: 'UpdateError',
+          status: 500
+        } as AuthError
+      };
+    }
+  };
+
+  const refreshSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    setUser(session?.user ?? null);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -111,6 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    updateProfile,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
