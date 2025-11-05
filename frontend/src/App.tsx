@@ -30,6 +30,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
   const handleLogout = async () => {
     await signOut();
     setIsMenuOpen(false);
+    onNavigate('home');
   };
 
   // Close menu when clicking outside
@@ -54,7 +55,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
             onNavigate("home");
           }}
         >
-          <img src="/duck.svg" alt="dductly logo" className="brand-logo" />
+          <img src="/blue-and-purple-store.svg" alt="dductly logo" className="brand-logo" />
           dductly
         </a>
 
