@@ -25,7 +25,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     // Add expense to shared state
     addExpense({
       expense_date: formData.date,
-      amount: parseFloat(formData.amount),
+      amount: parseFloat(formData.amount.replace(/,/g, '')),
       category: formData.category,
       vendor: formData.vendor,
       description: formData.description,
@@ -56,6 +56,29 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     });
   };
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow digits, one decimal point, and nothing else
+    let value = e.target.value.replace(/[^0-9.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    setFormData({
+      ...formData,
+      amount: value,
+    });
+  };
+
+  const formatAmount = (value: string) => {
+    if (!value) return '';
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   return (
     <div className="page">
       <section className="section">
@@ -71,15 +94,6 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
             <h1 className="section-title">Add Expense</h1>
             <p className="section-subtitle">
               Manually enter a new expense to keep your records up to date
-              <br />
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); onNavigate('expenses'); }}
-                className="link"
-                style={{ color: 'var(--primary-purple)', fontWeight: 600, fontSize: '1.25rem' }}
-              >
-                View all expenses →
-              </a>
             </p>
           </div>
 
@@ -105,17 +119,34 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
 
               <div className="form-group">
                 <label>Amount <span className="req">(required)</span></label>
-                <input
-                  type="number"
-                  name="amount"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
+                <div style={{ position: 'relative' }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: '16px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    color: 'var(--text-dark)',
+                    fontSize: '1rem'
+                  }}>
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    name="amount"
+                    placeholder="0.00"
+                    value={formData.amount}
+                    onChange={handleAmountChange}
+                    onBlur={(e) => {
+                      if (e.target.value) {
+                        setFormData({ ...formData, amount: formatAmount(e.target.value) });
+                      }
+                    }}
+                    style={{ paddingLeft: '28px' }}
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
 

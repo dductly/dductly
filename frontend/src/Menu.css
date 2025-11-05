@@ -1,9 +1,9 @@
 .user-menu {
     position: relative; /* ensures dropdown absolute positioning works */
     display: inline-block;
-  }  
+  }
 
-.dropdown-menu {
+.user-menu .dropdown-menu {
     position: absolute;
     right: 0;
     top: 36px;
@@ -19,9 +19,9 @@
     z-index: 100;
     overflow: hidden;
   }
-  
-.dropdown-menu a,
-.dropdown-menu button {
+
+.user-menu .dropdown-menu a,
+.user-menu .dropdown-menu button {
   display: block !important;  /* ensure each item is a block */
   width: 100% !important;     /* fill the dropdown width */
   text-align: left;
@@ -31,8 +31,8 @@
   cursor: pointer;
 }
 
-.dropdown-menu a:hover,
-.dropdown-menu button:hover {
+.user-menu .dropdown-menu a:hover,
+.user-menu .dropdown-menu button:hover {
   background-color: #f2f2f2;
 }
 

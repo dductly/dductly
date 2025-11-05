@@ -23,7 +23,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     vendor: "",
     description: "",
     payment_method: "",
-    amount: 0,
+    amount: "",
   });
 
   // Calculate total
@@ -61,6 +61,26 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
+  const formatAmount = (value: string) => {
+    if (!value) return '';
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const handleAmountChange = (value: string) => {
+    // Remove commas and allow digits, one decimal point, and nothing else
+    let cleanValue = value.replace(/[^0-9.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    setEditForm({ ...editForm, amount: cleanValue });
+  };
+
   const handleEditExpense = (expense: Expense) => {
     setEditingExpense(expense);
     setEditForm({
@@ -69,14 +89,17 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       vendor: expense.vendor,
       description: expense.description,
       payment_method: expense.payment_method,
-      amount: expense.amount,
+      amount: expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     });
     setOpenMenuId(null);
   };
 
   const handleSaveEdit = async () => {
     if (editingExpense) {
-      await updateExpense(editingExpense.id, editForm);
+      await updateExpense(editingExpense.id, {
+        ...editForm,
+        amount: parseFloat(editForm.amount.replace(/,/g, '')),
+      });
       setEditingExpense(null);
     }
   };
@@ -89,7 +112,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       vendor: "",
       description: "",
       payment_method: "",
-      amount: 0,
+      amount: "",
     });
   };
 
@@ -376,15 +399,32 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   </div>
                   <div className="form-group">
                     <label>Amount</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editForm.amount}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, amount: parseFloat(e.target.value) })
-                      }
-                      className="form-input"
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '16px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: 'var(--text-dark)',
+                        fontSize: '1rem'
+                      }}>
+                        $
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="0.00"
+                        value={editForm.amount}
+                        onChange={(e) => handleAmountChange(e.target.value)}
+                        onBlur={(e) => {
+                          if (e.target.value) {
+                            setEditForm({ ...editForm, amount: formatAmount(e.target.value) });
+                          }
+                        }}
+                        className="form-input"
+                        style={{ paddingLeft: '28px' }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="modal-footer">
