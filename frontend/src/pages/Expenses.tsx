@@ -50,7 +50,9 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const categories = Array.from(new Set(expenses.map((e) => e.category)));
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse the date string manually to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -134,8 +136,11 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
 
-      // If there's more space above or we're in the bottom half, open upward
-      if (spaceAbove > spaceBelow || rect.bottom > viewportHeight / 2) {
+      // If we're near the top (less than 200px from top), force dropdown to open downward
+      // Otherwise, open upward if there's more space above
+      if (spaceAbove < 200) {
+        setMenuPosition("bottom");
+      } else if (spaceAbove > spaceBelow) {
         setMenuPosition("top");
       } else {
         setMenuPosition("bottom");

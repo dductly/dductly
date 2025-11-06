@@ -5,9 +5,10 @@ import editIcon from "../img/pencil-edit.svg";
 interface DashboardProps {
   onNavigate: (page: string) => void;
   onFaqClick?: () => void;
+  onUserGuideClick?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGuideClick }) => {
   const { user, updateProfile, refreshSession } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -179,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick }) => {
                 </a>
               </li>
               <li>
-                <a href="#" onClick={(e) => { e.preventDefault(); /* Add guide navigation */ }} className="link">
+                <a href="#" onClick={(e) => { e.preventDefault(); onUserGuideClick?.(); }} className="link">
                   User Guide
                 </a>
               </li>

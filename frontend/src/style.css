@@ -1535,6 +1535,33 @@
   opacity: 0.7;
 }
 
+.password-requirements {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: var(--pale-blue);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  color: var(--text-medium);
+  transition: color 0.2s ease;
+}
+
+.requirement.met {
+  color: var(--success-green);
+}
+
+.requirement-icon {
+  font-weight: bold;
+  font-size: 1rem;
+  min-width: 18px;
+}
+
 .btn-large {
   width: 100%;
   padding: 16px 28px;
@@ -1992,7 +2019,7 @@
   width: 100%;
   border-collapse: collapse;
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .expenses-table thead {
