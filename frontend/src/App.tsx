@@ -258,7 +258,7 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isSignInOpen, setIsSignInOpen] = useState(false);
-  const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | null>(null);
+  const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | 'guide' | null>(null);
   const { loading, user } = useAuth();
 
   const handleNavigate = (page: string) => {
@@ -294,7 +294,7 @@ const AppContent: React.FC = () => {
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {
-          return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} />;
+          return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} onUserGuideClick={() => setLegalModal('guide')} />;
         }
         return (
           <>
@@ -490,6 +490,124 @@ const AppContent: React.FC = () => {
 
               <h4>What if I have a feature request?</h4>
               <p>We love hearing from our users! Contact us with your feature requests and suggestions. We're constantly improving dductly based on user feedback.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Guide Modal */}
+      {legalModal === 'guide' && (
+        <div className="modal-overlay" onClick={() => setLegalModal(null)}>
+          <div className="modal-content modal-legal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setLegalModal(null)} aria-label="Close">×</button>
+            <h2 className="modal-title">User Guide</h2>
+            <div className="modal-body">
+              <p>Welcome to dductly! This guide will help you make the most of our expense tracking platform.</p>
+
+              <h3>Getting Started</h3>
+
+              <h4>1. Creating Your Account</h4>
+              <p>To get started, click the "Sign Up" button and fill in your information. Your password must include:</p>
+              <ul>
+                <li>At least 8 characters</li>
+                <li>One uppercase letter</li>
+                <li>One lowercase letter</li>
+                <li>One number</li>
+                <li>One special character (!@#$%^&*)</li>
+              </ul>
+              <p>After signing up, check your email to verify your account. Once verified, you can sign in and access your dashboard.</p>
+
+              <h4>2. Your Dashboard</h4>
+              <p>After signing in, you'll land on your personalized dashboard. Here you can:</p>
+              <ul>
+                <li><strong>View Expenses:</strong> See all your tracked expenses in one place</li>
+                <li><strong>Add Expense:</strong> Manually add individual expenses</li>
+                <li><strong>Import Data:</strong> Upload bulk expense data from files</li>
+              </ul>
+
+              <h3>Managing Expenses</h3>
+
+              <h4>Adding an Expense</h4>
+              <p>Click "Add Expense" from your dashboard. You'll need to provide:</p>
+              <ul>
+                <li><strong>Date:</strong> When the expense occurred (required)</li>
+                <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
+                <li><strong>Category:</strong> Choose from options like Booth Fees, Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
+                <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Check, Bank Transfer, or Other (optional)</li>
+                <li><strong>Vendor/Store Name:</strong> Where you made the purchase (optional)</li>
+                <li><strong>Description/Notes:</strong> Additional details about the expense (optional)</li>
+              </ul>
+              <p>When entering amounts, just type the numbers - the $ symbol is automatically added, and the system will format it with commas and decimal places when you finish typing.</p>
+
+              <h4>Viewing Your Expenses</h4>
+              <p>Click "View Expenses" to see your complete expense list. You can:</p>
+              <ul>
+                <li><strong>Filter by category:</strong> See expenses for specific categories only</li>
+                <li><strong>Sort:</strong> Organize by date or amount, newest or oldest first</li>
+                <li><strong>Edit expenses:</strong> Click the three-line menu icon next to any expense to edit or delete it</li>
+              </ul>
+              <p>The expenses page shows a summary with total expenses, total entries, and number of categories being tracked.</p>
+
+              <h4>Editing and Deleting Expenses</h4>
+              <p>To modify an expense:</p>
+              <ol>
+                <li>Go to "View Expenses"</li>
+                <li>Find the expense in the table</li>
+                <li>Click the three-line menu icon on the right</li>
+                <li>Select "Edit" to modify or "Delete" to remove</li>
+              </ol>
+              <p>When editing, all fields can be updated just like when adding a new expense. Click "Save Changes" to apply your updates.</p>
+
+              <h4>Importing Data</h4>
+              <p>If you have expenses in a spreadsheet or file, use the "Import Data" feature to upload them in bulk. This is great for:</p>
+              <ul>
+                <li>Moving data from another system</li>
+                <li>Uploading receipts you've been tracking elsewhere</li>
+                <li>Adding multiple expenses at once</li>
+              </ul>
+
+              <h3>Account Management</h3>
+
+              <h4>Editing Your Profile</h4>
+              <p>From your dashboard:</p>
+              <ol>
+                <li>Find the "Your Account" card</li>
+                <li>Click the pencil icon in the top right</li>
+                <li>Update your first name, last name, or email</li>
+                <li>Click "Save Changes"</li>
+              </ol>
+              <p><strong>Note:</strong> If you change your email, you'll receive a confirmation email. After confirming, click the "Click here to refresh" link on your dashboard to see the updated email.</p>
+
+              <h4>Signing Out</h4>
+              <p>Click on your name in the top right corner and select "Logout" from the dropdown menu. This will sign you out and return you to the home page.</p>
+
+              <h3>Tips for Success</h3>
+
+              <h4>Stay Organized</h4>
+              <ul>
+                <li>Add expenses regularly - don't wait until tax time!</li>
+                <li>Use consistent categories to make tracking easier</li>
+                <li>Include vendor names and descriptions for better records</li>
+                <li>Keep digital copies of receipts for reference</li>
+              </ul>
+
+              <h4>Best Practices</h4>
+              <ul>
+                <li><strong>Regular Updates:</strong> Add expenses weekly or after each market/event</li>
+                <li><strong>Be Detailed:</strong> The more information you add, the better your records</li>
+                <li><strong>Use Categories:</strong> Proper categorization makes tax preparation much easier</li>
+                <li><strong>Review Regularly:</strong> Check your expense totals monthly to track spending trends</li>
+              </ul>
+
+              <h3>Need More Help?</h3>
+              <p>If you have questions or need assistance:</p>
+              <ul>
+                <li>Check the <a href="#" onClick={(e) => { e.preventDefault(); setLegalModal('faq'); }} className="link">FAQs</a> for common questions</li>
+                <li>Use the Contact Support link in your dashboard</li>
+                <li>Email us through the Contact page</li>
+              </ul>
+
+              <p style={{ marginTop: '24px', fontStyle: 'italic' }}>Thank you for using dductly! We're here to help make your business management effortless.</p>
             </div>
           </div>
         </div>

@@ -21,6 +21,15 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [showModal, setShowModal] = useState<'tos' | 'privacy' | null>(null);
   const { signUp } = useAuth();
 
+  // Password validation checks
+  const passwordChecks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -33,9 +42,14 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     }
 
     const { error } = await signUp(email, password, firstName, lastName);
-  
+
     if (error) {
-      setError(error.message);
+      // Replace the long password requirements message with a friendly one
+      if (error.message.includes('Password should contain at least one character')) {
+        setError('Please Choose a Stronger Password!');
+      } else {
+        setError(error.message);
+      }
     } else {
       setSuccess(true);
       // Navigate to confirmation page after a short delay
@@ -143,6 +157,30 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                  />
                </button>
              </div>
+             {password.length > 0 && (
+               <div className="password-requirements">
+                 <div className={`requirement ${passwordChecks.length ? 'met' : ''}`}>
+                   <span className="requirement-icon">{passwordChecks.length ? '✓' : '○'}</span>
+                   At least 8 characters
+                 </div>
+                 <div className={`requirement ${passwordChecks.uppercase ? 'met' : ''}`}>
+                   <span className="requirement-icon">{passwordChecks.uppercase ? '✓' : '○'}</span>
+                   One uppercase letter
+                 </div>
+                 <div className={`requirement ${passwordChecks.lowercase ? 'met' : ''}`}>
+                   <span className="requirement-icon">{passwordChecks.lowercase ? '✓' : '○'}</span>
+                   One lowercase letter
+                 </div>
+                 <div className={`requirement ${passwordChecks.number ? 'met' : ''}`}>
+                   <span className="requirement-icon">{passwordChecks.number ? '✓' : '○'}</span>
+                   One number
+                 </div>
+                 <div className={`requirement ${passwordChecks.special ? 'met' : ''}`}>
+                   <span className="requirement-icon">{passwordChecks.special ? '✓' : '○'}</span>
+                   One special character (!@#$%^&*)
+                 </div>
+               </div>
+             )}
            </div>
 
            <div className="form-group">
