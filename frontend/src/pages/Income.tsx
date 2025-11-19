@@ -1,49 +1,51 @@
 import React, { useState, useEffect } from "react";
-import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
-import type { Expense } from "../contexts/ExpensesContext";
+import { useExpenses } from "../contexts/ExpensesContext";
+import type { Income } from "../contexts/IncomeContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 
-interface ExpenseProps {
+interface IncomeProps {
   onNavigate: (page: string) => void;
 }
 
-const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
-  const { expenses, updateExpense, deleteExpense } = useExpenses();
-  const { incomes } = useIncome();
+const Income: React.FC<IncomeProps> = ({ onNavigate }) => {
+  const { incomes, updateIncome, deleteIncome } = useIncome();
+  const { expenses } = useExpenses();
   const [filterCategory, setFilterCategory] = useState("");
-  const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
+  const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [editForm, setEditForm] = useState({
-    expense_date: "",
+    income_date: "",
     category: "",
-    vendor: "",
+    customer: "",
+    market: "",
     description: "",
     payment_method: "",
     amount: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherMarket, setOtherMarket] = useState("");
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
   const totalProfit = totalIncome - totalExpenses;
 
-  // Filter expenses
-  const filteredExpenses = filterCategory
-    ? expenses.filter((e) => e.category === filterCategory)
-    : expenses;
+  // Filter incomes
+  const filteredIncomes = filterCategory
+    ? incomes.filter((i) => i.category === filterCategory)
+    : incomes;
 
-  // Sort expenses
-  const sortedExpenses = [...filteredExpenses].sort((a, b) => {
-    if (sortBy === "expense_date") {
+  // Sort incomes
+  const sortedIncomes = [...filteredIncomes].sort((a, b) => {
+    if (sortBy === "income_date") {
       const comparison =
-        new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime();
+        new Date(a.income_date).getTime() - new Date(b.income_date).getTime();
       return sortOrder === "asc" ? comparison : -comparison;
     } else {
       const comparison = a.amount - b.amount;
@@ -52,7 +54,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   });
 
   // Get unique categories for filter
-  const categories = Array.from(new Set(expenses.map((e) => e.category)));
+  const categories = Array.from(new Set(incomes.map((i) => i.category)));
 
   const formatDate = (dateString: string) => {
     // Parse the date string manually to avoid timezone issues
@@ -88,47 +90,52 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     setEditForm({ ...editForm, amount: cleanValue });
   };
 
-  const handleEditExpense = (expense: Expense) => {
-    setEditingExpense(expense);
+  const handleEditIncome = (income: Income) => {
+    setEditingIncome(income);
     setEditForm({
-      expense_date: expense.expense_date,
-      category: expense.category,
-      vendor: expense.vendor,
-      description: expense.description,
-      payment_method: expense.payment_method,
-      amount: expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      income_date: income.income_date,
+      category: income.category,
+      customer: income.customer,
+      market: income.market,
+      description: income.description,
+      payment_method: income.payment_method,
+      amount: income.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     });
     setOpenMenuId(null);
   };
 
   const handleSaveEdit = async () => {
-    if (editingExpense) {
-      await updateExpense(editingExpense.id, {
+    if (editingIncome) {
+      await updateIncome(editingIncome.id, {
         ...editForm,
+        market: editForm.market === "other" ? otherMarket : editForm.market,
         payment_method: editForm.payment_method === "other" ? otherPaymentMethod : editForm.payment_method,
         amount: parseFloat(editForm.amount.replace(/,/g, '')),
       });
-      setEditingExpense(null);
+      setEditingIncome(null);
       setOtherPaymentMethod("");
+      setOtherMarket("");
     }
   };
 
   const handleCancelEdit = () => {
-    setEditingExpense(null);
+    setEditingIncome(null);
     setEditForm({
-      expense_date: "",
+      income_date: "",
       category: "",
-      vendor: "",
+      customer: "",
+      market: "",
       description: "",
       payment_method: "",
       amount: "",
     });
     setOtherPaymentMethod("");
+    setOtherMarket("");
   };
 
-  const handleDeleteExpense = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      deleteExpense(id);
+  const handleDeleteIncome = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this income entry?")) {
+      deleteIncome(id);
     }
     setOpenMenuId(null);
   };
@@ -180,18 +187,18 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
             <button className="back-button" onClick={() => onNavigate("home")}>
               ← Back to Dashboard
             </button>
-            <h1 className="section-title">Your Expenses</h1>
+            <h1 className="section-title">Your Income</h1>
             <p className="section-subtitle">
-              Track and manage all your business expenses in one place
+              Track and manage all your business income in one place
             </p>
           </div>
 
           <div className="expenses-summary">
-            <div className="summary-card">
+            <div className="summary-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate('expenses')}>
               <div className="summary-label">Total Expenses</div>
               <div className="summary-value">{formatCurrency(totalExpenses)}</div>
             </div>
-            <div className="summary-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate('income')}>
+            <div className="summary-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate('add-income')}>
               <div className="summary-label">Total Income</div>
               <div className="summary-value">{formatCurrency(totalIncome)}</div>
             </div>
@@ -223,11 +230,11 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               <select
                 value={sortBy}
                 onChange={(e) =>
-                  setSortBy(e.target.value as "expense_date" | "amount")
+                  setSortBy(e.target.value as "income_date" | "amount")
                 }
                 className="expense-select"
               >
-                <option value="expense_date">Date</option>
+                <option value="income_date">Date</option>
                 <option value="amount">Amount</option>
               </select>
             </div>
@@ -244,19 +251,20 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </select>
             </div>
 
-            <button className="btn btn-primary" onClick={() => onNavigate("add-data")}>
-              + Add Expense
+            <button className="btn btn-primary" onClick={() => onNavigate("add-income")}>
+              + Add Income
             </button>
           </div>
 
           <div className="expenses-table-container">
-            {sortedExpenses.length > 0 ? (
+            {sortedIncomes.length > 0 ? (
               <table className="expenses-table">
                 <thead>
                   <tr>
                     <th>Date</th>
                     <th>Category</th>
-                    <th>Vendor</th>
+                    <th>Customer</th>
+                    <th>Market</th>
                     <th>Title</th>
                     <th>Payment Method</th>
                     <th className="amount-column">Amount</th>
@@ -264,29 +272,30 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedExpenses.map((expense) => (
-                    <tr key={expense.id}>
-                      <td>{formatDate(expense.expense_date)}</td>
+                  {sortedIncomes.map((income) => (
+                    <tr key={income.id}>
+                      <td>{formatDate(income.income_date)}</td>
                       <td>
-                        <span className="category-badge">{expense.category}</span>
+                        <span className="category-badge">{income.category}</span>
                       </td>
-                      <td>{expense.vendor}</td>
-                      <td>{expense.description}</td>
-                      <td>{expense.payment_method}</td>
-                      <td>{formatCurrency(expense.amount)}</td>
+                      <td>{income.customer}</td>
+                      <td>{income.market}</td>
+                      <td>{income.description}</td>
+                      <td>{income.payment_method}</td>
+                      <td>{formatCurrency(income.amount)}</td>
                       <td>
                         <div className="menu-wrapper">
                           <button
                             className="menu-btn"
-                            onClick={(e) => toggleMenu(expense.id, e)}
+                            onClick={(e) => toggleMenu(income.id, e)}
                           >
                             <img src={menuIcon} alt="Menu" className="menu-icon" />
                           </button>
-                          {openMenuId === expense.id && (
+                          {openMenuId === income.id && (
                             <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
                               <button
                                 className="dropdown-item"
-                                onClick={() => handleEditExpense(expense)}
+                                onClick={() => handleEditIncome(income)}
                               >
                                 <img
                                   src={editIcon}
@@ -297,7 +306,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                               </button>
                               <button
                                 className="dropdown-item delete-item"
-                                onClick={() => handleDeleteExpense(expense.id)}
+                                onClick={() => handleDeleteIncome(income.id)}
                               >
                                 <img
                                   src={recycleIcon}
@@ -316,22 +325,22 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </table>
             ) : (
               <div className="no-expenses">
-                <p>No expenses found for the selected category.</p>
+                <p>No income entries found for the selected category.</p>
                 <button
                   className="btn btn-primary btn-large"
-                  onClick={() => onNavigate("add-data")}
+                  onClick={() => onNavigate("add-income")}
                 >
-                  Add Your First Expense
+                  Add Your First Income Entry
                 </button>
               </div>
             )}
           </div>
 
-          {editingExpense && (
+          {editingIncome && (
             <div className="modal-overlay" onClick={handleCancelEdit}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                  <h2>Edit Expense</h2>
+                  <h2>Edit Income</h2>
                   <button className="modal-close" onClick={handleCancelEdit}>
                     ×
                   </button>
@@ -341,9 +350,9 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                     <label>Date</label>
                     <input
                       type="date"
-                      value={editForm.expense_date}
+                      value={editForm.income_date}
                       onChange={(e) =>
-                        setEditForm({ ...editForm, expense_date: e.target.value })
+                        setEditForm({ ...editForm, income_date: e.target.value })
                       }
                       className="form-input"
                     />
@@ -358,29 +367,53 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                       className="form-input"
                     >
                       <option value="">Select a category</option>
-                      <option value="booth-fees">Booth Fees</option>
-                      <option value="supplies">Supplies</option>
-                      <option value="materials">Materials</option>
-                      <option value="equipment">Equipment</option>
-                      <option value="travel">Travel</option>
-                      <option value="marketing">Marketing</option>
-                      <option value="packaging">Packaging</option>
-                      <option value="utilities">Utilities</option>
-                      <option value="insurance">Insurance</option>
+                      <option value="product-sales">Product Sales</option>
+                      <option value="services">Services</option>
+                      <option value="consulting">Consulting</option>
+                      <option value="grants">Grants</option>
+                      <option value="investments">Investments</option>
+                      <option value="refunds">Refunds</option>
+                      <option value="commissions">Commissions</option>
+                      <option value="royalties">Royalties</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Vendor</label>
+                    <label>Customer</label>
                     <input
                       type="text"
-                      value={editForm.vendor}
+                      value={editForm.customer}
                       onChange={(e) =>
-                        setEditForm({ ...editForm, vendor: e.target.value })
+                        setEditForm({ ...editForm, customer: e.target.value })
                       }
                       className="form-input"
                     />
                   </div>
+                  <div className="form-group">
+                    <label>Market</label>
+                    <select
+                      value={editForm.market}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, market: e.target.value })
+                      }
+                      className="form-input"
+                    >
+                      <option value="">Select market</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  {editForm.market === "other" && (
+                    <div className="form-group">
+                      <label>Specify Market</label>
+                      <input
+                        type="text"
+                        placeholder="Enter market name"
+                        value={otherMarket}
+                        onChange={(e) => setOtherMarket(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                  )}
                   <div className="form-group">
                     <label>Title</label>
                     <textarea
@@ -474,4 +507,4 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   );
 };
 
-export default Expenses;
+export default Income;
