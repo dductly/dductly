@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import AddData from "./pages/AddData";
 import Expenses from "./pages/Expenses";
 import AddIncome from "./pages/AddIncome";
-import Income from "./pages/Income";
+import IncomePage from "./pages/Income";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
@@ -297,7 +297,7 @@ const AppContent: React.FC = () => {
       case 'add-income':
         return <AddIncome onNavigate={handleNavigate} />;
       case 'income':
-        return <Income onNavigate={handleNavigate} />;
+        return <IncomePage onNavigate={handleNavigate} />;
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {

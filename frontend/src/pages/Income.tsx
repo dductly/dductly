@@ -10,7 +10,7 @@ interface IncomeProps {
   onNavigate: (page: string) => void;
 }
 
-const Income: React.FC<IncomeProps> = ({ onNavigate }) => {
+const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const { incomes, updateIncome, deleteIncome } = useIncome();
   const { expenses } = useExpenses();
   const [filterCategory, setFilterCategory] = useState("");
@@ -507,4 +507,4 @@ const Income: React.FC<IncomeProps> = ({ onNavigate }) => {
   );
 };
 
-export default Income;
+export default IncomePage;
