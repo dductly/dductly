@@ -1,21 +1,23 @@
 import React, { useState } from "react";
-import { useExpenses } from "../contexts/ExpensesContext";
+import { useIncome } from "../contexts/IncomeContext";
 
-interface AddDataProps {
+interface AddIncomeProps {
   onNavigate: (page: string) => void;
 }
 
-const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
-  const { addExpense } = useExpenses();
+const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
+  const { addIncome } = useIncome();
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
     category: "",
-    vendor: "",
+    customer: "",
+    market: "",
     description: "",
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherMarket, setOtherMarket] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -23,12 +25,13 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     e.preventDefault();
     setLoading(true);
 
-    // Add expense to shared state
-    addExpense({
-      expense_date: formData.date,
+    // Add income to shared state
+    addIncome({
+      income_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
       category: formData.category,
-      vendor: formData.vendor,
+      customer: formData.customer,
+      market: formData.market === "other" ? otherMarket : formData.market,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
     });
@@ -41,11 +44,13 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
       date: "",
       amount: "",
       category: "",
-      vendor: "",
+      customer: "",
+      market: "",
       description: "",
       paymentMethod: "",
     });
     setOtherPaymentMethod("");
+    setOtherMarket("");
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -88,20 +93,20 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
           <div className="add-data-header">
             <button
               className="back-button"
-              onClick={() => onNavigate('expenses')}
-              aria-label="Go back to expenses"
+              onClick={() => onNavigate('income')}
+              aria-label="Go back to income"
             >
-              ← Back to Your Expenses
+              ← Back to Your Income
             </button>
-            <h1 className="section-title">Add Expense</h1>
+            <h1 className="section-title">Add Income</h1>
             <p className="section-subtitle">
-              Manually enter a new expense to keep your records up to date
+              Record a new income entry to keep your records up to date
             </p>
           </div>
 
           {success && (
             <div className="success-banner">
-              ✓ Expense added successfully!
+              ✓ Income added successfully!
             </div>
           )}
 
@@ -163,15 +168,14 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                   disabled={loading}
                 >
                   <option value="">Select a category</option>
-                  <option value="booth-fees">Booth Fees</option>
-                  <option value="supplies">Supplies</option>
-                  <option value="materials">Materials</option>
-                  <option value="equipment">Equipment</option>
-                  <option value="travel">Travel</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="packaging">Packaging</option>
-                  <option value="utilities">Utilities</option>
-                  <option value="insurance">Insurance</option>
+                  <option value="product-sales">Product Sales</option>
+                  <option value="services">Services</option>
+                  <option value="consulting">Consulting</option>
+                  <option value="grants">Grants</option>
+                  <option value="investments">Investments</option>
+                  <option value="refunds">Refunds</option>
+                  <option value="commissions">Commissions</option>
+                  <option value="royalties">Royalties</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -209,23 +213,51 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
               </div>
             )}
 
-            <div className="form-group">
-              <label>Vendor/Store Name</label>
-              <input
-                type="text"
-                name="vendor"
-                placeholder="Where did you make this purchase?"
-                value={formData.vendor}
-                onChange={handleChange}
-                disabled={loading}
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label>Customer</label>
+                <input
+                  type="text"
+                  name="customer"
+                  placeholder="Customer name (if applicable)"
+                  value={formData.customer}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Market</label>
+                <select
+                  name="market"
+                  value={formData.market}
+                  onChange={handleChange}
+                  disabled={loading}
+                >
+                  <option value="">Select market</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
+
+            {formData.market === "other" && (
+              <div className="form-group">
+                <label>Specify Market</label>
+                <input
+                  type="text"
+                  placeholder="Enter market name"
+                  value={otherMarket}
+                  onChange={(e) => setOtherMarket(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label>Title</label>
               <textarea
                 name="description"
-                placeholder="Add a title or additional details about this expense..."
+                placeholder="Add a title or additional details about this income..."
                 rows={4}
                 maxLength={50}
                 value={formData.description}
@@ -251,7 +283,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                 className="btn btn-primary btn-large"
                 disabled={loading}
               >
-                {loading ? "Saving..." : "Add Expense"}
+                {loading ? "Saving..." : "Add Income"}
               </button>
             </div>
           </form>
@@ -261,4 +293,4 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
   );
 };
 
-export default AddData;
+export default AddIncome;

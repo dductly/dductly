@@ -82,13 +82,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                 className="btn btn-primary btn-large"
                 onClick={() => onNavigate('expenses')}
               >
-                View Expenses
+                Expenses
               </button>
               <button
                 className="btn btn-primary btn-large"
-                onClick={() => onNavigate('add-data')}
+                onClick={() => onNavigate('income')}
               >
-                Add Expense
+                Income
               </button>
               <button
                 className="btn btn-primary btn-large"

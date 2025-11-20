@@ -8,12 +8,15 @@ import Import from "./pages/Import";
 import Dashboard from "./pages/Dashboard";
 import AddData from "./pages/AddData";
 import Expenses from "./pages/Expenses";
+import AddIncome from "./pages/AddIncome";
+import IncomePage from "./pages/Income";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
+import { IncomeProvider } from "./contexts/IncomeContext";
 import openEyeIcon from "./img/open-eye.svg";
 import closedEyeIcon from "./img/closed-eye.svg";
 
@@ -291,6 +294,10 @@ const AppContent: React.FC = () => {
         return <AddData onNavigate={handleNavigate} />;
       case 'expenses':
         return <Expenses onNavigate={handleNavigate} />;
+      case 'add-income':
+        return <AddIncome onNavigate={handleNavigate} />;
+      case 'income':
+        return <IncomePage onNavigate={handleNavigate} />;
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {
@@ -620,7 +627,9 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <ExpensesProvider>
-        <AppContent />
+        <IncomeProvider>
+          <AppContent />
+        </IncomeProvider>
       </ExpensesProvider>
     </AuthProvider>
   );
