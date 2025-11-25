@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useIncome } from "../contexts/IncomeContext";
+import { useAuth } from "../hooks/useAuth";
 
 interface AddIncomeProps {
   onNavigate: (page: string) => void;
@@ -7,6 +8,8 @@ interface AddIncomeProps {
 
 const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
   const { addIncome } = useIncome();
+  const { user } = useAuth();
+  const businessName = user?.user_metadata?.business_name || "Your";
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
@@ -96,7 +99,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('income')}
               aria-label="Go back to income"
             >
-              ← Back to Your Income
+              ← Back to {businessName} Income
             </button>
             <h1 className="section-title">Add Income</h1>
             <p className="section-subtitle">

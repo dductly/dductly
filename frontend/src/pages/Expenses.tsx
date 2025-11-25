@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
+import { useAuth } from "../hooks/useAuth";
 import type { Expense } from "../contexts/ExpensesContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
@@ -13,6 +14,8 @@ interface ExpenseProps {
 const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const { expenses, updateExpense, deleteExpense } = useExpenses();
   const { incomes } = useIncome();
+  const { user } = useAuth();
+  const businessName = user?.user_metadata?.business_name || "Your";
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -180,7 +183,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
             <button className="back-button" onClick={() => onNavigate("home")}>
               ← Back to Dashboard
             </button>
-            <h1 className="section-title">Your Expenses</h1>
+            <h1 className="section-title">{businessName} Expenses</h1>
             <p className="section-subtitle">
               Track and manage all your business expenses in one place
             </p>

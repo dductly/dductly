@@ -51,6 +51,54 @@
     --deep-orange: var(--deep-blue);
     --coral: var(--powder-blue);
     --orange-gray: var(--blue-gray);
+
+    /* Additional colors for dark mode support */
+    --harvest-orange: #FF7E5F;
+    --warm-cream: #FEF5ED;
+    --cream-text: #2D3748;
+  }
+
+  /* Dark Mode Theme */
+  [data-theme="dark"] {
+    /* Dark backgrounds */
+    --white: #1A202C;
+    --off-white: #2D3748;
+    --pale-blue: #2D3748;
+    --pale-orange: #374151;
+    --powder-blue: #374151;
+    --warm-cream: #2D3748;
+
+    /* Dark mode blues */
+    --primary-blue: #5A8DBF;
+    --light-blue: #4A7AA8;
+    --deep-blue: #6B9BD6;
+    --blue-gray: #4A5568;
+
+    /* Dark mode text */
+    --text-dark: #F7FAFC;
+    --text-medium: #CBD5E0;
+    --text-light: #A0AEC0;
+    --cream-text: #F7FAFC;
+
+    /* Dark borders and shadows */
+    --border-light: rgba(255, 255, 255, 0.1);
+    --border-medium: rgba(255, 255, 255, 0.15);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+    /* Status colors adjusted for dark mode */
+    --success-green: #68D391;
+    --warning-orange: #F6AD55;
+    --error-red: #FC8181;
+    --harvest-orange: #FF9472;
+  }
+
+  /* Dark mode body background */
+  [data-theme="dark"] body::before {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(90, 141, 191, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(74, 122, 168, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(74, 85, 104, 0.03) 0%, transparent 50%);
   }
   
   *{box-sizing:border-box}
@@ -123,6 +171,31 @@
   filter: drop-shadow(0 2px 4px rgba(45, 80, 22, 0.1));
 }
   .menu{display:flex; gap:16px; align-items:center}
+  
+  /* Dark Mode Toggle */
+  .theme-toggle {
+    background: var(--warm-cream);
+    border: 2px solid var(--border-light);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 20px;
+    padding: 0;
+  }
+  .theme-toggle:hover {
+    transform: scale(1.1) rotate(20deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-blue);
+  }
+  .theme-toggle:active {
+    transform: scale(0.95);
+  }
+
   .menu a{
     color:var(--text-dark); 
     text-decoration:none; 
@@ -1411,12 +1484,13 @@
 }
 
 .signup-container {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: clamp(32px, 5vw, 80px);
+  display: flex;
+  justify-content: center;
   align-items: center;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  min-height: calc(100vh - 300px);
 }
 
 .signup-left {
@@ -1601,6 +1675,262 @@
   color: var(--text-medium);
   margin-top: 20px;
   font-size: 0.95rem;
+}
+
+/* Wizard Onboarding Styles */
+.signup-wizard {
+  background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f7 100%);
+  border-radius: var(--radius-lg);
+  padding: clamp(32px, 5vw, 48px);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(168, 197, 232, 0.3);
+  width: 100%;
+  max-width: 600px;
+}
+
+.wizard-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.wizard-header h1 {
+  color: var(--text-medium);
+  margin-bottom: 8px;
+  font-size: clamp(1.8rem, 4vw, 2.2rem);
+}
+
+.wizard-subtitle {
+  color: var(--text-light);
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-top: 32px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--warm-cream);
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: var(--harvest-orange);
+  border-color: var(--harvest-orange);
+  color: var(--white);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 126, 95, 0.3);
+}
+
+.step.completed .step-number {
+  background: var(--primary-purple);
+  border-color: var(--primary-purple);
+  color: var(--white);
+}
+
+.step-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  transition: color 0.3s ease;
+}
+
+.step.active .step-label {
+  color: var(--harvest-orange);
+}
+
+.step.completed .step-label {
+  color: var(--primary-purple);
+}
+
+.step-line {
+  width: 80px;
+  height: 3px;
+  background: var(--border-light);
+  margin: 0 8px;
+  margin-bottom: 32px;
+  transition: background 0.3s ease;
+}
+
+.step-line.completed {
+  background: var(--primary-purple);
+}
+
+/* Wizard Form */
+.wizard-form {
+  margin-top: 32px;
+}
+
+.wizard-step {
+  min-height: 400px;
+}
+
+.wizard-step.step-2 {
+  background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f7 100%);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: -16px;
+  box-shadow: inset 0 2px 8px rgba(168, 197, 232, 0.1);
+}
+
+.step-title {
+  font-size: 1.4rem;
+  color: var(--text-dark);
+  margin-bottom: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.textarea-input {
+  width: 100%;
+  background: var(--warm-cream);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text-dark);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.textarea-input:focus {
+  border-color: var(--harvest-orange);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(168, 197, 232, 0.1);
+}
+
+.textarea-input::placeholder {
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 500 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-label span {
+  line-height: 1.6;
+}
+
+/* Wizard Navigation */
+.wizard-navigation {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  justify-content: space-between;
+}
+
+.wizard-navigation .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+.wizard-navigation .btn-ghost {
+  background: var(--warm-cream);
+  color: var(--text-dark);
+  border: 2px solid var(--border-light);
+}
+
+.wizard-navigation .btn-ghost:hover {
+  background: var(--border-light);
+  transform: translateY(-2px);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments for wizard */
+@media (max-width: 768px) {
+  .signup-container {
+    padding: 20px;
+    min-height: calc(100vh - 250px);
+  }
+  
+  .signup-wizard {
+    padding: clamp(20px, 4vw, 32px);
+  }
+
+  .wizard-step {
+    min-height: 350px;
+  }
+
+  .step-line {
+    width: 40px;
+  }
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+  }
+
+  .wizard-navigation {
+    flex-direction: column;
+  }
+
+  .wizard-navigation .btn {
+    width: 100%;
+  }
 }
 
 .link {
@@ -2144,12 +2474,28 @@
   position: absolute;
   right: 0;
   background: var(--white);
-  border: 2px solid var(--light-blue);
+  border: 2px solid var(--border-medium);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
-  min-width: 140px;
+  min-width: 160px;
   overflow: hidden;
+  padding: 8px 0;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 12px 20px;
+  color: #2D3748 !important;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu a:hover {
+  background: var(--pale-blue);
+  color: var(--primary-blue) !important;
 }
 
 .dropdown-menu-top {

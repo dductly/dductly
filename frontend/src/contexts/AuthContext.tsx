@@ -7,10 +7,10 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (firstName: string, lastName: string, email: string) => Promise<{ error: AuthError | null }>;
+  updateProfile: (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string) => Promise<{ error: AuthError | null }>;
   refreshSession: () => Promise<void>;
 }
 
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -67,6 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             first_name: firstName,
             last_name: lastName,
+            business_name: businessName || '',
+            products_sold: productsSold || '',
+            farmers_markets: farmersMarkets || '',
           },
         },
       });
@@ -102,13 +105,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (firstName: string, lastName: string, email: string) => {
+  const updateProfile = async (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
         email,
         data: {
           first_name: firstName,
           last_name: lastName,
+          business_name: businessName || '',
+          products_sold: productsSold || '',
         },
       }, {
         emailRedirectTo: window.location.origin
