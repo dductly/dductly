@@ -8,18 +8,25 @@ interface SignUpProps {
 }
 
 const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [productsSold, setProductsSold] = useState("");
+  const [farmersMarkets, setFarmersMarkets] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showModal, setShowModal] = useState<'tos' | 'privacy' | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signUp } = useAuth();
+
+  const totalSteps = 3;
 
   // Password validation checks
   const passwordChecks = {
@@ -30,18 +37,42 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
   };
 
+  const isPasswordValid = Object.values(passwordChecks).every(check => check);
+
+  const canProceedToStep2 = businessName && productsSold;
+  const canProceedToStep3 = farmersMarkets;
+  const canSubmit = firstName && lastName && email && password && confirmPassword && password === confirmPassword && isPasswordValid && agreedToTerms;
+
+  const handleNext = () => {
+    setError(null);
+    if (currentStep === 1 && !canProceedToStep2) {
+      setError("Please tell us about your business");
+      return;
+    }
+    if (currentStep === 2 && !canProceedToStep3) {
+      setError("Please list the markets you visit");
+      return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+  };
+
+  const handleBack = () => {
+    setError(null);
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (!canSubmit) {
+      setError("Please complete all required fields");
       setLoading(false);
       return;
     }
 
-    const { error } = await signUp(email, password, firstName, lastName);
+    const { error } = await signUp(email, password, firstName, lastName, businessName, productsSold, farmersMarkets);
 
     if (error) {
       // Replace the long password requirements message with a friendly one
@@ -84,146 +115,255 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
    <div className="page">
      <section className="section">
        <div className="signup-container">
-         <div className="signup-left">
-           <h1 className="section-title">Create Your Account</h1>
-           <p>Join dductly today and make managing your business effortless, so you can focus on what truly matters.</p>
-         </div>
+         <div className="signup-wizard">
+           <div className="wizard-header">
+             <h1 className="section-title">Join dductly</h1>
+             <p className="wizard-subtitle">Make managing your business effortless</p>
+             
+             {/* Progress Steps */}
+             <div className="progress-steps">
+               <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+                 <div className="step-number">1</div>
+                 <div className="step-label">Business</div>
+               </div>
+               <div className={`step-line ${currentStep > 1 ? 'completed' : ''}`}></div>
+               <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+                 <div className="step-number">2</div>
+                 <div className="step-label">Markets</div>
+               </div>
+               <div className={`step-line ${currentStep > 2 ? 'completed' : ''}`}></div>
+               <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+                 <div className="step-number">3</div>
+                 <div className="step-label">Account</div>
+               </div>
+             </div>
+           </div>
 
-
-         <form className="signup-form" onSubmit={handleSubmit}>
+         <form className="signup-form wizard-form" onSubmit={handleSubmit}>
            {error && (
              <div className="error-message">
                {error}
              </div>
            )}
-          
-           <div className="form-group">
-             <label>First Name <span className="req">(required)</span></label>
-             <input
-               type="text"
-               placeholder="Enter your first name"
-               value={firstName}
-               onChange={(e) => setFirstName(e.target.value)}
-               required
-               disabled={loading}
-             />
-           </div>
-          
-           <div className="form-group">
-             <label>Last Name <span className="req">(required)</span></label>
-             <input
-               type="text"
-               placeholder="Enter your last name"
-               value={lastName}
-               onChange={(e) => setLastName(e.target.value)}
-               required
-               disabled={loading}
-             />
-           </div>
-          
-           <div className="form-group">
-             <label>Email Address <span className="req">(required)</span></label>
-             <input
-               type="email"
-               placeholder="you@example.com"
-               value={email}
-               onChange={(e) => setEmail(e.target.value)}
-               required
-               disabled={loading}
-             />
-           </div>
-          
-           <div className="form-group">
-             <label>Password <span className="req">(required)</span></label>
-             <div className="password-input-wrapper">
-               <input
-                 type={showPassword ? "text" : "password"}
-                 placeholder="Create a strong password"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 required
-                 disabled={loading}
-               />
-               <button
-                 type="button"
-                 className="password-toggle"
-                 onClick={() => setShowPassword(!showPassword)}
-                 aria-label={showPassword ? "Hide password" : "Show password"}
-               >
-                 <img
-                   src={showPassword ? openEyeIcon : closedEyeIcon}
-                   alt={showPassword ? "Hide password" : "Show password"}
-                   className="eye-icon"
+
+           {/* Step 1: Business Info */}
+           {currentStep === 1 && (
+             <div className="wizard-step" style={{ animation: 'fadeIn 0.3s ease-in' }}>
+               <h2 className="step-title">Tell us about your business</h2>
+               
+               <div className="form-group">
+                 <label>Business or Market Name <span className="req">*</span></label>
+                 <input
+                   type="text"
+                   placeholder="e.g. Smith's Organic Farm"
+                   value={businessName}
+                   onChange={(e) => setBusinessName(e.target.value)}
+                   disabled={loading}
+                   autoFocus
                  />
-               </button>
+                 <small className="field-hint">What name do customers know you by?</small>
+               </div>
+
+               <div className="form-group">
+                 <label>What Do You Sell? <span className="req">*</span></label>
+                 <textarea
+                   placeholder="e.g. Honey, homemade jams, jewlery, pottery, etc."
+                   value={productsSold}
+                   onChange={(e) => setProductsSold(e.target.value)}
+                   disabled={loading}
+                   rows={4}
+                   className="textarea-input"
+                 />
+                 <small className="field-hint">Tell us about your products or services</small>
+               </div>
              </div>
-             {password.length > 0 && (
-               <div className="password-requirements">
-                 <div className={`requirement ${passwordChecks.length ? 'met' : ''}`}>
-                   <span className="requirement-icon">{passwordChecks.length ? '✓' : '○'}</span>
-                   At least 8 characters
+           )}
+
+           {/* Step 2: Markets */}
+           {currentStep === 2 && (
+             <div className="wizard-step" style={{ animation: 'fadeIn 0.3s ease-in' }}>
+               <h2 className="step-title">Where do you sell?</h2>
+               
+               <div className="form-group">
+                 <label>Farmers Markets You Visit <span className="req">*</span></label>
+                 <textarea
+                   placeholder="e.g. Downtown Farmers Market, Provo Farmers Market, Orem Farmers Market, etc"
+                   value={farmersMarkets}
+                   onChange={(e) => setFarmersMarkets(e.target.value)}
+                   disabled={loading}
+                   rows={4}
+                   className="textarea-input"
+                   autoFocus
+                 />
+                 <small className="field-hint">List the markets where you regularly sell</small>
+               </div>
+             </div>
+           )}
+
+           {/* Step 3: Account Setup */}
+           {currentStep === 3 && (
+             <div className="wizard-step" style={{ animation: 'fadeIn 0.3s ease-in' }}>
+               <h2 className="step-title">Create your account</h2>
+               
+               <div className="form-group">
+                 <label>First Name <span className="req">*</span></label>
+                 <input
+                   type="text"
+                   placeholder="Enter your first name"
+                   value={firstName}
+                   onChange={(e) => setFirstName(e.target.value)}
+                   disabled={loading}
+                   autoFocus
+                 />
+               </div>
+              
+               <div className="form-group">
+                 <label>Last Name <span className="req">*</span></label>
+                 <input
+                   type="text"
+                   placeholder="Enter your last name"
+                   value={lastName}
+                   onChange={(e) => setLastName(e.target.value)}
+                   disabled={loading}
+                 />
+               </div>
+              
+               <div className="form-group">
+                 <label>Email Address <span className="req">*</span></label>
+                 <input
+                   type="email"
+                   placeholder="you@example.com"
+                   value={email}
+                   onChange={(e) => setEmail(e.target.value)}
+                   disabled={loading}
+                 />
+               </div>
+              
+               <div className="form-group">
+                 <label>Password <span className="req">*</span></label>
+                 <div className="password-input-wrapper">
+                   <input
+                     type={showPassword ? "text" : "password"}
+                     placeholder="Create a strong password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     disabled={loading}
+                   />
+                   <button
+                     type="button"
+                     className="password-toggle"
+                     onClick={() => setShowPassword(!showPassword)}
+                     aria-label={showPassword ? "Hide password" : "Show password"}
+                   >
+                     <img
+                       src={showPassword ? openEyeIcon : closedEyeIcon}
+                       alt={showPassword ? "Hide password" : "Show password"}
+                       className="eye-icon"
+                     />
+                   </button>
                  </div>
-                 <div className={`requirement ${passwordChecks.uppercase ? 'met' : ''}`}>
-                   <span className="requirement-icon">{passwordChecks.uppercase ? '✓' : '○'}</span>
-                   One uppercase letter
-                 </div>
-                 <div className={`requirement ${passwordChecks.lowercase ? 'met' : ''}`}>
-                   <span className="requirement-icon">{passwordChecks.lowercase ? '✓' : '○'}</span>
-                   One lowercase letter
-                 </div>
-                 <div className={`requirement ${passwordChecks.number ? 'met' : ''}`}>
-                   <span className="requirement-icon">{passwordChecks.number ? '✓' : '○'}</span>
-                   One number
-                 </div>
-                 <div className={`requirement ${passwordChecks.special ? 'met' : ''}`}>
-                   <span className="requirement-icon">{passwordChecks.special ? '✓' : '○'}</span>
-                   One special character (!@#$%^&*)
+                 {password.length > 0 && (
+                   <div className="password-requirements">
+                     <div className={`requirement ${passwordChecks.length ? 'met' : ''}`}>
+                       <span className="requirement-icon">{passwordChecks.length ? '✓' : '○'}</span>
+                       At least 8 characters
+                     </div>
+                     <div className={`requirement ${passwordChecks.uppercase ? 'met' : ''}`}>
+                       <span className="requirement-icon">{passwordChecks.uppercase ? '✓' : '○'}</span>
+                       One uppercase letter
+                     </div>
+                     <div className={`requirement ${passwordChecks.lowercase ? 'met' : ''}`}>
+                       <span className="requirement-icon">{passwordChecks.lowercase ? '✓' : '○'}</span>
+                       One lowercase letter
+                     </div>
+                     <div className={`requirement ${passwordChecks.number ? 'met' : ''}`}>
+                       <span className="requirement-icon">{passwordChecks.number ? '✓' : '○'}</span>
+                       One number
+                     </div>
+                     <div className={`requirement ${passwordChecks.special ? 'met' : ''}`}>
+                       <span className="requirement-icon">{passwordChecks.special ? '✓' : '○'}</span>
+                       One special character (!@#$%^&*)
+                     </div>
+                   </div>
+                 )}
+               </div>
+
+               <div className="form-group">
+                 <label>Confirm Password <span className="req">*</span></label>
+                 <div className="password-input-wrapper">
+                   <input
+                     type={showConfirmPassword ? "text" : "password"}
+                     placeholder="Confirm your password"
+                     value={confirmPassword}
+                     onChange={(e) => setConfirmPassword(e.target.value)}
+                     disabled={loading}
+                   />
+                   <button
+                     type="button"
+                     className="password-toggle"
+                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                   >
+                     <img
+                       src={showConfirmPassword ? openEyeIcon : closedEyeIcon}
+                       alt={showConfirmPassword ? "Hide password" : "Show password"}
+                       className="eye-icon"
+                     />
+                   </button>
                  </div>
                </div>
+
+               <div className="form-group">
+                 <label className="checkbox-label">
+                   <input 
+                     type="checkbox" 
+                     checked={agreedToTerms}
+                     onChange={(e) => setAgreedToTerms(e.target.checked)}
+                     disabled={loading} 
+                   />
+                   <span>I agree to the <a href="#" onClick={(e) => { e.preventDefault(); setShowModal('tos'); }} className="link">Terms of Service</a> and <a href="#" onClick={(e) => { e.preventDefault(); setShowModal('privacy'); }} className="link">Privacy Policy</a></span>
+                 </label>
+               </div>
+             </div>
+           )}
+          
+           {/* Navigation Buttons */}
+           <div className="wizard-navigation">
+             {currentStep > 1 && (
+               <button 
+                 type="button" 
+                 className="btn btn-ghost btn-large" 
+                 onClick={handleBack}
+                 disabled={loading}
+               >
+                 Back
+               </button>
+             )}
+             {currentStep < totalSteps ? (
+               <button 
+                 type="button" 
+                 className="btn btn-primary btn-large" 
+                 onClick={handleNext}
+                 disabled={loading}
+               >
+                 Continue
+               </button>
+             ) : (
+               <button 
+                 type="submit" 
+                 className="btn btn-primary btn-large" 
+                 disabled={loading || !canSubmit}
+               >
+                 {loading ? "Creating Account..." : "Create Account"}
+               </button>
              )}
            </div>
-
-           <div className="form-group">
-             <label>Confirm Password <span className="req">(required)</span></label>
-             <div className="password-input-wrapper">
-               <input
-                 type={showConfirmPassword ? "text" : "password"}
-                 placeholder="Confirm your password"
-                 value={confirmPassword}
-                 onChange={(e) => setConfirmPassword(e.target.value)}
-                 required
-                 disabled={loading}
-               />
-               <button
-                 type="button"
-                 className="password-toggle"
-                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-               >
-                 <img
-                   src={showConfirmPassword ? openEyeIcon : closedEyeIcon}
-                   alt={showConfirmPassword ? "Hide password" : "Show password"}
-                   className="eye-icon"
-                 />
-               </button>
-             </div>
-           </div>
-        
-           <div className="form-group">
-             <label>
-               <input type="checkbox" required disabled={loading} />
-               I agree to the <a href="#" onClick={(e) => { e.preventDefault(); setShowModal('tos'); }} className="link">Terms of Service</a> and <a href="#" onClick={(e) => { e.preventDefault(); setShowModal('privacy'); }} className="link">Privacy Policy</a>
-             </label>
-           </div>
-          
-           <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
-             {loading ? "Creating Account..." : "Create Account"}
-           </button>
           
           <p className="signup-login">
             Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('signin'); }} className="link">Sign in here</a>
           </p>
          </form>
+         </div>
        </div>
      </section>
 

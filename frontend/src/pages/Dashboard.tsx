@@ -15,6 +15,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
     firstName: user?.user_metadata?.first_name || "",
     lastName: user?.user_metadata?.last_name || "",
     email: user?.email || "",
+    businessName: user?.user_metadata?.business_name || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
       firstName: user?.user_metadata?.first_name || "",
       lastName: user?.user_metadata?.last_name || "",
       email: user?.email || "",
+      businessName: user?.user_metadata?.business_name || "",
     });
     setIsEditingProfile(true);
     setError(null);
@@ -38,7 +40,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
     const { error } = await updateProfile(
       profileForm.firstName,
       profileForm.lastName,
-      profileForm.email
+      profileForm.email,
+      profileForm.businessName,
     );
 
     if (error) {
@@ -151,6 +154,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                 <span className="info-label">Email:</span>
                 <span className="info-value">{user?.email}</span>
               </div>
+              {user?.user_metadata?.business_name && (
+                <div className="info-row">
+                  <span className="info-label">Business:</span>
+                  <span className="info-value">{user?.user_metadata?.business_name}</span>
+                </div>
+              )}
               <div style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-medium)' }}>
                 Changed your email?{' '}
                 <a
@@ -238,6 +247,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                     setProfileForm({ ...profileForm, email: e.target.value })
                   }
                   className="form-input"
+                  disabled={loading}
+                />
+              </div>
+              <div className="form-group">
+                <label>Business Name</label>
+                <input
+                  type="text"
+                  value={profileForm.businessName}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, businessName: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="e.g. Smith's Organic Farm"
                   disabled={loading}
                 />
               </div>

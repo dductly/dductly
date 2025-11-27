@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useIncome } from "../contexts/IncomeContext";
 import { useExpenses } from "../contexts/ExpensesContext";
+import { useAuth } from "../hooks/useAuth";
 import type { Income } from "../contexts/IncomeContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
@@ -13,6 +14,8 @@ interface IncomeProps {
 const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const { incomes, updateIncome, deleteIncome } = useIncome();
   const { expenses } = useExpenses();
+  const { user } = useAuth();
+  const businessName = user?.user_metadata?.business_name || "Your";
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -187,7 +190,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
             <button className="back-button" onClick={() => onNavigate("home")}>
               ← Back to Dashboard
             </button>
-            <h1 className="section-title">Your Income</h1>
+            <h1 className="section-title">{businessName} Income</h1>
             <p className="section-subtitle">
               Track and manage all your business income in one place
             </p>

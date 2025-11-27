@@ -17,6 +17,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
 import { IncomeProvider } from "./contexts/IncomeContext";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import openEyeIcon from "./img/open-eye.svg";
 import closedEyeIcon from "./img/closed-eye.svg";
 
@@ -27,6 +28,7 @@ interface NavProps {
 
 const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
   const { user, signOut } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +65,16 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
         </a>
 
         <div className="menu">
+          {/* Dark Mode Toggle */}
+          <button 
+            className="theme-toggle" 
+            onClick={toggleDarkMode}
+            aria-label="Toggle dark mode"
+            title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+
           {!user && (
             <>
               <button className="btn btn-ghost btn-small" onClick={onSignInClick}>
@@ -611,7 +623,7 @@ const AppContent: React.FC = () => {
               <ul>
                 <li>Check the <a href="#" onClick={(e) => { e.preventDefault(); setLegalModal('faq'); }} className="link">FAQs</a> for common questions</li>
                 <li>Use the Contact Support link in your dashboard</li>
-                <li>Email us through the Contact page</li>
+                <li>Email us at admin@dductly.com</li>
               </ul>
 
               <p style={{ marginTop: '24px', fontStyle: 'italic' }}>Thank you for using dductly! We're here to help make your business management effortless.</p>
@@ -625,13 +637,15 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <ExpensesProvider>
-        <IncomeProvider>
-          <AppContent />
-        </IncomeProvider>
-      </ExpensesProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ExpensesProvider>
+          <IncomeProvider>
+            <AppContent />
+          </IncomeProvider>
+        </ExpensesProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

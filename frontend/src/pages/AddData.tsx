@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
+import { useAuth } from "../hooks/useAuth";
 
 interface AddDataProps {
   onNavigate: (page: string) => void;
@@ -7,6 +8,8 @@ interface AddDataProps {
 
 const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
   const { addExpense } = useExpenses();
+  const { user } = useAuth();
+  const businessName = user?.user_metadata?.business_name || "Your";
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
@@ -91,7 +94,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('expenses')}
               aria-label="Go back to expenses"
             >
-              ← Back to Your Expenses
+              ← Back to {businessName} Expenses
             </button>
             <h1 className="section-title">Add Expense</h1>
             <p className="section-subtitle">
