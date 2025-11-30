@@ -20,6 +20,8 @@ import { IncomeProvider } from "./contexts/IncomeContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import openEyeIcon from "./img/open-eye.svg";
 import closedEyeIcon from "./img/closed-eye.svg";
+import lightModeIcon from "./img/light-mode.svg";
+import darkModeIcon from "./img/dark-mode-tilted.svg";
 
 interface NavProps {
   onNavigate: (page: string) => void;
@@ -72,7 +74,18 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
             aria-label="Toggle dark mode"
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {isDarkMode ? '☀️' : '🌙'}
+            <img
+              src={isDarkMode ? lightModeIcon : darkModeIcon}
+              alt={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              style={{
+                width: "20px",
+                height: "20px",
+                transform: isDarkMode 
+                  ? "none" 
+                  : "scale(1.25) translate(1px, 0px)",   // adjust here
+                transformOrigin: "center"
+              }}
+            />
           </button>
 
           {!user && (
