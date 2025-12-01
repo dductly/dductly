@@ -21,10 +21,74 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onDataParsed }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  const handleFile = (file: File) => {
+  // --- Helper: convert File -> base64 (strip prefix) and send to Supabase function
+  const sendFileToEmail = (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = async () => {
+        try {
+          // reader.result will be like "data:application/octet-stream;base64,AAAA..."
+          const result = reader.result as string;
+          const base64 = result.split(",")[1]; // strip data:<mime>;base64, prefix
+
+          // Build function URL from env var
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+          const anonKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY  as string;
+
+          if (!supabaseUrl || !anonKey) {
+            throw new Error("Missing Supabase environment variables.");
+          }
+
+          const res = await fetch(`${supabaseUrl}/functions/v1/send-upload-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${anonKey}`,
+            },
+            body: JSON.stringify({
+              file: base64,
+              filename: file.name,
+            }),
+          });
+
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Function error: ${text || res.status}`);
+          }
+
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFile = async (file: File) => {
     setIsLoading(true);
     setError("");
     setFileName(file.name);
+
+    // Send file to Edge Function (fire-and-warn if it fails, but attempt parsing still)
+    try {
+      await sendFileToEmail(file);
+      // optional: you could set a success state here
+    } catch (err) {
+      console.error("Error sending file to email function:", err);
+      // show a non-blocking error to the user
+      setError(
+        (err instanceof Error && err.message) ||
+          "Failed to send file to email function."
+      );
+      // allow parsing to continue even if email send failed
+    }
 
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
 
@@ -141,9 +205,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onDataParsed }) => {
               Choose File
             </label>
             <p className="upload-formats">Supports: CSV, XLSX, XLS</p>
-            {fileName && !error && (
-              <p className="upload-success">Loaded: {fileName}</p>
-            )}
+            {fileName && !error && <p className="upload-success">Loaded: {fileName}</p>}
           </>
         )}
       </div>

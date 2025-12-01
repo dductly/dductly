@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "strict": true
+    },
+    "imports": {
+      "std/http/server": "https://deno.land/std@0.168.0/http/server.ts",
+      "resend": "npm:resend@3.2.0"
+    }
+  }
+  
