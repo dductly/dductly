@@ -1,90 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CSVUpload from "../components/CSVUpload";
-import DataTable from "../components/DataTable";
 import { supabase } from "../lib/supabaseClient";
 
-interface DonationRecord {
-  date?: string;
-  recipient?: string;
-  amount?: string | number;
-  category?: string;
-  description?: string;
-  [key: string]: string | number | undefined;
-}
-
 const Import: React.FC = () => {
-  const [importedData, setImportedData] = useState<DonationRecord[]>([]);
-  const [showFullTable, setShowFullTable] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleDataParsed = (data: DonationRecord[]) => {
-    // Filter out empty rows
-    const filteredData = data.filter((row) =>
-      Object.values(row).some((value) => value !== undefined && value !== "")
-    );
-    setImportedData(filteredData);
-    setShowFullTable(false); // Reset to preview mode
-    setSaveMessage(null);
-  };
-
-  const handleViewAll = () => {
-    setShowFullTable(true);
-  };
-
-  const handleSaveToDatabase = async (data: DonationRecord[]) => {
-    setIsSaving(true);
-    setSaveMessage(null);
-
-    try {
-      // Check if Supabase is configured
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY;
-
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes("placeholder")) {
-        // Simulate saving for demo
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setSaveMessage({
-          type: "success",
-          text: `Successfully saved ${data.length} records! (Demo mode - Supabase not configured)`,
-        });
-      } else {
-        // Transform data to match your database schema
-        const recordsToInsert = data.map((record) => ({
-          date: record.date || new Date().toISOString(),
-          recipient: record.recipient || record.Recipient || "",
-          amount: parseFloat(String(record.amount || record.Amount || 0)),
-          category: record.category || record.Category || "Donation",
-          description: record.description || record.Description || "",
-        }));
-
-        const { error } = await supabase.from("donations").insert(recordsToInsert);
-
-        if (error) {
-          console.error("Supabase error:", error);
-          setSaveMessage({
-            type: "error",
-            text: `Error saving to database: ${error.message}`,
-          });
-        } else {
-          setSaveMessage({
-            type: "success",
-            text: `Successfully saved ${data.length} records to your account!`,
-          });
-        }
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const name = user.user_metadata?.full_name || user.email;
+        setUserName(name || 'Unknown User');
       }
-    } catch (err) {
-      console.error("Error:", err);
-      setSaveMessage({
-        type: "error",
-        text: "An unexpected error occurred while saving.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    };
+    fetchUser();
+  }, []);
+
+  const handleEmailSuccess = (fileName: string) => {
+    setSuccessMessage(`File "${fileName}" uploaded! Your data has been sent for processing.`);
+    setTimeout(() => setSuccessMessage(null), 5000);
   };
 
   return (
@@ -97,52 +32,16 @@ const Import: React.FC = () => {
         </p>
       </div>
 
-      <CSVUpload onDataParsed={handleDataParsed} />
+      <CSVUpload 
+        userName={userName}
+        onEmailSuccess={handleEmailSuccess}
+      />
 
-      {saveMessage && (
-        <div className={`save-message ${saveMessage.type}`}>
-          {saveMessage.text}
-        </div>
+      {successMessage && (
+        <div className={'save-message success'}>{successMessage}</div>
       )}
 
-      {importedData.length > 0 && !showFullTable && (
-        <div className="import-preview">
-          <div className="preview-header">
-            <h3>Upload Successful!</h3>
-            <p className="preview-info">
-              Loaded {importedData.length} records. Here's a preview of the first 3 rows:
-            </p>
-          </div>
-          <DataTable
-            data={importedData.slice(0, 3)}
-            onSave={isSaving ? undefined : () => handleSaveToDatabase(importedData)}
-          />
-          <div className="preview-actions">
-            <button className="btn btn-primary" onClick={handleViewAll}>
-              View All {importedData.length} Records
-            </button>
-          </div>
-        </div>
-      )}
-
-      {importedData.length > 0 && showFullTable && (
-        <div className="imported-data-section">
-          <div className="collapse-section">
-            <button
-              className="btn btn-secondary btn-small"
-              onClick={() => setShowFullTable(false)}
-            >
-              ← Collapse to Preview
-            </button>
-          </div>
-          <DataTable
-            data={importedData}
-            onSave={isSaving ? undefined : handleSaveToDatabase}
-          />
-        </div>
-      )}
-
-      {importedData.length === 0 && (
+      {!successMessage && (
         <div className="import-help">
           <h3>Need help formatting your spreadsheet?</h3>
           <p>Your CSV or Excel file should include columns like:</p>
