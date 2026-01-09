@@ -6,6 +6,7 @@ import type { Expense } from "../contexts/ExpensesContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
+import viewIcon from "../img/open-eye.svg";
 
 interface ExpenseProps {
   onNavigate: (page: string) => void;
@@ -21,6 +22,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editForm, setEditForm] = useState({
     expense_date: "",
@@ -89,6 +91,15 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     }
 
     setEditForm({ ...editForm, amount: cleanValue });
+  };
+
+  const handleViewExpense = (expense: Expense) => {
+    setViewingExpense(expense);
+    setOpenMenuId(null);
+  };
+
+  const handleCloseView = () => {
+    setViewingExpense(null);
   };
 
   const handleEditExpense = (expense: Expense) => {
@@ -289,6 +300,17 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                             <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
                               <button
                                 className="dropdown-item"
+                                onClick={() => handleViewExpense(expense)}
+                              >
+                                <img
+                                  src={viewIcon}
+                                  alt="View"
+                                  className="dropdown-icon"
+                                />
+                                View
+                              </button>
+                              <button
+                                className="dropdown-item"
                                 onClick={() => handleEditExpense(expense)}
                               >
                                 <img
@@ -329,6 +351,62 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {viewingExpense && (
+            <div className="modal-overlay" onClick={handleCloseView}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>View Expense</h2>
+                  <button className="modal-close" onClick={handleCloseView}>
+                    ×
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Date</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {formatDate(viewingExpense.expense_date)}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingExpense.category}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Vendor</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingExpense.vendor}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Title</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                      {viewingExpense.description}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Payment Method</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingExpense.payment_method}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', fontWeight: 'bold' }}>
+                      {formatCurrency(viewingExpense.amount)}
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={handleCloseView}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {editingExpense && (
             <div className="modal-overlay" onClick={handleCancelEdit}>
