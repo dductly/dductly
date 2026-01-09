@@ -13,6 +13,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
+    tip: "",
     category: "",
     customer: "",
     market: "",
@@ -32,6 +33,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     addIncome({
       income_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
+      tip: formData.tip ? parseFloat(formData.tip.replace(/,/g, '')) : 0,
       category: formData.category,
       customer: formData.customer,
       market: formData.market === "other" ? otherMarket : formData.market,
@@ -46,6 +48,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     setFormData({
       date: "",
       amount: "",
+      tip: "",
       category: "",
       customer: "",
       market: "",
@@ -79,6 +82,22 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     setFormData({
       ...formData,
       amount: value,
+    });
+  };
+
+  const handleTipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow digits, one decimal point, and nothing else
+    let value = e.target.value.replace(/[^0-9.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    setFormData({
+      ...formData,
+      tip: value,
     });
   };
 
@@ -154,6 +173,39 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                     }}
                     style={{ paddingLeft: '28px' }}
                     required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Tip</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: '16px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    color: 'var(--text-dark)',
+                    fontSize: '1rem'
+                  }}>
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    name="tip"
+                    placeholder="0.00"
+                    value={formData.tip}
+                    onChange={handleTipChange}
+                    onBlur={(e) => {
+                      if (e.target.value) {
+                        setFormData({ ...formData, tip: formatAmount(e.target.value) });
+                      }
+                    }}
+                    style={{ paddingLeft: '28px' }}
                     disabled={loading}
                   />
                 </div>
