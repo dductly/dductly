@@ -30,13 +30,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     description: "",
     payment_method: "",
     amount: "",
+    tip: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
   const [otherMarket, setOtherMarket] = useState("");
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
+  const totalIncome = incomes.reduce((sum, income) => sum + income.amount + (income.tip || 0), 0);
   const totalProfit = totalIncome - totalExpenses;
 
   // Filter incomes
@@ -51,7 +52,9 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
         new Date(a.income_date).getTime() - new Date(b.income_date).getTime();
       return sortOrder === "asc" ? comparison : -comparison;
     } else {
-      const comparison = a.amount - b.amount;
+      const totalA = a.amount + (a.tip || 0);
+      const totalB = b.amount + (b.tip || 0);
+      const comparison = totalA - totalB;
       return sortOrder === "asc" ? comparison : -comparison;
     }
   });
@@ -93,6 +96,19 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     setEditForm({ ...editForm, amount: cleanValue });
   };
 
+  const handleTipChange = (value: string) => {
+    // Remove commas and allow digits, one decimal point, and nothing else
+    let cleanValue = value.replace(/[^0-9.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    setEditForm({ ...editForm, tip: cleanValue });
+  };
+
   const handleEditIncome = (income: Income) => {
     setEditingIncome(income);
     setEditForm({
@@ -103,6 +119,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       description: income.description,
       payment_method: income.payment_method,
       amount: income.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      tip: income.tip ? income.tip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00",
     });
     setOpenMenuId(null);
   };
@@ -114,6 +131,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
         market: editForm.market === "other" ? otherMarket : editForm.market,
         payment_method: editForm.payment_method === "other" ? otherPaymentMethod : editForm.payment_method,
         amount: parseFloat(editForm.amount.replace(/,/g, '')),
+        tip: editForm.tip ? parseFloat(editForm.tip.replace(/,/g, '')) : 0,
       });
       setEditingIncome(null);
       setOtherPaymentMethod("");
@@ -131,6 +149,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       description: "",
       payment_method: "",
       amount: "",
+      tip: "",
     });
     setOtherPaymentMethod("");
     setOtherMarket("");
@@ -285,7 +304,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       <td>{income.market}</td>
                       <td>{income.description}</td>
                       <td>{income.payment_method}</td>
-                      <td>{formatCurrency(income.amount)}</td>
+                      <td>{formatCurrency(income.amount + (income.tip || 0))}</td>
                       <td>
                         <div className="menu-wrapper">
                           <button
@@ -485,6 +504,35 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                         onBlur={(e) => {
                           if (e.target.value) {
                             setEditForm({ ...editForm, amount: formatAmount(e.target.value) });
+                          }
+                        }}
+                        className="form-input"
+                        style={{ paddingLeft: '28px' }}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Tip</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '16px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        color: 'var(--text-dark)',
+                        fontSize: '1rem'
+                      }}>
+                        $
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="0.00"
+                        value={editForm.tip}
+                        onChange={(e) => handleTipChange(e.target.value)}
+                        onBlur={(e) => {
+                          if (e.target.value) {
+                            setEditForm({ ...editForm, tip: formatAmount(e.target.value) });
                           }
                         }}
                         className="form-input"

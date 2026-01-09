@@ -18,6 +18,7 @@ export interface Income {
   description: string;
   payment_method: string;
   amount: number;
+  tip: number;
 }
 
 interface IncomeContextType {
@@ -70,6 +71,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       market: newIncome.market,
       description: newIncome.description,
       payment_method: newIncome.payment_method,
+      tip: newIncome.tip || 0,
       user_id: user.id,
     };
 
@@ -98,6 +100,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         market: updatedIncome.market,
         description: updatedIncome.description,
         payment_method: updatedIncome.payment_method,
+        tip: updatedIncome.tip || 0,
       })
       .eq("id", id)
       .select()
