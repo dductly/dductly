@@ -28,14 +28,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     income_date: "",
     category: "",
     customer: "",
-    market: "",
+    // market: "",
     description: "",
     payment_method: "",
     amount: "",
     tip: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
-  const [otherMarket, setOtherMarket] = useState("");
+  // const [otherMarket, setOtherMarket] = useState("");
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -126,7 +126,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       income_date: income.income_date,
       category: income.category,
       customer: income.customer,
-      market: income.market,
+      // market: income.market,
       description: income.description,
       payment_method: income.payment_method,
       amount: income.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -139,14 +139,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     if (editingIncome) {
       await updateIncome(editingIncome.id, {
         ...editForm,
-        market: editForm.market === "other" ? otherMarket : editForm.market,
+        market: "", // editForm.market === "other" ? otherMarket : editForm.market,
         payment_method: editForm.payment_method === "other" ? otherPaymentMethod : editForm.payment_method,
         amount: parseFloat(editForm.amount.replace(/,/g, '')),
         tip: editForm.tip ? parseFloat(editForm.tip.replace(/,/g, '')) : 0,
       });
       setEditingIncome(null);
       setOtherPaymentMethod("");
-      setOtherMarket("");
+      // setOtherMarket("");
     }
   };
 
@@ -156,14 +156,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       income_date: "",
       category: "",
       customer: "",
-      market: "",
+      // market: "",
       description: "",
       payment_method: "",
       amount: "",
       tip: "",
     });
     setOtherPaymentMethod("");
-    setOtherMarket("");
+    // setOtherMarket("");
   };
 
   const handleDeleteIncome = (id: string) => {
@@ -297,7 +297,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                     <th>Date</th>
                     <th>Category</th>
                     <th>Customer</th>
-                    <th>Market</th>
+                    {/* <th>Market</th> */}
                     <th>Title</th>
                     <th>Payment Method</th>
                     <th className="amount-column">Amount</th>
@@ -312,7 +312,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                         <span className="category-badge">{income.category}</span>
                       </td>
                       <td>{income.customer}</td>
-                      <td>{income.market}</td>
+                      {/* <td>{income.market}</td> */}
                       <td>{income.description}</td>
                       <td>{income.payment_method}</td>
                       <td>{formatCurrency(income.amount + (income.tip || 0))}</td>
@@ -408,12 +408,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       {viewingIncome.customer}
                     </div>
                   </div>
-                  <div className="form-group">
+                  {/* <div className="form-group">
                     <label>Market</label>
                     <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
                       {viewingIncome.market}
                     </div>
-                  </div>
+                  </div> */}
                   <div className="form-group">
                     <label>Title</label>
                     <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
@@ -507,7 +507,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       className="form-input"
                     />
                   </div>
-                  <div className="form-group">
+                  {/* <div className="form-group">
                     <label>Market</label>
                     <select
                       value={editForm.market}
@@ -531,7 +531,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                         className="form-input"
                       />
                     </div>
-                  )}
+                  )} */}
                   <div className="form-group">
                     <label>Title</label>
                     <textarea
