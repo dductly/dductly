@@ -16,12 +16,12 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     tip: "",
     category: "",
     customer: "",
-    market: "",
+    // market: "",
     description: "",
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
-  const [otherMarket, setOtherMarket] = useState("");
+  // const [otherMarket, setOtherMarket] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -36,7 +36,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
       tip: formData.tip ? parseFloat(formData.tip.replace(/,/g, '')) : 0,
       category: formData.category,
       customer: formData.customer,
-      market: formData.market === "other" ? otherMarket : formData.market,
+      market: "", // formData.market === "other" ? otherMarket : formData.market,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
     });
@@ -51,12 +51,12 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
       tip: "",
       category: "",
       customer: "",
-      market: "",
+      // market: "",
       description: "",
       paymentMethod: "",
     });
     setOtherPaymentMethod("");
-    setOtherMarket("");
+    // setOtherMarket("");
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -281,7 +281,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                 />
               </div>
 
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label>Market</label>
                 <select
                   name="market"
@@ -292,10 +292,10 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                   <option value="">Select market</option>
                   <option value="other">Other</option>
                 </select>
-              </div>
+              </div> */}
             </div>
 
-            {formData.market === "other" && (
+            {/* {formData.market === "other" && (
               <div className="form-group">
                 <label>Specify Market</label>
                 <input
@@ -306,7 +306,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                   disabled={loading}
                 />
               </div>
-            )}
+            )} */}
 
             <div className="form-group">
               <label>Title</label>
