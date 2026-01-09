@@ -6,6 +6,7 @@ import type { Income } from "../contexts/IncomeContext";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
+import viewIcon from "../img/open-eye.svg";
 
 interface IncomeProps {
   onNavigate: (page: string) => void;
@@ -21,6 +22,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [editForm, setEditForm] = useState({
     income_date: "",
@@ -107,6 +109,15 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     }
 
     setEditForm({ ...editForm, tip: cleanValue });
+  };
+
+  const handleViewIncome = (income: Income) => {
+    setViewingIncome(income);
+    setOpenMenuId(null);
+  };
+
+  const handleCloseView = () => {
+    setViewingIncome(null);
   };
 
   const handleEditIncome = (income: Income) => {
@@ -317,6 +328,17 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                             <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
                               <button
                                 className="dropdown-item"
+                                onClick={() => handleViewIncome(income)}
+                              >
+                                <img
+                                  src={viewIcon}
+                                  alt="View"
+                                  className="dropdown-icon"
+                                />
+                                View
+                              </button>
+                              <button
+                                className="dropdown-item"
                                 onClick={() => handleEditIncome(income)}
                               >
                                 <img
@@ -357,6 +379,80 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {viewingIncome && (
+            <div className="modal-overlay" onClick={handleCloseView}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>View Income</h2>
+                  <button className="modal-close" onClick={handleCloseView}>
+                    ×
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Date</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {formatDate(viewingIncome.income_date)}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingIncome.category}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Customer</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingIncome.customer}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Market</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingIncome.market}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Title</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                      {viewingIncome.description}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Payment Method</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {viewingIncome.payment_method}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {formatCurrency(viewingIncome.amount)}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Tip</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                      {formatCurrency(viewingIncome.tip || 0)}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Total</label>
+                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', fontWeight: 'bold' }}>
+                      {formatCurrency(viewingIncome.amount + (viewingIncome.tip || 0))}
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={handleCloseView}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {editingIncome && (
             <div className="modal-overlay" onClick={handleCancelEdit}>
