@@ -5,15 +5,15 @@ import storefrontImg from "../img/storefront.svg";
 
 interface Service { title: string; subtext: string; img: string; }
 const services: Service[] = [
-  { title: "Your Business", subtext: "Easily track your market expenses, from booth fees to supplies, all in one simple place designed for small vendors like you.", img: storefrontImg },
-  { title: "Your Market", subtext: "Stay organized with automatic expense sorting and clear insights that help your business thrive at every market.", img: shoppingbasketImg },
+  { title: "Your Business", subtext: "Easily track your expenses, from supplies to operating costs, all in one simple place designed for small businesses like you.", img: storefrontImg },
+  { title: "Your Finances", subtext: "Stay organized with automatic expense sorting and clear insights that help your business thrive every day.", img: shoppingbasketImg },
   { title: "Made Effortless", subtext: "Export everything you need at tax time with just a click, giving you peace of mind and more time for your craft and community.", img: stocksImg},
 ];
 
 const Services: React.FC = () => (
   <section id="services" className="section">
     <h2 className="section-title">Simplify your business and focus on what you love.</h2>
-    <p className="section-subtitle">Built for local makers and market sellers, dductly helps you spend less time on paperwork and more time doing what you love: creating, connecting, and growing your business.</p>
+    <p className="section-subtitle">Built for small business owners, dductly helps you spend less time on paperwork and more time doing what you love: creating, connecting, and growing your business.</p>
     <div className="services-list">
       {services.map((s) => (
         <div className="service-item" key={s.title}>

@@ -117,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                 <div className="step-number">2</div>
                 <div className="step-content">
                   <h3>Track Everything</h3>
-                  <p>Keep all your market expenses in one place</p>
+                  <p>Keep all your finances in one place</p>
                 </div>
               </div>
               <div className="step-item">

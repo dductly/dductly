@@ -1,8 +1,14 @@
 // /Users/andreapinto/Documents/dductly/frontend/src/pages/Contact.tsx
 import React, { useState } from "react";
 import { sendContactEmail, type ContactFormData } from "../services/contactService";
+import { useAuth } from "../hooks/useAuth";
 
-const Contact: React.FC = () => {
+interface ContactProps {
+  onNavigate?: (page: string) => void;
+}
+
+const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
     lastName: "",
@@ -112,13 +118,23 @@ const Contact: React.FC = () => {
           required 
           disabled={isSubmitting}
         />
-        <button 
-          className="btn btn-primary" 
-          type="submit" 
+        <button
+          className="btn btn-primary"
+          type="submit"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Sending...' : 'Send'}
         </button>
+        {onNavigate && user && (
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={() => onNavigate('home')}
+            style={{ marginTop: '12px' }}
+          >
+            Back to Dashboard
+          </button>
+        )}
       </form>
     </section>
   );

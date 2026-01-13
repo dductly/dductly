@@ -50,7 +50,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       return;
     }
     if (currentStep === 2 && !canProceedToStep3) {
-      setError("Please list the markets you visit");
+      setError("Please tell us where you operate");
       return;
     }
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -152,10 +152,10 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                <h2 className="step-title">Tell us about your business</h2>
                
                <div className="form-group">
-                 <label>Business or Market Name <span className="req">*</span></label>
+                 <label>Business Name <span className="req">*</span></label>
                  <input
                    type="text"
-                   placeholder="e.g. Smith's Organic Farm"
+                   placeholder="e.g. Bella's Nail Studio"
                    value={businessName}
                    onChange={(e) => setBusinessName(e.target.value)}
                    disabled={loading}
@@ -165,9 +165,9 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                </div>
 
                <div className="form-group">
-                 <label>What Do You Sell? <span className="req">*</span></label>
+                 <label>What Do You Sell or Offer? <span className="req">*</span></label>
                  <textarea
-                   placeholder="e.g. Honey, homemade jams, jewlery, pottery, etc."
+                   placeholder="e.g. nail services, jewelry, consultin, etc."
                    value={productsSold}
                    onChange={(e) => setProductsSold(e.target.value)}
                    disabled={loading}
@@ -182,12 +182,12 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
            {/* Step 2: Markets */}
            {currentStep === 2 && (
              <div className="wizard-step" style={{ animation: 'fadeIn 0.3s ease-in' }}>
-               <h2 className="step-title">Where do you sell?</h2>
+               <h2 className="step-title">Where do you operate?</h2>
                
                <div className="form-group">
-                 <label>Farmers Markets You Visit <span className="req">*</span></label>
+                 <label>Platforms or Websites <span className="req">*</span></label>
                  <textarea
-                   placeholder="e.g. Downtown Farmers Market, Provo Farmers Market, Orem Farmers Market, etc"
+                   placeholder="e.g. Instagram, Etsy, salon, home-based, etc."
                    value={farmersMarkets}
                    onChange={(e) => setFarmersMarkets(e.target.value)}
                    disabled={loading}
@@ -195,7 +195,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                    className="textarea-input"
                    autoFocus
                  />
-                 <small className="field-hint">List the markets where you regularly sell</small>
+                 <small className="field-hint">List where you regularly sell</small>
                </div>
              </div>
            )}
@@ -311,6 +311,11 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                      />
                    </button>
                  </div>
+                {confirmPassword.length > 0 && password !== confirmPassword && (
+                  <div className="password-mismatch-error" style={{ color: '#c33', fontSize: '0.875rem', marginTop: '8px' }}>
+                    Passwords do not match
+                  </div>
+                )}
                </div>
 
                <div className="form-group">
@@ -380,7 +385,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
              <p>By accessing and using dductly, you accept and agree to be bound by the terms and provisions of this agreement.</p>
 
              <h3>2. Use of Service</h3>
-             <p>dductly provides expense tracking and financial management tools for farmers market vendors. You agree to use the service only for lawful purposes and in accordance with these Terms.</p>
+             <p>dductly provides expense tracking and financial management tools for small businesses. You agree to use the service only for lawful purposes and in accordance with these Terms.</p>
 
              <h3>3. User Accounts</h3>
              <p>You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.</p>

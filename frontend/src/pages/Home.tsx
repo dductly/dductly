@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-const Home: React.FC = () => {
+interface HomeProps {
+  onNavigate?: (page: string) => void;
+}
+
+const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -83,13 +87,13 @@ const Home: React.FC = () => {
       <div className="hero-left">
         <div className="bubble-1"></div>
         <div className="bubble-2"></div>
-        <div className="kicker">Built for Farmers Market Vendors</div>
-        <h1>Making market life easier, one expense at a time.</h1>
+        <div className="kicker">Built for business Owners</div>
+        <h1>Making your life easier, one expense at a time.</h1>
         <p className="sub">
-          At dductly we believe thriving markets build thriving communities. Our mission is to make running your business effortless so you can focus on what matters most: growing your craft and connecting with your community.
+          At dductly, we believe small businesses are the heart of every community. Our mission is to simplify the day-to-day of running a business, so you can focus on what matters most: your customers, your growth, and doing what you love.
         </p>
         <div className="cta-row">
-          <a className="btn btn-primary" href="#services">Get Started</a>
+          <button className="btn btn-primary" onClick={() => onNavigate?.('signup')}>Get Started</button>
           <a className="btn btn-primary" href="#contact">Contact Us</a>
         </div>
       </div>

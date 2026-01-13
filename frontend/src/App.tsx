@@ -308,7 +308,7 @@ const AppContent: React.FC = () => {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'contact':
-        return <Contact />;
+        return <Contact onNavigate={handleNavigate} />;
       case 'signup':
         return <SignUp onNavigate={handleNavigate} />;
       case 'confirm-email':
@@ -330,9 +330,9 @@ const AppContent: React.FC = () => {
         }
         return (
           <>
-            <Home />
+            <Home onNavigate={handleNavigate} />
             <Services />
-            <Contact />
+            <Contact onNavigate={handleNavigate} />
           </>
         );
     }
@@ -376,7 +376,7 @@ const AppContent: React.FC = () => {
               <p>By accessing and using dductly, you accept and agree to be bound by the terms and provisions of this agreement.</p>
 
               <h3>2. Use of Service</h3>
-              <p>dductly provides expense tracking and financial management tools for farmers market vendors. You agree to use the service only for lawful purposes and in accordance with these Terms.</p>
+              <p>dductly provides expense tracking and financial management tools for small business owners. You agree to use the service only for lawful purposes and in accordance with these Terms.</p>
 
               <h3>3. User Accounts</h3>
               <p>You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.</p>
@@ -463,10 +463,10 @@ const AppContent: React.FC = () => {
               <h3>General Questions</h3>
 
               <h4>What is dductly?</h4>
-              <p>dductly is an expense tracking and financial management platform designed specifically for farmers market vendors and small business owners. We help you organize your business expenses, track receipts, and generate reports for tax time.</p>
+              <p>dductly is an expense tracking and financial management platform designed specifically for small business owners. We help you organize your business expenses, track receipts, and generate reports for tax time.</p>
 
               <h4>Who is dductly for?</h4>
-              <p>dductly is built for farmers market vendors, craft fair sellers, local makers, and small business owners who need a simple way to track expenses and stay organized for tax season.</p>
+              <p>dductly is built for small business owners, independent contractors, freelancers, and entrepreneurs who need a simple way to track expenses and stay organized for tax season.</p>
 
               <h4>How much does dductly cost?</h4>
               <p>We offer flexible pricing plans to fit your needs. Contact us for current pricing information and to find the plan that works best for your business.</p>
@@ -488,7 +488,7 @@ const AppContent: React.FC = () => {
               <p>Yes! Use the "Add Data" button on your dashboard to manually enter individual expenses. This is perfect for adding receipts on the go.</p>
 
               <h4>What types of expenses can I track?</h4>
-              <p>You can track all business-related expenses including booth fees, supplies, materials, travel costs, equipment, marketing expenses, and more.</p>
+              <p>You can track all business-related expenses including supplies, materials, travel costs, equipment, marketing expenses, utilities, and more.</p>
 
               <h4>Can I categorize my expenses?</h4>
               <p>Yes, dductly allows you to categorize expenses to help you understand where your money is going and make tax time easier.</p>
@@ -564,7 +564,7 @@ const AppContent: React.FC = () => {
               <ul>
                 <li><strong>Date:</strong> When the expense occurred (required)</li>
                 <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
-                <li><strong>Category:</strong> Choose from options like Booth Fees, Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
+                <li><strong>Category:</strong> Choose from options like Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
                 <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Check, Bank Transfer, or Other (optional)</li>
                 <li><strong>Vendor/Store Name:</strong> Where you made the purchase (optional)</li>
                 <li><strong>Description/Notes:</strong> Additional details about the expense (optional)</li>
@@ -625,7 +625,7 @@ const AppContent: React.FC = () => {
 
               <h4>Best Practices</h4>
               <ul>
-                <li><strong>Regular Updates:</strong> Add expenses weekly or after each market/event</li>
+                <li><strong>Regular Updates:</strong> Add expenses weekly or as they occur</li>
                 <li><strong>Be Detailed:</strong> The more information you add, the better your records</li>
                 <li><strong>Use Categories:</strong> Proper categorization makes tax preparation much easier</li>
                 <li><strong>Review Regularly:</strong> Check your expense totals monthly to track spending trends</li>
