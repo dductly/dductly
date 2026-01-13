@@ -1,12 +1,14 @@
 // /Users/andreapinto/Documents/dductly/frontend/src/pages/Contact.tsx
 import React, { useState } from "react";
 import { sendContactEmail, type ContactFormData } from "../services/contactService";
+import { useAuth } from "../hooks/useAuth";
 
 interface ContactProps {
   onNavigate?: (page: string) => void;
 }
 
 const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
     lastName: "",
@@ -123,7 +125,7 @@ const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
         >
           {isSubmitting ? 'Sending...' : 'Send'}
         </button>
-        {onNavigate && (
+        {onNavigate && user && (
           <button
             className="btn btn-secondary"
             type="button"

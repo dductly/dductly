@@ -330,7 +330,7 @@ const AppContent: React.FC = () => {
         }
         return (
           <>
-            <Home />
+            <Home onNavigate={handleNavigate} />
             <Services />
             <Contact onNavigate={handleNavigate} />
           </>
