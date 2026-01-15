@@ -2020,6 +2020,19 @@
 }
 
 /* Getting Started Card */
+.dashboard-card.getting-started {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card.getting-started .steps-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+}
+
 .steps-list {
   display: flex;
   flex-direction: column;
@@ -2075,16 +2088,33 @@
   background: var(--daisy-white);
   border-radius: var(--radius);
   border: 2px solid var(--sage-green);
+  gap: 12px;
 }
 
 .info-label {
   color: var(--text-medium);
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .info-value {
   color: var(--text-dark);
   font-weight: 700;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .info-value {
+    text-align: left;
+  }
 }
 
 /* Resources Card */
