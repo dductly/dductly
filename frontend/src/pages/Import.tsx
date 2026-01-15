@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import CSVUpload from "../components/CSVUpload";
 import { supabase } from "../lib/supabaseClient";
 
-const Import: React.FC = () => {
+interface ImportProps {
+  onNavigate?: (page: string) => void;
+}
+
+const Import: React.FC<ImportProps> = ({ onNavigate }) => {
   const [userName, setUserName] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -24,6 +28,11 @@ const Import: React.FC = () => {
 
   return (
     <section id="import" className="section import-section">
+      {onNavigate && (
+        <button className="back-button" onClick={() => onNavigate('home')}>
+          ← Back to Dashboard
+        </button>
+      )}
       <div className="import-header">
         <h2 className="section-title">Import Your Records</h2>
         <p className="section-subtitle">

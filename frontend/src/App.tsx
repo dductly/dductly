@@ -315,7 +315,7 @@ const AppContent: React.FC = () => {
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
       case 'import':
-        return <Import />;
+        return <Import onNavigate={handleNavigate} />;
       case 'add-data':
         return <AddData onNavigate={handleNavigate} />;
       case 'expenses':
