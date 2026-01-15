@@ -1,8 +1,5 @@
 {
   "devDependencies": {
     "supabase": "^2.63.1"
-  },
-  "dependencies": {
-    "react-helmet-async": "^2.0.5"
   }
 }
