@@ -99,6 +99,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
               >
                 Import Data
               </button>
+              <button
+                className="btn btn-primary btn-large"
+                onClick={() => onNavigate('stats')}
+              >
+                Stats
+              </button>
             </div>
           </div>
 

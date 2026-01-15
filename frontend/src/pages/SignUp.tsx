@@ -167,7 +167,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                <div className="form-group">
                  <label>What Do You Sell or Offer? <span className="req">*</span></label>
                  <textarea
-                   placeholder="e.g. nail services, jewelry, consultin, etc."
+                   placeholder="e.g. nail services, jewelry, consulting, etc."
                    value={productsSold}
                    onChange={(e) => setProductsSold(e.target.value)}
                    disabled={loading}
