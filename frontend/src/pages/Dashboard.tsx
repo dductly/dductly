@@ -103,7 +103,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                 className="btn btn-primary btn-large"
                 onClick={() => onNavigate('stats')}
               >
-                Stats
+                Statistics
               </button>
             </div>
           </div>
