@@ -12,7 +12,11 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
 
-  const businessName = user?.user_metadata?.business_name || "Your Business";
+  const businessName = user?.user_metadata?.business_name
+    ? (user.user_metadata.business_name.endsWith('s')
+      ? user.user_metadata.business_name
+      : `${user.user_metadata.business_name}'s`)
+    : "Your Business";
 
   // Calculate total expenses
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);

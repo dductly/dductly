@@ -306,8 +306,41 @@ const AppContent: React.FC = () => {
     }
   }, [user, currentPage]);
 
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      console.log('[History] Back/forward button clicked, state:', event.state);
+      if (event.state && event.state.page) {
+        console.log('[History] Navigating to page:', event.state.page);
+        setCurrentPage(event.state.page);
+      } else {
+        console.log('[History] No page state, defaulting to home');
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Set initial state
+    const currentPath = window.location.pathname;
+    const initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
+    console.log('[History] Initial setup, path:', currentPath, 'page:', initialPage);
+
+    if (!window.history.state) {
+      window.history.replaceState({ page: initialPage }, '', currentPath);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   const handleNavigate = (page: string) => {
+    console.log('[History] Navigating from', currentPage, 'to', page);
     setCurrentPage(page);
+    // Add to browser history
+    const url = page === 'home' ? '/' : `/${page}`;
+    window.history.pushState({ page }, '', url);
   };
 
   const handleSignInClick = () => {
