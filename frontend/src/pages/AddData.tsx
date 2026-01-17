@@ -9,7 +9,11 @@ interface AddDataProps {
 const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
   const { addExpense } = useExpenses();
   const { user } = useAuth();
-  const businessName = user?.user_metadata?.business_name || "Your";
+  const businessName = user?.user_metadata?.business_name
+    ? (user.user_metadata.business_name.endsWith('s')
+      ? user.user_metadata.business_name
+      : `${user.user_metadata.business_name}'s`)
+    : "Your";
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
