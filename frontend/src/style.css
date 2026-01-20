@@ -2880,7 +2880,7 @@
   border-radius: 8px;
   box-shadow: var(--shadow);
   z-index: 1000;
-  min-width: 120px;
+  min-width: 80px;
   overflow: hidden;
   padding: 4px 0;
 }
@@ -2912,14 +2912,14 @@
 
 .dropdown-item {
   width: 100%;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: none;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  gap: 6px;
+  font-size: 0.9rem;
   color: var(--text-dark);
   transition: all 0.2s ease;
   text-align: left;

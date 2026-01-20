@@ -193,11 +193,11 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       // This accounts for page header, summary cards, and table header
       // Otherwise, open upward if there's more space above
       if (spaceAbove < 350) {
-        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 120 });
+        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 80 });
       } else if (spaceAbove > spaceBelow) {
-        setMenuCoords({ top: rect.top - menuHeight - 4, left: rect.right - 120 });
+        setMenuCoords({ top: rect.top - menuHeight - 4, left: rect.right - 80 });
       } else {
-        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 120 });
+        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 80 });
       }
 
       setOpenMenuId(id);
