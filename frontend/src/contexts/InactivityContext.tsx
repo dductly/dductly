@@ -109,11 +109,32 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } else {
       // Tab visible - check elapsed time and resume
       const elapsedTime = Date.now() - lastActivityRef.current;
+      const TOTAL_TIMEOUT = WARNING_TIME + (COUNTDOWN_SECONDS * 1000); // 15 min + 2 min
 
-      if (elapsedTime >= WARNING_TIME) {
-        // Should show warning immediately
+      if (elapsedTime >= TOTAL_TIMEOUT) {
+        // 17+ minutes passed while away - log out immediately
+        console.log('[Inactivity] 17+ minutes passed while away, logging out');
+        signOut();
+      } else if (elapsedTime >= WARNING_TIME) {
+        // Between 15-17 minutes - show warning with remaining countdown
+        const elapsedCountdownSeconds = Math.floor((elapsedTime - WARNING_TIME) / 1000);
+        const remainingCountdown = COUNTDOWN_SECONDS - elapsedCountdownSeconds;
+        setRemainingSeconds(remainingCountdown);
         setShowWarning(true);
-        startCountdown();
+
+        // Start countdown from remaining time
+        countdownIntervalRef.current = window.setInterval(() => {
+          setRemainingSeconds(prev => {
+            if (prev <= 1) {
+              if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+              }
+              signOut();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       } else {
         // Resume warning timer with remaining time
         const remainingTime = WARNING_TIME - elapsedTime;
@@ -123,7 +144,7 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }, remainingTime);
       }
     }
-  }, [WARNING_TIME, clearAllTimers, startCountdown]);
+  }, [WARNING_TIME, COUNTDOWN_SECONDS, clearAllTimers, signOut, startCountdown]);
 
   // Initialize and cleanup
   useEffect(() => {
