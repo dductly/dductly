@@ -162,9 +162,10 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
 
-      // If we're near the top (less than 200px from top), force dropdown to open downward
+      // If we're near the top (less than 350px from top), force dropdown to open downward
+      // This accounts for page header, summary cards, and table header
       // Otherwise, open upward if there's more space above
-      if (spaceAbove < 200) {
+      if (spaceAbove < 350) {
         setMenuPosition("bottom");
       } else if (spaceAbove > spaceBelow) {
         setMenuPosition("top");
