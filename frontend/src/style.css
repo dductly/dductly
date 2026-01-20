@@ -93,6 +93,39 @@
     --harvest-orange: #FF9472;
   }
 
+  /* Dark mode form inputs */
+  [data-theme="dark"] .form-group input[type="text"],
+  [data-theme="dark"] .form-group input[type="email"],
+  [data-theme="dark"] .form-group input[type="password"],
+  [data-theme="dark"] .contact-form input,
+  [data-theme="dark"] .contact-form textarea,
+  [data-theme="dark"] .add-data-form input,
+  [data-theme="dark"] .add-data-form select,
+  [data-theme="dark"] .add-data-form textarea {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .form-group input:focus,
+  [data-theme="dark"] .contact-form input:focus,
+  [data-theme="dark"] .contact-form textarea:focus,
+  [data-theme="dark"] .add-data-form input:focus,
+  [data-theme="dark"] .add-data-form select:focus,
+  [data-theme="dark"] .add-data-form textarea:focus {
+    background: #374151;
+    border-color: var(--harvest-orange);
+  }
+
+  [data-theme="dark"] .form-group input::placeholder,
+  [data-theme="dark"] .contact-form input::placeholder,
+  [data-theme="dark"] .contact-form textarea::placeholder,
+  [data-theme="dark"] .add-data-form input::placeholder,
+  [data-theme="dark"] .add-data-form select::placeholder,
+  [data-theme="dark"] .add-data-form textarea::placeholder {
+    color: #A0AEC0;
+  }
+
   /* Dark mode body background */
   [data-theme="dark"] body::before {
     background:

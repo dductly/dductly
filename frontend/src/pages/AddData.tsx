@@ -239,7 +239,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                 onChange={handleChange}
                 disabled={loading}
               />
-              <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? '#c33' : '#999', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                 {formData.description.length}/50 characters
               </div>
             </div>
