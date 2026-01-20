@@ -161,17 +161,18 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      const menuHeight = 75; // Approximate height of compact dropdown menu
+      const menuHeight = 90; // Approximate height of compact dropdown menu
+      const menuWidth = 85; // Width of dropdown menu
 
       // If we're near the top (less than 350px from top), force dropdown to open downward
       // This accounts for page header, summary cards, and table header
       // Otherwise, open upward if there's more space above
       if (spaceAbove < 350) {
-        setMenuCoords({ top: rect.bottom + 2, left: rect.right - 70 });
+        setMenuCoords({ top: rect.bottom + 4, left: rect.left - menuWidth + rect.width });
       } else if (spaceAbove > spaceBelow) {
-        setMenuCoords({ top: rect.top - menuHeight - 2, left: rect.right - 70 });
+        setMenuCoords({ top: rect.top - menuHeight - 4, left: rect.left - menuWidth + rect.width });
       } else {
-        setMenuCoords({ top: rect.bottom + 2, left: rect.right - 70 });
+        setMenuCoords({ top: rect.bottom + 4, left: rect.left - menuWidth + rect.width });
       }
 
       setOpenMenuId(id);

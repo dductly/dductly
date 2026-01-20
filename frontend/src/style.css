@@ -2877,11 +2877,12 @@
   right: 0;
   background: var(--white);
   border: 1px solid var(--border-medium);
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   z-index: 1000;
   overflow: hidden;
-  padding: 2px 0;
+  padding: 4px;
+  width: 85px;
 }
 
 .dropdown-menu a {
@@ -2911,16 +2912,17 @@
 
 .dropdown-item {
   width: 100%;
-  padding: 5px 10px;
+  padding: 6px 8px;
   background: none;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.85rem;
+  gap: 6px;
+  font-size: 0.8rem;
   color: var(--text-dark);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-align: left;
 }
 
