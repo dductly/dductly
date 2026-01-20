@@ -396,55 +396,55 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                 <div className="modal-body">
                   <div className="form-group">
                     <label>Date</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {formatDate(viewingIncome.income_date)}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Category</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingIncome.category}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Customer</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingIncome.customer}
                     </div>
                   </div>
                   {/* <div className="form-group">
                     <label>Market</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingIncome.market}
                     </div>
                   </div> */}
                   <div className="form-group">
                     <label>Title</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                       {viewingIncome.description}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Payment Method</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingIncome.payment_method}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Amount</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {formatCurrency(viewingIncome.amount)}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Tip</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {formatCurrency(viewingIncome.tip || 0)}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Total</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', fontWeight: 'bold' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', fontWeight: 'bold' }}>
                       {formatCurrency(viewingIncome.amount + (viewingIncome.tip || 0))}
                     </div>
                   </div>
@@ -547,7 +547,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       maxLength={50}
                       rows={3}
                     />
-                    <div style={{ fontSize: '0.85rem', color: editForm.description.length >= 50 ? '#c33' : '#999', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.85rem', color: editForm.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                       {editForm.description.length}/50 characters
                     </div>
                   </div>

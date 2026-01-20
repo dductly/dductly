@@ -126,6 +126,111 @@
     color: #A0AEC0;
   }
 
+  /* Dark mode expenses/income tables */
+  [data-theme="dark"] .expenses-table-container {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .expenses-table thead {
+    background: #2D3748;
+  }
+
+  [data-theme="dark"] .expenses-table th {
+    color: #90CDF4;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .expenses-table tbody tr {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .expenses-table tbody tr:hover {
+    background: #2D3748;
+  }
+
+  [data-theme="dark"] .expenses-table td {
+    color: #F7FAFC;
+  }
+
+  [data-theme="dark"] .category-badge {
+    background: #4A5568;
+    color: #90CDF4;
+  }
+
+  /* Dark mode summary cards */
+  [data-theme="dark"] .summary-card {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .summary-label {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .summary-value {
+    color: #90CDF4;
+  }
+
+  /* Dark mode select dropdowns */
+  [data-theme="dark"] .expense-select {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .expense-select:focus {
+    border-color: #90CDF4;
+  }
+
+  /* Dark mode dropdown menus */
+  [data-theme="dark"] .dropdown-menu {
+    background: #2D3748;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .dropdown-menu a {
+    color: #F7FAFC !important;
+  }
+
+  [data-theme="dark"] .dropdown-menu a:hover {
+    background: #4A5568;
+    color: #90CDF4 !important;
+  }
+
+  [data-theme="dark"] .dropdown-item {
+    color: #F7FAFC;
+  }
+
+  [data-theme="dark"] .dropdown-item:hover {
+    background: #4A5568;
+  }
+
+  /* Dark mode modal form inputs */
+  [data-theme="dark"] .form-input {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .form-input:focus {
+    border-color: #90CDF4;
+    background: #374151;
+  }
+
+  [data-theme="dark"] .modal-content {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .modal-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
   /* Dark mode body background */
   [data-theme="dark"] body::before {
     background:
