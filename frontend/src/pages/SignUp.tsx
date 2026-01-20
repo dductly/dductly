@@ -82,15 +82,9 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
         setError(error.message);
       }
     } else {
+      localStorage.setItem("pendingSignUpEmail", email);
       setSuccess(true);
-      // Navigate to confirmation page after a short delay
-      setTimeout(() => {
-        if (onNavigate) {
-          onNavigate('confirm-email');
-        }
-      }, 2000);
     }
-  
     setLoading(false);
   };
 
@@ -102,13 +96,18 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
          <div className="signup-container">
            <div className="success-message">
              <h1 className="section-title">Check Your Email</h1>
-             <p>We've sent you a confirmation link. Please check your email and click the link to verify your account.</p>
+             <p>
+                We've sent a confirmation link to <strong>{email}</strong>.
+                Please check your inbox and click the link to verify your account.
+              </p>
            </div>
          </div>
        </section>
      </div>
    );
  }
+
+
 
 
  return (
