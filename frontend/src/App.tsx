@@ -298,15 +298,15 @@ const AppContent: React.FC = () => {
     console.log('[AppContent] showWarning changed to:', showWarning, 'user:', !!user);
   }, [showWarning, user]);
 
-  // Redirect to home page when user logs out
+  // Redirect to home page when user logs out (only after auth has finished loading)
   useEffect(() => {
-    if (!user && currentPage !== 'home' && currentPage !== 'signup' && currentPage !== 'confirm-email') {
+    if (!loading && !user && currentPage !== 'home' && currentPage !== 'signup' && currentPage !== 'confirm-email') {
       console.log('[AppContent] User logged out, navigating to home');
       setCurrentPage('home');
     }
-  }, [user, currentPage]);
+  }, [loading, user, currentPage]);
 
-  // Handle browser back/forward buttons
+  // Handle browser back/forward buttons and page refresh
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       console.log('[History] Back/forward button clicked, state:', event.state);
@@ -321,10 +321,15 @@ const AppContent: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Set initial state
+    // Set initial state from URL on page load/refresh
     const currentPath = window.location.pathname;
     const initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
     console.log('[History] Initial setup, path:', currentPath, 'page:', initialPage);
+
+    // Actually set the current page based on URL
+    if (initialPage !== 'home') {
+      setCurrentPage(initialPage);
+    }
 
     if (!window.history.state) {
       window.history.replaceState({ page: initialPage }, '', currentPath);
