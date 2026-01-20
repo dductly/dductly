@@ -25,7 +25,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [editForm, setEditForm] = useState({
@@ -187,16 +187,17 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
+      const menuHeight = 140; // Approximate height of dropdown menu
 
       // If we're near the top (less than 350px from top), force dropdown to open downward
       // This accounts for page header, summary cards, and table header
       // Otherwise, open upward if there's more space above
       if (spaceAbove < 350) {
-        setMenuPosition("bottom");
+        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 160 });
       } else if (spaceAbove > spaceBelow) {
-        setMenuPosition("top");
+        setMenuCoords({ top: rect.top - menuHeight - 4, left: rect.right - 160 });
       } else {
-        setMenuPosition("bottom");
+        setMenuCoords({ top: rect.bottom + 4, left: rect.right - 160 });
       }
 
       setOpenMenuId(id);
@@ -330,7 +331,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                             <img src={menuIcon} alt="Menu" className="menu-icon" />
                           </button>
                           {openMenuId === income.id && (
-                            <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
+                            <div
+                              className="dropdown-menu"
+                              style={{
+                                position: 'fixed',
+                                top: menuCoords.top,
+                                left: menuCoords.left,
+                              }}
+                            >
                               <button
                                 className="dropdown-item"
                                 onClick={() => handleViewIncome(income)}
