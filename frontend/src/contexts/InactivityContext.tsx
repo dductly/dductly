@@ -16,11 +16,11 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Timeout durations
   const WARNING_TIME = import.meta.env.DEV ? 30 * 1000 : 15 * 60 * 1000; // 30s dev, 15min prod
-  const LOGOUT_COUNTDOWN = 120 * 1000; // 120 seconds (2 minutes)
+  const COUNTDOWN_SECONDS = 120; // 2 minutes
   const DEBOUNCE_DELAY = 300; // 300ms debounce
 
   const [showWarning, setShowWarning] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(120);
+  const [remainingSeconds, setRemainingSeconds] = useState(COUNTDOWN_SECONDS);
 
   const warningTimerRef = useRef<number | null>(null);
   const logoutTimerRef = useRef<number | null>(null);
@@ -50,7 +50,7 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Start countdown when warning appears
   const startCountdown = useCallback(() => {
-    setRemainingSeconds(120);
+    setRemainingSeconds(COUNTDOWN_SECONDS);
 
     countdownIntervalRef.current = window.setInterval(() => {
       setRemainingSeconds(prev => {
