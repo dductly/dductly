@@ -22,6 +22,7 @@
     /* Layout tokens */
     --maxw: 1200px;
     --radius: 12px;
+    --radius-md: 10px;
     --radius-lg: 16px;
     --shadow: 0 4px 20px rgba(139, 174, 214, 0.08);
     --shadow-lg: 0 8px 30px rgba(139, 174, 214, 0.12);
@@ -124,6 +125,133 @@
   [data-theme="dark"] .add-data-form select::placeholder,
   [data-theme="dark"] .add-data-form textarea::placeholder {
     color: #A0AEC0;
+  }
+
+  /* Dark mode expenses/income tables */
+  [data-theme="dark"] .expenses-table-container {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .expenses-table thead {
+    background: #2D3748;
+  }
+
+  [data-theme="dark"] .expenses-table th {
+    color: #90CDF4;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .expenses-table tbody tr {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .expenses-table tbody tr:hover {
+    background: #2D3748;
+  }
+
+  [data-theme="dark"] .expenses-table td {
+    color: #F7FAFC;
+  }
+
+  [data-theme="dark"] .category-badge {
+    background: #4A5568;
+    color: #90CDF4;
+  }
+
+  /* Dark mode summary cards */
+  [data-theme="dark"] .summary-card {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .summary-label {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .summary-value {
+    color: #90CDF4;
+  }
+
+  /* Dark mode select dropdowns */
+  [data-theme="dark"] .expense-select {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .expense-select:focus {
+    border-color: #90CDF4;
+  }
+
+  /* Dark mode dropdown menus */
+  [data-theme="dark"] .dropdown-menu {
+    background: #2D3748;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .dropdown-menu a {
+    color: #F7FAFC !important;
+  }
+
+  [data-theme="dark"] .dropdown-menu a:hover {
+    background: #4A5568;
+    color: #90CDF4 !important;
+  }
+
+  [data-theme="dark"] .dropdown-item {
+    color: #F7FAFC;
+  }
+
+  [data-theme="dark"] .dropdown-item:hover {
+    background: #4A5568;
+  }
+
+  /* Dark mode modal form inputs */
+  [data-theme="dark"] .form-input {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .form-input:focus {
+    border-color: #90CDF4;
+    background: #374151;
+  }
+
+  [data-theme="dark"] .modal-content {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  [data-theme="dark"] .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .modal-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Dark mode modal form inputs */
+  [data-theme="dark"] .modal-body .form-group label {
+    color: #F7FAFC;
+  }
+
+  [data-theme="dark"] .modal-body .form-group .form-input {
+    background: #2D3748;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .modal-body .form-group .form-input:focus {
+    border-color: #90CDF4;
+    background: #374151;
+  }
+
+  [data-theme="dark"] .modal-body .form-group div.form-input {
+    background: #374151;
+    color: #F7FAFC;
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   /* Dark mode body background */
@@ -1623,6 +1751,54 @@
   font-weight: 600;
 }
 
+/* Modal form styling for view/edit */
+.modal-body .form-group {
+  margin-bottom: 16px;
+}
+
+.modal-body .form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.modal-body .form-group .form-input {
+  border-radius: var(--radius);
+  border: 2px solid var(--light-blue);
+  padding: 14px 16px;
+  font-size: 1rem;
+  background: var(--white);
+  color: var(--text-dark);
+}
+
+.modal-body .form-group .form-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(168, 197, 232, 0.15);
+}
+
+/* Read-only fields in view modals */
+.modal-body .form-group div.form-input {
+  border-radius: var(--radius);
+  border: 2px solid var(--light-blue);
+  padding: 14px 16px;
+  font-size: 1rem;
+  background: var(--off-white);
+  color: var(--text-dark);
+}
+
+.modal-body .form-group select.form-input {
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.modal-body .form-group textarea.form-input {
+  border-radius: var(--radius);
+  resize: vertical;
+  min-height: 80px;
+}
+
 @media (max-width: 640px){
   .cards{grid-template-columns: 1fr}
   .services-list{grid-template-columns: 1fr}
@@ -2700,13 +2876,13 @@
   position: absolute;
   right: 0;
   background: var(--white);
-  border: 2px solid var(--border-medium);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
   z-index: 1000;
-  min-width: 160px;
   overflow: hidden;
-  padding: 8px 0;
+  padding: 4px;
+  width: 85px;
 }
 
 .dropdown-menu a {
@@ -2736,16 +2912,17 @@
 
 .dropdown-item {
   width: 100%;
-  padding: 10px 16px;
+  padding: 6px 8px;
   background: none;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
+  gap: 6px;
+  font-size: 0.9rem;
   color: var(--text-dark);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-align: left;
 }
 
@@ -2759,8 +2936,8 @@
 }
 
 .dropdown-icon {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   display: block;
 }
 

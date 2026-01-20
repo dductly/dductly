@@ -25,7 +25,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<"top" | "bottom">("top");
+  const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editForm, setEditForm] = useState({
@@ -161,15 +161,18 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
+      const menuHeight = 90; // Approximate height of compact dropdown menu
+      const menuWidth = 85; // Width of dropdown menu
 
-      // If we're near the top (less than 200px from top), force dropdown to open downward
+      // If we're near the top (less than 350px from top), force dropdown to open downward
+      // This accounts for page header, summary cards, and table header
       // Otherwise, open upward if there's more space above
-      if (spaceAbove < 200) {
-        setMenuPosition("bottom");
+      if (spaceAbove < 350) {
+        setMenuCoords({ top: rect.bottom + 4, left: rect.left - menuWidth + rect.width });
       } else if (spaceAbove > spaceBelow) {
-        setMenuPosition("top");
+        setMenuCoords({ top: rect.top - menuHeight - 4, left: rect.left - menuWidth + rect.width });
       } else {
-        setMenuPosition("bottom");
+        setMenuCoords({ top: rect.bottom + 4, left: rect.left - menuWidth + rect.width });
       }
 
       setOpenMenuId(id);
@@ -301,7 +304,14 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                             <img src={menuIcon} alt="Menu" className="menu-icon" />
                           </button>
                           {openMenuId === expense.id && (
-                            <div className={`dropdown-menu dropdown-menu-${menuPosition}`}>
+                            <div
+                              className="dropdown-menu"
+                              style={{
+                                position: 'fixed',
+                                top: menuCoords.top,
+                                left: menuCoords.left,
+                              }}
+                            >
                               <button
                                 className="dropdown-item"
                                 onClick={() => handleViewExpense(expense)}
@@ -368,37 +378,37 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                 <div className="modal-body">
                   <div className="form-group">
                     <label>Date</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {formatDate(viewingExpense.expense_date)}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Category</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingExpense.category}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Vendor</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingExpense.vendor}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Title</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                       {viewingExpense.description}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Payment Method</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
                       {viewingExpense.payment_method}
                     </div>
                   </div>
                   <div className="form-group">
                     <label>Amount</label>
-                    <div className="form-input" style={{ backgroundColor: '#f5f5f5', cursor: 'default', fontWeight: 'bold' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', fontWeight: 'bold' }}>
                       {formatCurrency(viewingExpense.amount)}
                     </div>
                   </div>
@@ -477,7 +487,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                       maxLength={50}
                       rows={3}
                     />
-                    <div style={{ fontSize: '0.85rem', color: editForm.description.length >= 50 ? '#c33' : '#999', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.85rem', color: editForm.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                       {editForm.description.length}/50 characters
                     </div>
                   </div>
