@@ -11,14 +11,17 @@ import Expenses from "./pages/Expenses";
 import AddIncome from "./pages/AddIncome";
 import IncomePage from "./pages/Income";
 import Stats from "./pages/Stats";
+import InactivityWarningModal from "./components/InactivityWarningModal";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
+import { useInactivity } from "./hooks/useInactivity";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
 import { IncomeProvider } from "./contexts/IncomeContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
+import { InactivityProvider } from "./contexts/InactivityContext";
 import openEyeIcon from "./img/open-eye.svg";
 import closedEyeIcon from "./img/closed-eye.svg";
 import lightModeIcon from "./img/light-mode.svg";
@@ -289,9 +292,55 @@ const AppContent: React.FC = () => {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | 'guide' | null>(null);
   const { loading, user } = useAuth();
+  const { showWarning, remainingSeconds, resetActivity } = useInactivity();
+
+  useEffect(() => {
+    console.log('[AppContent] showWarning changed to:', showWarning, 'user:', !!user);
+  }, [showWarning, user]);
+
+  // Redirect to home page when user logs out
+  useEffect(() => {
+    if (!user && currentPage !== 'home' && currentPage !== 'signup' && currentPage !== 'confirm-email') {
+      console.log('[AppContent] User logged out, navigating to home');
+      setCurrentPage('home');
+    }
+  }, [user, currentPage]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      console.log('[History] Back/forward button clicked, state:', event.state);
+      if (event.state && event.state.page) {
+        console.log('[History] Navigating to page:', event.state.page);
+        setCurrentPage(event.state.page);
+      } else {
+        console.log('[History] No page state, defaulting to home');
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Set initial state
+    const currentPath = window.location.pathname;
+    const initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
+    console.log('[History] Initial setup, path:', currentPath, 'page:', initialPage);
+
+    if (!window.history.state) {
+      window.history.replaceState({ page: initialPage }, '', currentPath);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const handleNavigate = (page: string) => {
+    console.log('[History] Navigating from', currentPage, 'to', page);
     setCurrentPage(page);
+    // Add to browser history
+    const url = page === 'home' ? '/' : `/${page}`;
+    window.history.pushState({ page }, '', url);
   };
 
   const handleSignInClick = () => {
@@ -364,6 +413,14 @@ const AppContent: React.FC = () => {
       <Footer onLegalClick={setLegalModal} />
       {isSignInOpen && (
         <SignInModal onClose={handleCloseSignIn} onSignUpClick={handleSignUpClick} />
+      )}
+
+      {/* Inactivity Warning Modal - Only for authenticated users */}
+      {user && showWarning && (
+        <InactivityWarningModal
+          remainingSeconds={remainingSeconds}
+          onStayActive={resetActivity}
+        />
       )}
 
       {/* Terms of Service Modal */}
@@ -655,11 +712,13 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ExpensesProvider>
-          <IncomeProvider>
-            <AppContent />
-          </IncomeProvider>
-        </ExpensesProvider>
+        <InactivityProvider>
+          <ExpensesProvider>
+            <IncomeProvider>
+              <AppContent />
+            </IncomeProvider>
+          </ExpensesProvider>
+        </InactivityProvider>
       </AuthProvider>
     </ThemeProvider>
   );

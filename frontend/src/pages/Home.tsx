@@ -92,9 +92,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         <p className="sub">
           At dductly, we believe small businesses are the heart of every community. Our mission is to simplify the day-to-day of running a business, so you can focus on what matters most: your customers, your growth, and doing what you love.
         </p>
-        <div className="cta-row">
-          <button className="btn btn-primary" onClick={() => onNavigate?.('signup')}>Get Started</button>
-          <a className="btn btn-primary" href="#contact">Contact Us</a>
+        <div className="cta-row" style={{ display: 'flex', gap: '16px' }}>
+          <button className="btn btn-primary" onClick={() => onNavigate?.('signup')} style={{ width: '180px', padding: '16px 32px', textAlign: 'center', fontSize: '1.1rem' }}>Get Started</button>
+          <button className="btn btn-primary" onClick={() => window.location.href = '#contact'} style={{ width: '180px', padding: '16px 32px', textAlign: 'center', fontSize: '1.1rem' }}>Contact Us</button>
         </div>
       </div>
       <div className="hero-right" aria-label="Waitlist panel">

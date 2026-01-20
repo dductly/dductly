@@ -9,7 +9,11 @@ interface AddIncomeProps {
 const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
   const { addIncome } = useIncome();
   const { user } = useAuth();
-  const businessName = user?.user_metadata?.business_name || "Your";
+  const businessName = user?.user_metadata?.business_name
+    ? (user.user_metadata.business_name.endsWith('s')
+      ? user.user_metadata.business_name
+      : `${user.user_metadata.business_name}'s`)
+    : "Your";
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
@@ -319,7 +323,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                 onChange={handleChange}
                 disabled={loading}
               />
-              <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? '#c33' : '#999', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                 {formData.description.length}/50 characters
               </div>
             </div>

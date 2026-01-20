@@ -16,7 +16,11 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const { expenses, updateExpense, deleteExpense } = useExpenses();
   const { incomes } = useIncome();
   const { user } = useAuth();
-  const businessName = user?.user_metadata?.business_name || "Your";
+  const businessName = user?.user_metadata?.business_name
+    ? (user.user_metadata.business_name.endsWith('s')
+      ? user.user_metadata.business_name
+      : `${user.user_metadata.business_name}'s`)
+    : "Your";
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
