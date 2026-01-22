@@ -2607,6 +2607,233 @@
   cursor: pointer;
 }
 
+/* File Upload Component */
+.file-upload-container {
+  margin-top: 8px;
+}
+
+.file-upload-dropzone {
+  border: 2px dashed var(--light-blue);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--off-white);
+}
+
+.file-upload-dropzone:hover {
+  border-color: var(--primary-blue);
+  background: var(--pale-blue);
+}
+
+.file-upload-dropzone.dragging {
+  border-color: var(--primary-blue);
+  background: var(--pale-blue);
+  transform: scale(1.01);
+}
+
+.file-upload-dropzone.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.file-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-upload-icon {
+  font-size: 2rem;
+}
+
+.file-upload-text {
+  color: var(--text-dark);
+  font-weight: 600;
+  margin: 0;
+}
+
+.file-upload-hint {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.file-list {
+  margin-top: 12px;
+}
+
+.file-list-label {
+  font-size: 0.85rem;
+  color: var(--text-medium);
+  margin: 0 0 8px 0;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.file-item.pending {
+  background: var(--pale-blue);
+  border-style: dashed;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.file-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-link {
+  text-decoration: none;
+  color: var(--primary-blue);
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.file-remove-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--pale-blue);
+  color: var(--text-medium);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.file-remove-btn:hover {
+  background: var(--error-red);
+  color: white;
+}
+
+/* Dark mode file upload */
+[data-theme="dark"] .file-upload-dropzone {
+  background: #2D3748;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .file-upload-dropzone:hover,
+[data-theme="dark"] .file-upload-dropzone.dragging {
+  background: #374151;
+  border-color: #90CDF4;
+}
+
+[data-theme="dark"] .file-item {
+  background: #2D3748;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .file-item.pending {
+  background: #374151;
+}
+
+[data-theme="dark"] .file-name {
+  color: #F7FAFC;
+}
+
+[data-theme="dark"] .file-remove-btn {
+  background: #4A5568;
+  color: #A0AEC0;
+}
+
+/* Attachments display in modals */
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+
+.attachment-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.attachment-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.attachment-link {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--primary-blue);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+[data-theme="dark"] .attachment-item {
+  background: #2D3748;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .attachment-link {
+  color: #90CDF4;
+}
+
 .success-banner {
   background: var(--success-green);
   color: var(--white);

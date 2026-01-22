@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useAuth } from "../hooks/useAuth";
+import FileUpload from "../components/FileUpload";
+import { storageService, type Attachment } from "../services/storageService";
 
 interface AddDataProps {
   onNavigate: (page: string) => void;
@@ -25,19 +27,40 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // Generate a temporary ID for file uploads
+    const tempId = `temp_${Date.now()}`;
+
+    // Upload files if any (don't let upload failures block expense creation)
+    let attachments: Attachment[] = [];
+    if (pendingFiles.length > 0 && user) {
+      try {
+        attachments = await storageService.uploadFiles(
+          pendingFiles,
+          user.id,
+          'expense',
+          tempId
+        );
+      } catch (error) {
+        console.error('File upload failed:', error);
+        // Continue without attachments
+      }
+    }
+
     // Add expense to shared state
-    addExpense({
+    await addExpense({
       expense_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
       category: formData.category,
       vendor: formData.vendor,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
+      attachments,
     });
 
     setSuccess(true);
@@ -53,6 +76,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
       paymentMethod: "",
     });
     setOtherPaymentMethod("");
+    setPendingFiles([]);
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -242,6 +266,18 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
               <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                 {formData.description.length}/50 characters
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Attachments</label>
+              <FileUpload
+                attachments={[]}
+                pendingFiles={pendingFiles}
+                onFilesSelected={(files) => setPendingFiles([...pendingFiles, ...files])}
+                onRemoveAttachment={() => {}}
+                onRemovePendingFile={(file) => setPendingFiles(pendingFiles.filter(f => f !== file))}
+                disabled={loading}
+              />
             </div>
 
             <div className="form-actions">
