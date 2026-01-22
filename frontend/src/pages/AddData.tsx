@@ -66,20 +66,8 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     setSuccess(true);
     setLoading(false);
 
-    // Reset form
-    setFormData({
-      date: "",
-      amount: "",
-      category: "",
-      vendor: "",
-      description: "",
-      paymentMethod: "",
-    });
-    setOtherPaymentMethod("");
-    setPendingFiles([]);
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
+    // Navigate to expenses page after successful save
+    onNavigate('expenses');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {

@@ -71,23 +71,8 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     setSuccess(true);
     setLoading(false);
 
-    // Reset form
-    setFormData({
-      date: "",
-      amount: "",
-      tip: "",
-      category: "",
-      customer: "",
-      // market: "",
-      description: "",
-      paymentMethod: "",
-    });
-    setOtherPaymentMethod("");
-    // setOtherMarket("");
-    setPendingFiles([]);
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
+    // Navigate to income page after successful save
+    onNavigate('income');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
