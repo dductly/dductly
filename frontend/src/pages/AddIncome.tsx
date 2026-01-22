@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useIncome } from "../contexts/IncomeContext";
 import { useAuth } from "../hooks/useAuth";
+import FileUpload from "../components/FileUpload";
+import { storageService, type Attachment } from "../services/storageService";
 
 interface AddIncomeProps {
   onNavigate: (page: string) => void;
@@ -28,13 +30,33 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
   // const [otherMarket, setOtherMarket] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // Generate a temporary ID for file uploads
+    const tempId = `temp_${Date.now()}`;
+
+    // Upload files if any (don't let upload failures block income creation)
+    let attachments: Attachment[] = [];
+    if (pendingFiles.length > 0 && user) {
+      try {
+        attachments = await storageService.uploadFiles(
+          pendingFiles,
+          user.id,
+          'income',
+          tempId
+        );
+      } catch (error) {
+        console.error('File upload failed:', error);
+        // Continue without attachments
+      }
+    }
+
     // Add income to shared state
-    addIncome({
+    await addIncome({
       income_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
       tip: formData.tip ? parseFloat(formData.tip.replace(/,/g, '')) : 0,
@@ -43,6 +65,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
       market: "", // formData.market === "other" ? otherMarket : formData.market,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
+      attachments,
     });
 
     setSuccess(true);
@@ -61,6 +84,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     });
     setOtherPaymentMethod("");
     // setOtherMarket("");
+    setPendingFiles([]);
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -326,6 +350,18 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
               <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
                 {formData.description.length}/50 characters
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Attachments</label>
+              <FileUpload
+                attachments={[]}
+                pendingFiles={pendingFiles}
+                onFilesSelected={(files) => setPendingFiles([...pendingFiles, ...files])}
+                onRemoveAttachment={() => {}}
+                onRemovePendingFile={(file) => setPendingFiles(pendingFiles.filter(f => f !== file))}
+                disabled={loading}
+              />
             </div>
 
             <div className="form-actions">

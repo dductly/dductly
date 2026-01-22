@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import type { Attachment } from "../services/storageService";
 
 export interface Income {
   id: string;
@@ -19,6 +20,7 @@ export interface Income {
   payment_method: string;
   amount: number;
   tip: number;
+  attachments?: Attachment[];
 }
 
 interface IncomeContextType {
@@ -72,6 +74,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       description: newIncome.description,
       payment_method: newIncome.payment_method,
       tip: newIncome.tip || 0,
+      attachments: newIncome.attachments || [],
       user_id: user.id,
     };
 
@@ -101,6 +104,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         description: updatedIncome.description,
         payment_method: updatedIncome.payment_method,
         tip: updatedIncome.tip || 0,
+        attachments: updatedIncome.attachments || [],
       })
       .eq("id", id)
       .select()

@@ -3,6 +3,8 @@ import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
 import { useAuth } from "../hooks/useAuth";
 import type { Expense } from "../contexts/ExpensesContext";
+import FileUpload from "../components/FileUpload";
+import { storageService, type Attachment } from "../services/storageService";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
@@ -37,6 +39,8 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     amount: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -97,8 +101,14 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     setEditForm({ ...editForm, amount: cleanValue });
   };
 
-  const handleViewExpense = (expense: Expense) => {
-    setViewingExpense(expense);
+  const handleViewExpense = async (expense: Expense) => {
+    // Refresh signed URLs for attachments before viewing
+    if (expense.attachments && expense.attachments.length > 0) {
+      const refreshedAttachments = await storageService.refreshAttachmentUrls(expense.attachments);
+      setViewingExpense({ ...expense, attachments: refreshedAttachments });
+    } else {
+      setViewingExpense(expense);
+    }
     setOpenMenuId(null);
   };
 
@@ -106,7 +116,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     setViewingExpense(null);
   };
 
-  const handleEditExpense = (expense: Expense) => {
+  const handleEditExpense = async (expense: Expense) => {
     setEditingExpense(expense);
     setEditForm({
       expense_date: expense.expense_date,
@@ -116,18 +126,48 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       payment_method: expense.payment_method,
       amount: expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     });
+    // Refresh signed URLs for attachments before editing
+    if (expense.attachments && expense.attachments.length > 0) {
+      const refreshedAttachments = await storageService.refreshAttachmentUrls(expense.attachments);
+      setEditAttachments(refreshedAttachments);
+    } else {
+      setEditAttachments([]);
+    }
+    setPendingFiles([]);
     setOpenMenuId(null);
   };
 
   const handleSaveEdit = async () => {
-    if (editingExpense) {
+    if (editingExpense && user) {
+      // Upload new files if any (don't let upload failures block save)
+      let newAttachments: Attachment[] = [];
+      if (pendingFiles.length > 0) {
+        try {
+          newAttachments = await storageService.uploadFiles(
+            pendingFiles,
+            user.id,
+            'expense',
+            editingExpense.id
+          );
+        } catch (error) {
+          console.error('File upload failed:', error);
+          // Continue without new attachments
+        }
+      }
+
+      // Combine existing attachments with new ones
+      const allAttachments = [...editAttachments, ...newAttachments];
+
       await updateExpense(editingExpense.id, {
         ...editForm,
         payment_method: editForm.payment_method === "other" ? otherPaymentMethod : editForm.payment_method,
         amount: parseFloat(editForm.amount.replace(/,/g, '')),
+        attachments: allAttachments,
       });
       setEditingExpense(null);
       setOtherPaymentMethod("");
+      setEditAttachments([]);
+      setPendingFiles([]);
     }
   };
 
@@ -142,6 +182,8 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       amount: "",
     });
     setOtherPaymentMethod("");
+    setEditAttachments([]);
+    setPendingFiles([]);
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -412,6 +454,36 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                       {formatCurrency(viewingExpense.amount)}
                     </div>
                   </div>
+                  {viewingExpense.attachments && viewingExpense.attachments.length > 0 && (
+                    <div className="form-group">
+                      <label>Attachments</label>
+                      <div className="attachments-list">
+                        {viewingExpense.attachments.map((attachment) => (
+                          <div key={attachment.id} className="attachment-item">
+                            {attachment.type.startsWith('image/') ? (
+                              <img
+                                src={attachment.url}
+                                alt={attachment.name}
+                                className="attachment-thumbnail"
+                              />
+                            ) : (
+                              <span className="attachment-icon">
+                                {attachment.type === 'application/pdf' ? '📄' : '📎'}
+                              </span>
+                            )}
+                            <a
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="attachment-link"
+                            >
+                              {attachment.name}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={handleCloseView}>
@@ -550,6 +622,19 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                         style={{ paddingLeft: '28px' }}
                       />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Attachments</label>
+                    <FileUpload
+                      attachments={editAttachments}
+                      pendingFiles={pendingFiles}
+                      onFilesSelected={(files) => setPendingFiles([...pendingFiles, ...files])}
+                      onRemoveAttachment={async (attachment) => {
+                        await storageService.deleteFile(attachment.path);
+                        setEditAttachments(editAttachments.filter(a => a.id !== attachment.id));
+                      }}
+                      onRemovePendingFile={(file) => setPendingFiles(pendingFiles.filter(f => f !== file))}
+                    />
                   </div>
                 </div>
                 <div className="modal-footer">

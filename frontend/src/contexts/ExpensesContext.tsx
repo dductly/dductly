@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import type { Attachment } from "../services/storageService";
 
 export interface Expense {
   id: string;
@@ -17,6 +18,7 @@ export interface Expense {
   description: string;
   payment_method: string;
   amount: number;
+  attachments?: Attachment[];
 }
 
 interface ExpensesContextType {
@@ -66,8 +68,9 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       amount: newExpense.amount,
       category: newExpense.category,
       vendor: newExpense.vendor,
-      description: newExpense.description, 
+      description: newExpense.description,
       payment_method: newExpense.payment_method,
+      attachments: newExpense.attachments || [],
       user_id: user.id,
     };
 
@@ -95,6 +98,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
         vendor: updatedExpense.vendor,
         description: updatedExpense.description,
         payment_method: updatedExpense.payment_method,
+        attachments: updatedExpense.attachments || [],
       })
       .eq("id", id)
       .select()

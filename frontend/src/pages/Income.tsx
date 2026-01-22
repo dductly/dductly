@@ -3,6 +3,8 @@ import { useIncome } from "../contexts/IncomeContext";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useAuth } from "../hooks/useAuth";
 import type { Income } from "../contexts/IncomeContext";
+import FileUpload from "../components/FileUpload";
+import { storageService, type Attachment } from "../services/storageService";
 import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
@@ -40,6 +42,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
   // const [otherMarket, setOtherMarket] = useState("");
+  const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -115,8 +119,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     setEditForm({ ...editForm, tip: cleanValue });
   };
 
-  const handleViewIncome = (income: Income) => {
-    setViewingIncome(income);
+  const handleViewIncome = async (income: Income) => {
+    // Refresh signed URLs for attachments before viewing
+    if (income.attachments && income.attachments.length > 0) {
+      const refreshedAttachments = await storageService.refreshAttachmentUrls(income.attachments);
+      setViewingIncome({ ...income, attachments: refreshedAttachments });
+    } else {
+      setViewingIncome(income);
+    }
     setOpenMenuId(null);
   };
 
@@ -124,7 +134,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     setViewingIncome(null);
   };
 
-  const handleEditIncome = (income: Income) => {
+  const handleEditIncome = async (income: Income) => {
     setEditingIncome(income);
     setEditForm({
       income_date: income.income_date,
@@ -136,21 +146,51 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       amount: income.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       tip: income.tip ? income.tip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00",
     });
+    // Refresh signed URLs for attachments before editing
+    if (income.attachments && income.attachments.length > 0) {
+      const refreshedAttachments = await storageService.refreshAttachmentUrls(income.attachments);
+      setEditAttachments(refreshedAttachments);
+    } else {
+      setEditAttachments([]);
+    }
+    setPendingFiles([]);
     setOpenMenuId(null);
   };
 
   const handleSaveEdit = async () => {
-    if (editingIncome) {
+    if (editingIncome && user) {
+      // Upload new files if any (don't let upload failures block save)
+      let newAttachments: Attachment[] = [];
+      if (pendingFiles.length > 0) {
+        try {
+          newAttachments = await storageService.uploadFiles(
+            pendingFiles,
+            user.id,
+            'income',
+            editingIncome.id
+          );
+        } catch (error) {
+          console.error('File upload failed:', error);
+          // Continue without new attachments
+        }
+      }
+
+      // Combine existing attachments with new ones
+      const allAttachments = [...editAttachments, ...newAttachments];
+
       await updateIncome(editingIncome.id, {
         ...editForm,
         market: "", // editForm.market === "other" ? otherMarket : editForm.market,
         payment_method: editForm.payment_method === "other" ? otherPaymentMethod : editForm.payment_method,
         amount: parseFloat(editForm.amount.replace(/,/g, '')),
         tip: editForm.tip ? parseFloat(editForm.tip.replace(/,/g, '')) : 0,
+        attachments: allAttachments,
       });
       setEditingIncome(null);
       setOtherPaymentMethod("");
       // setOtherMarket("");
+      setEditAttachments([]);
+      setPendingFiles([]);
     }
   };
 
@@ -168,6 +208,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     });
     setOtherPaymentMethod("");
     // setOtherMarket("");
+    setEditAttachments([]);
+    setPendingFiles([]);
   };
 
   const handleDeleteIncome = (id: string) => {
@@ -458,6 +500,36 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       {formatCurrency(viewingIncome.amount + (viewingIncome.tip || 0))}
                     </div>
                   </div>
+                  {viewingIncome.attachments && viewingIncome.attachments.length > 0 && (
+                    <div className="form-group">
+                      <label>Attachments</label>
+                      <div className="attachments-list">
+                        {viewingIncome.attachments.map((attachment) => (
+                          <div key={attachment.id} className="attachment-item">
+                            {attachment.type.startsWith('image/') ? (
+                              <img
+                                src={attachment.url}
+                                alt={attachment.name}
+                                className="attachment-thumbnail"
+                              />
+                            ) : (
+                              <span className="attachment-icon">
+                                {attachment.type === 'application/pdf' ? '📄' : '📎'}
+                              </span>
+                            )}
+                            <a
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="attachment-link"
+                            >
+                              {attachment.name}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={handleCloseView}>
@@ -649,6 +721,19 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                         style={{ paddingLeft: '28px' }}
                       />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Attachments</label>
+                    <FileUpload
+                      attachments={editAttachments}
+                      pendingFiles={pendingFiles}
+                      onFilesSelected={(files) => setPendingFiles([...pendingFiles, ...files])}
+                      onRemoveAttachment={async (attachment) => {
+                        await storageService.deleteFile(attachment.path);
+                        setEditAttachments(editAttachments.filter(a => a.id !== attachment.id));
+                      }}
+                      onRemovePendingFile={(file) => setPendingFiles(pendingFiles.filter(f => f !== file))}
+                    />
                   </div>
                 </div>
                 <div className="modal-footer">
