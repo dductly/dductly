@@ -378,6 +378,10 @@ const AppContent: React.FC = () => {
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
       case 'signup':
+        // Redirect to dashboard if already signed in
+        if (user) {
+          return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} onUserGuideClick={() => setLegalModal('guide')} />;
+        }
         return <SignUp onNavigate={handleNavigate} />;
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
