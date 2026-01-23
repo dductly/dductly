@@ -541,7 +541,7 @@ const AppContent: React.FC = () => {
               <h3>General Questions</h3>
 
               <h4>What is dductly?</h4>
-              <p>dductly is an expense tracking and financial management platform designed specifically for small business owners. We help you organize your business expenses, track receipts, and generate reports for tax time.</p>
+              <p>dductly is an expense and income tracking platform designed specifically for small business owners. We help you organize your finances, upload receipts, view statistics, and stay prepared for tax time.</p>
 
               <h4>Who is dductly for?</h4>
               <p>dductly is built for small business owners, independent contractors, freelancers, and entrepreneurs who need a simple way to track expenses and stay organized for tax season.</p>
@@ -562,19 +562,22 @@ const AppContent: React.FC = () => {
               <h4>How do I import my expense data?</h4>
               <p>You can import expense data through our Import Data feature. We support various file formats including CSV and Excel. Simply click "Import Data" from your dashboard and follow the prompts.</p>
 
-              <h4>Can I manually add expenses?</h4>
-              <p>Yes! Use the "Add Data" button on your dashboard to manually enter individual expenses. This is perfect for adding receipts on the go.</p>
+              <h4>Can I manually add expenses and income?</h4>
+              <p>Yes! Use the "Expenses" or "Income" buttons on your dashboard to add entries. You can also upload receipts and attachments to keep everything organized.</p>
 
-              <h4>What types of expenses can I track?</h4>
-              <p>You can track all business-related expenses including supplies, materials, travel costs, equipment, marketing expenses, utilities, and more.</p>
+              <h4>What can I track?</h4>
+              <p>You can track expenses (supplies, materials, travel, equipment, marketing, etc.) and income (product sales, services, tips, and more).</p>
 
-              <h4>Can I categorize my expenses?</h4>
-              <p>Yes, dductly allows you to categorize expenses to help you understand where your money is going and make tax time easier.</p>
+              <h4>Can I upload receipts and attachments?</h4>
+              <p>Yes! You can upload photos, PDFs, or any file type to your expenses and income. Just drag and drop or click to browse when adding or editing an entry.</p>
 
-              <h3>Reports & Exports</h3>
+              <h4>Can I categorize my entries?</h4>
+              <p>Yes, dductly allows you to categorize both expenses and income to help you understand your finances and make tax time easier.</p>
 
-              <h4>How do I generate reports?</h4>
-              <p>Navigate to your dashboard and use the reporting tools to generate expense summaries, tax reports, and custom reports for any date range.</p>
+              <h3>Statistics & Reports</h3>
+
+              <h4>How do I view my statistics?</h4>
+              <p>Click "Statistics" from your dashboard to see charts and insights about your expenses, income, and profit over time. You can filter by date range and category.</p>
 
               <h4>What export formats are available?</h4>
               <p>You can export your data in multiple formats including PDF, CSV, and Excel, making it easy to share with your accountant or use with other software.</p>
@@ -582,7 +585,7 @@ const AppContent: React.FC = () => {
               <h3>Account & Security</h3>
 
               <h4>Is my data secure?</h4>
-              <p>Yes! We take data security seriously. All data is encrypted and stored securely. We never share your personal or business information with third parties. See our Privacy Policy for more details.</p>
+              <p>Yes! We take data security seriously. All data is encrypted and stored securely. Your uploaded files are protected with secure access. You'll also be automatically logged out after 15 minutes of inactivity for added security.</p>
 
               <h4>How do I reset my password?</h4>
               <p>Click "Sign In" and then "Forgot Password" to receive a password reset link via email.</p>
