@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
+import supabase from './lib/supabaseClient';
 
 dotenv.config();
 
@@ -24,6 +25,35 @@ app.use(express.urlencoded({ extended: true }));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Public endpoint to get user count (for subscription counter)
+// Uses database function approach (recommended by Supabase)
+app.get('/api/user-count', async (req, res) => {
+  try {
+    // Use database function - works with anon key, no service role key needed
+    // This is the recommended Supabase approach using SECURITY DEFINER
+    const { data: functionCount, error: functionError } = await supabase
+      .rpc('get_user_count');
+
+    if (functionError) {
+      console.error('Error fetching user count:', functionError);
+      return res.status(500).json({ 
+        error: 'Internal Server Error',
+        message: 'Failed to fetch user count. Please ensure the get_user_count() database function exists.',
+        details: functionError.message
+      });
+    }
+
+    res.json({ count: functionCount || 0 });
+  } catch (error: any) {
+    console.error('Error in user count endpoint:', error);
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: 'Failed to fetch user count',
+      details: error?.message
+    });
+  }
 });
 
 // Routes
