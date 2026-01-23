@@ -83,12 +83,6 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       }
     } else {
       setSuccess(true);
-      // Navigate to confirmation page after a short delay
-      setTimeout(() => {
-        if (onNavigate) {
-          onNavigate('confirm-email');
-        }
-      }, 2000);
     }
   
     setLoading(false);
