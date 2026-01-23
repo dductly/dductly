@@ -165,30 +165,34 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     );
   }
 
-  // Default: waiting for email confirmation
+  // If no tokens and not verified, redirect to home
+  useEffect(() => {
+    if (!isVerifying && !isVerified && !user?.email_confirmed_at && !error) {
+      // Small delay to avoid flash, then redirect
+      const timer = setTimeout(() => {
+        onNavigate('home');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isVerifying, isVerified, user, error, onNavigate]);
+
+  // Show verifying state or nothing (will redirect)
   return (
     <div className="page">
       <section className="section">
         <div className="confirmation-container">
           <div className="confirmation-content">
-            <div className="email-icon">📧</div>
-            <h1 className="section-title">Check Your Email</h1>
-            <p>We've sent a confirmation link to your email address.</p>
-            <p>Please check your email and click the link to verify your account.</p>
-            <div className="confirmation-actions">
-              <button
-                className="btn btn-ghost"
-                onClick={() => window.location.reload()}
-              >
-                Check Again
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => onNavigate('home')}
-              >
-                Go to Home
-              </button>
-            </div>
+            {isVerifying ? (
+              <>
+                <div className="email-icon">📧</div>
+                <h1 className="section-title">Verifying Your Email</h1>
+                <p>Please wait while we verify your email address...</p>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <p>Redirecting...</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
