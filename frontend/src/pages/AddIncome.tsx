@@ -27,6 +27,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherCategory, setOtherCategory] = useState("");
   // const [otherMarket, setOtherMarket] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -60,7 +61,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
       income_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
       tip: formData.tip ? parseFloat(formData.tip.replace(/,/g, '')) : 0,
-      category: formData.category,
+      category: formData.category === "other" ? otherCategory : formData.category,
       customer: formData.customer,
       market: "", // formData.market === "other" ? otherMarket : formData.market,
       description: formData.description,
@@ -267,6 +268,19 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                 </select>
               </div>
             </div>
+
+            {formData.category === "other" && (
+              <div className="form-group">
+                <label>Specify Category</label>
+                <input
+                  type="text"
+                  placeholder="Enter category"
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             {formData.paymentMethod === "other" && (
               <div className="form-group">

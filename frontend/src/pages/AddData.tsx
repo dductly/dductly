@@ -25,6 +25,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherCategory, setOtherCategory] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -56,7 +57,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     await addExpense({
       expense_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
-      category: formData.category,
+      category: formData.category === "other" ? otherCategory : formData.category,
       vendor: formData.vendor,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
@@ -214,6 +215,19 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                 </select>
               </div>
             </div>
+
+            {formData.category === "other" && (
+              <div className="form-group">
+                <label>Specify Category</label>
+                <input
+                  type="text"
+                  placeholder="Enter category"
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             {formData.paymentMethod === "other" && (
               <div className="form-group">
