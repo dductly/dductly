@@ -378,6 +378,10 @@ const AppContent: React.FC = () => {
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
       case 'signup':
+        // Redirect to dashboard if already signed in
+        if (user) {
+          return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} onUserGuideClick={() => setLegalModal('guide')} />;
+        }
         return <SignUp onNavigate={handleNavigate} />;
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
@@ -541,7 +545,7 @@ const AppContent: React.FC = () => {
               <h3>General Questions</h3>
 
               <h4>What is dductly?</h4>
-              <p>dductly is an expense tracking and financial management platform designed specifically for small business owners. We help you organize your business expenses, track receipts, and generate reports for tax time.</p>
+              <p>dductly is an expense and income tracking platform designed specifically for small business owners. We help you organize your finances, upload receipts, view statistics, and stay prepared for tax time.</p>
 
               <h4>Who is dductly for?</h4>
               <p>dductly is built for small business owners, independent contractors, freelancers, and entrepreneurs who need a simple way to track expenses and stay organized for tax season.</p>
@@ -562,19 +566,22 @@ const AppContent: React.FC = () => {
               <h4>How do I import my expense data?</h4>
               <p>You can import expense data through our Import Data feature. We support various file formats including CSV and Excel. Simply click "Import Data" from your dashboard and follow the prompts.</p>
 
-              <h4>Can I manually add expenses?</h4>
-              <p>Yes! Use the "Add Data" button on your dashboard to manually enter individual expenses. This is perfect for adding receipts on the go.</p>
+              <h4>Can I manually add expenses and income?</h4>
+              <p>Yes! Use the "Expenses" or "Income" buttons on your dashboard to add entries. You can also upload receipts and attachments to keep everything organized.</p>
 
-              <h4>What types of expenses can I track?</h4>
-              <p>You can track all business-related expenses including supplies, materials, travel costs, equipment, marketing expenses, utilities, and more.</p>
+              <h4>What can I track?</h4>
+              <p>You can track expenses (supplies, materials, travel, equipment, marketing, etc.) and income (product sales, services, tips, and more).</p>
 
-              <h4>Can I categorize my expenses?</h4>
-              <p>Yes, dductly allows you to categorize expenses to help you understand where your money is going and make tax time easier.</p>
+              <h4>Can I upload receipts and attachments?</h4>
+              <p>Yes! You can upload photos, PDFs, or any file type to your expenses and income. Just drag and drop or click to browse when adding or editing an entry.</p>
 
-              <h3>Reports & Exports</h3>
+              <h4>Can I categorize my entries?</h4>
+              <p>Yes, dductly allows you to categorize both expenses and income to help you understand your finances and make tax time easier.</p>
 
-              <h4>How do I generate reports?</h4>
-              <p>Navigate to your dashboard and use the reporting tools to generate expense summaries, tax reports, and custom reports for any date range.</p>
+              <h3>Statistics & Reports</h3>
+
+              <h4>How do I view my statistics?</h4>
+              <p>Click "Statistics" from your dashboard to see charts and insights about your expenses, income, and profit over time. You can filter by date range and category.</p>
 
               <h4>What export formats are available?</h4>
               <p>You can export your data in multiple formats including PDF, CSV, and Excel, making it easy to share with your accountant or use with other software.</p>
@@ -582,7 +589,7 @@ const AppContent: React.FC = () => {
               <h3>Account & Security</h3>
 
               <h4>Is my data secure?</h4>
-              <p>Yes! We take data security seriously. All data is encrypted and stored securely. We never share your personal or business information with third parties. See our Privacy Policy for more details.</p>
+              <p>Yes! We take data security seriously. All data is encrypted and stored securely. Your uploaded files are protected with secure access. You'll also be automatically logged out after 15 minutes of inactivity for added security.</p>
 
               <h4>How do I reset my password?</h4>
               <p>Click "Sign In" and then "Forgot Password" to receive a password reset link via email.</p>
@@ -631,8 +638,11 @@ const AppContent: React.FC = () => {
               <p>After signing in, you'll land on your personalized dashboard. Here you can:</p>
               <ul>
                 <li><strong>View Expenses:</strong> See all your tracked expenses in one place</li>
+                <li><strong>View Income:</strong> See all your tracked income in one place</li>
                 <li><strong>Add Expense:</strong> Manually add individual expenses</li>
-                <li><strong>Import Data:</strong> Upload bulk expense data from files</li>
+                <li><strong>Add Income:</strong> Manually add individual income entries</li>
+                <li><strong>Statistics:</strong> View charts and insights about your finances</li>
+                <li><strong>Import Data:</strong> Upload bulk data from files</li>
               </ul>
 
               <h3>Managing Expenses</h3>
@@ -645,9 +655,11 @@ const AppContent: React.FC = () => {
                 <li><strong>Category:</strong> Choose from options like Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
                 <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Check, Bank Transfer, or Other (optional)</li>
                 <li><strong>Vendor/Store Name:</strong> Where you made the purchase (optional)</li>
-                <li><strong>Description/Notes:</strong> Additional details about the expense (optional)</li>
+                <li><strong>Title:</strong> A brief description of the expense (optional)</li>
+                <li><strong>Attachments:</strong> Upload receipts, photos, or documents (optional)</li>
               </ul>
               <p>When entering amounts, just type the numbers - the $ symbol is automatically added, and the system will format it with commas and decimal places when you finish typing.</p>
+              <p>After adding an expense, you'll be taken directly to your expenses list to see your new entry.</p>
 
               <h4>Viewing Your Expenses</h4>
               <p>Click "View Expenses" to see your complete expense list. You can:</p>
@@ -663,10 +675,48 @@ const AppContent: React.FC = () => {
               <ol>
                 <li>Go to "View Expenses"</li>
                 <li>Find the expense in the table</li>
-                <li>Click the three-line menu icon on the right</li>
-                <li>Select "Edit" to modify or "Delete" to remove</li>
+                <li>Click the three-dot menu icon on the right</li>
+                <li>Select "View" to see details and attachments</li>
+                <li>Select "Edit" to modify or add/remove attachments</li>
+                <li>Select "Delete" to remove the expense</li>
               </ol>
-              <p>When editing, all fields can be updated just like when adding a new expense. Click "Save Changes" to apply your updates.</p>
+
+              <h3>Managing Income</h3>
+
+              <h4>Adding Income</h4>
+              <p>Click "Add Income" from your dashboard. You'll need to provide:</p>
+              <ul>
+                <li><strong>Date:</strong> When the income was received (required)</li>
+                <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
+                <li><strong>Tip:</strong> Any tip amount received (optional)</li>
+                <li><strong>Category:</strong> Choose from options like Product Sales, Services, Consulting, Grants, and more (required)</li>
+                <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Venmo, Check, Bank Transfer, or Other (optional)</li>
+                <li><strong>Customer:</strong> Customer name if applicable (optional)</li>
+                <li><strong>Title:</strong> A brief description of the income (optional)</li>
+                <li><strong>Attachments:</strong> Upload invoices, receipts, or documents (optional)</li>
+              </ul>
+              <p>After adding income, you'll be taken directly to your income list to see your new entry.</p>
+
+              <h4>Viewing and Editing Income</h4>
+              <p>Click "View Income" to see your complete income list. Just like expenses, you can filter, sort, view, edit, and delete entries using the three-dot menu.</p>
+
+              <h3>Uploading Attachments</h3>
+              <p>You can upload receipts, photos, PDFs, or any file to your expenses and income:</p>
+              <ul>
+                <li><strong>When adding:</strong> Drag and drop files or click the upload area to browse</li>
+                <li><strong>When editing:</strong> Add new files or remove existing attachments</li>
+                <li><strong>When viewing:</strong> Click on any attachment to open it</li>
+              </ul>
+              <p>This works on both desktop and mobile - upload photos directly from your phone!</p>
+
+              <h3>Statistics</h3>
+              <p>The Statistics page gives you insights into your finances:</p>
+              <ul>
+                <li>View your total expenses, income, and profit</li>
+                <li>See breakdowns by category</li>
+                <li>Filter by date range</li>
+                <li>Track your financial trends over time</li>
+              </ul>
 
               <h4>Importing Data</h4>
               <p>If you have expenses in a spreadsheet or file, use the "Import Data" feature to upload them in bulk. This is great for:</p>
@@ -691,22 +741,19 @@ const AppContent: React.FC = () => {
               <h4>Signing Out</h4>
               <p>Click on your name in the top right corner and select "Logout" from the dropdown menu. This will sign you out and return you to the home page.</p>
 
-              <h3>Tips for Success</h3>
-
-              <h4>Stay Organized</h4>
+              <h3>Settings & Preferences</h3>
               <ul>
-                <li>Add expenses regularly - don't wait until tax time!</li>
-                <li>Use consistent categories to make tracking easier</li>
-                <li>Include vendor names and descriptions for better records</li>
-                <li>Keep digital copies of receipts for reference</li>
+                <li><strong>Dark Mode:</strong> Toggle dark mode from the settings for comfortable viewing</li>
+                <li><strong>Auto-Logout:</strong> For your security, you'll be automatically logged out after 15 minutes of inactivity</li>
               </ul>
 
-              <h4>Best Practices</h4>
+              <h3>Tips for Success</h3>
               <ul>
-                <li><strong>Regular Updates:</strong> Add expenses weekly or as they occur</li>
-                <li><strong>Be Detailed:</strong> The more information you add, the better your records</li>
-                <li><strong>Use Categories:</strong> Proper categorization makes tax preparation much easier</li>
-                <li><strong>Review Regularly:</strong> Check your expense totals monthly to track spending trends</li>
+                <li>Add expenses and income regularly - don't wait until tax time!</li>
+                <li>Upload receipts right when you make a purchase so you don't lose them</li>
+                <li>Use consistent categories to make tracking and reporting easier</li>
+                <li>Check your Statistics page regularly to track your profit</li>
+                <li>Include customer names and descriptions for better records</li>
               </ul>
 
               <h3>Need More Help?</h3>

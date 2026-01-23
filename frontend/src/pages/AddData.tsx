@@ -9,7 +9,7 @@ interface AddDataProps {
 }
 
 const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
-  const { addExpense } = useExpenses();
+  const { addExpense, customCategories, customPaymentMethods } = useExpenses();
   const { user } = useAuth();
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
@@ -25,6 +25,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherCategory, setOtherCategory] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -56,7 +57,7 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
     await addExpense({
       expense_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
-      category: formData.category,
+      category: formData.category === "other" ? otherCategory : formData.category,
       vendor: formData.vendor,
       description: formData.description,
       payment_method: formData.paymentMethod === "other" ? otherPaymentMethod : formData.paymentMethod,
@@ -191,6 +192,13 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                   <option value="packaging">Packaging</option>
                   <option value="utilities">Utilities</option>
                   <option value="insurance">Insurance</option>
+                  {customCategories.length > 0 && (
+                    <optgroup label="Your Categories">
+                      {customCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -210,10 +218,30 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                   <option value="venmo">Venmo</option>
                   <option value="check">Check</option>
                   <option value="bank-transfer">Bank Transfer</option>
+                  {customPaymentMethods.length > 0 && (
+                    <optgroup label="Your Payment Methods">
+                      {customPaymentMethods.map(method => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
             </div>
+
+            {formData.category === "other" && (
+              <div className="form-group">
+                <label>Specify Category</label>
+                <input
+                  type="text"
+                  placeholder="Enter category"
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             {formData.paymentMethod === "other" && (
               <div className="form-group">

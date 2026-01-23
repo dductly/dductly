@@ -23,12 +23,24 @@ export interface Income {
   attachments?: Attachment[];
 }
 
+// Default options that come with the app
+const DEFAULT_INCOME_CATEGORIES = [
+  "product-sales", "services", "consulting", "grants", "investments",
+  "refunds", "commissions", "royalties", "other"
+];
+
+const DEFAULT_PAYMENT_METHODS = [
+  "cash", "credit-card", "debit-card", "venmo", "check", "bank-transfer", "other"
+];
+
 interface IncomeContextType {
   incomes: Income[];
   addIncome: (income: Omit<Income, "id" | "user_id">) => Promise<void>;
   updateIncome: (id: string, income: Omit<Income, "id" | "user_id">) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
   loading: boolean;
+  customCategories: string[];
+  customPaymentMethods: string[];
 }
 
 const IncomeContext = createContext<IncomeContextType | undefined>(undefined);
@@ -37,6 +49,17 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const { user } = useAuth();
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Extract custom categories and payment methods from existing income
+  const customCategories = React.useMemo(() => {
+    const usedCategories = new Set(incomes.map(i => i.category).filter(Boolean));
+    return Array.from(usedCategories).filter(cat => !DEFAULT_INCOME_CATEGORIES.includes(cat));
+  }, [incomes]);
+
+  const customPaymentMethods = React.useMemo(() => {
+    const usedMethods = new Set(incomes.map(i => i.payment_method).filter(Boolean));
+    return Array.from(usedMethods).filter(method => !DEFAULT_PAYMENT_METHODS.includes(method));
+  }, [incomes]);
 
   // Fetch incomes when user changes
   useEffect(() => {
@@ -121,7 +144,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   return (
-    <IncomeContext.Provider value={{ incomes, addIncome, updateIncome, deleteIncome, loading }}>
+    <IncomeContext.Provider value={{ incomes, addIncome, updateIncome, deleteIncome, loading, customCategories, customPaymentMethods }}>
       {children}
     </IncomeContext.Provider>
   );

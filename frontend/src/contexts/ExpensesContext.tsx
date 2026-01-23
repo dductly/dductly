@@ -21,12 +21,24 @@ export interface Expense {
   attachments?: Attachment[];
 }
 
+// Default options that come with the app
+const DEFAULT_EXPENSE_CATEGORIES = [
+  "booth-fees", "supplies", "materials", "equipment", "travel",
+  "marketing", "packaging", "utilities", "insurance", "other"
+];
+
+const DEFAULT_PAYMENT_METHODS = [
+  "cash", "credit-card", "debit-card", "venmo", "check", "bank-transfer", "other"
+];
+
 interface ExpensesContextType {
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
   updateExpense: (id: string, expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   loading: boolean;
+  customCategories: string[];
+  customPaymentMethods: string[];
 }
 
 const ExpensesContext = createContext<ExpensesContextType | undefined>(undefined);
@@ -35,6 +47,17 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Extract custom categories and payment methods from existing expenses
+  const customCategories = React.useMemo(() => {
+    const usedCategories = new Set(expenses.map(e => e.category).filter(Boolean));
+    return Array.from(usedCategories).filter(cat => !DEFAULT_EXPENSE_CATEGORIES.includes(cat));
+  }, [expenses]);
+
+  const customPaymentMethods = React.useMemo(() => {
+    const usedMethods = new Set(expenses.map(e => e.payment_method).filter(Boolean));
+    return Array.from(usedMethods).filter(method => !DEFAULT_PAYMENT_METHODS.includes(method));
+  }, [expenses]);
 
   // Fetch expenses when user changes
   useEffect(() => {
@@ -115,7 +138,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <ExpensesContext.Provider value={{ expenses, addExpense, updateExpense, deleteExpense, loading }}>
+    <ExpensesContext.Provider value={{ expenses, addExpense, updateExpense, deleteExpense, loading, customCategories, customPaymentMethods }}>
       {children}
     </ExpensesContext.Provider>
   );

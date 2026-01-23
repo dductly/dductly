@@ -9,7 +9,7 @@ interface AddIncomeProps {
 }
 
 const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
-  const { addIncome } = useIncome();
+  const { addIncome, customCategories, customPaymentMethods } = useIncome();
   const { user } = useAuth();
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
@@ -27,6 +27,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
     paymentMethod: "",
   });
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
+  const [otherCategory, setOtherCategory] = useState("");
   // const [otherMarket, setOtherMarket] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -60,7 +61,7 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
       income_date: formData.date,
       amount: parseFloat(formData.amount.replace(/,/g, '')),
       tip: formData.tip ? parseFloat(formData.tip.replace(/,/g, '')) : 0,
-      category: formData.category,
+      category: formData.category === "other" ? otherCategory : formData.category,
       customer: formData.customer,
       market: "", // formData.market === "other" ? otherMarket : formData.market,
       description: formData.description,
@@ -244,6 +245,13 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                   <option value="refunds">Refunds</option>
                   <option value="commissions">Commissions</option>
                   <option value="royalties">Royalties</option>
+                  {customCategories.length > 0 && (
+                    <optgroup label="Your Categories">
+                      {customCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -263,10 +271,30 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
                   <option value="venmo">Venmo</option>
                   <option value="check">Check</option>
                   <option value="bank-transfer">Bank Transfer</option>
+                  {customPaymentMethods.length > 0 && (
+                    <optgroup label="Your Payment Methods">
+                      {customPaymentMethods.map(method => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
             </div>
+
+            {formData.category === "other" && (
+              <div className="form-group">
+                <label>Specify Category</label>
+                <input
+                  type="text"
+                  placeholder="Enter category"
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             {formData.paymentMethod === "other" && (
               <div className="form-group">
