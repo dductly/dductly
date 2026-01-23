@@ -321,9 +321,22 @@ const AppContent: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
 
+    // Check for email confirmation tokens in URL (hash or query params)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    const hasConfirmationToken = 
+      (hashParams.get('access_token') && hashParams.get('type') === 'email') ||
+      (queryParams.get('token') && queryParams.get('type') === 'email');
+
     // Set initial state from URL on page load/refresh
     const currentPath = window.location.pathname;
-    const initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
+    let initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
+    
+    // If we have confirmation tokens, route to confirm-email page
+    if (hasConfirmationToken) {
+      initialPage = 'confirm-email';
+    }
+    
     console.log('[History] Initial setup, path:', currentPath, 'page:', initialPage);
 
     // Actually set the current page based on URL
