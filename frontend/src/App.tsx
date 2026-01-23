@@ -631,8 +631,11 @@ const AppContent: React.FC = () => {
               <p>After signing in, you'll land on your personalized dashboard. Here you can:</p>
               <ul>
                 <li><strong>View Expenses:</strong> See all your tracked expenses in one place</li>
+                <li><strong>View Income:</strong> See all your tracked income in one place</li>
                 <li><strong>Add Expense:</strong> Manually add individual expenses</li>
-                <li><strong>Import Data:</strong> Upload bulk expense data from files</li>
+                <li><strong>Add Income:</strong> Manually add individual income entries</li>
+                <li><strong>Statistics:</strong> View charts and insights about your finances</li>
+                <li><strong>Import Data:</strong> Upload bulk data from files</li>
               </ul>
 
               <h3>Managing Expenses</h3>
@@ -645,9 +648,11 @@ const AppContent: React.FC = () => {
                 <li><strong>Category:</strong> Choose from options like Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
                 <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Check, Bank Transfer, or Other (optional)</li>
                 <li><strong>Vendor/Store Name:</strong> Where you made the purchase (optional)</li>
-                <li><strong>Description/Notes:</strong> Additional details about the expense (optional)</li>
+                <li><strong>Title:</strong> A brief description of the expense (optional)</li>
+                <li><strong>Attachments:</strong> Upload receipts, photos, or documents (optional)</li>
               </ul>
               <p>When entering amounts, just type the numbers - the $ symbol is automatically added, and the system will format it with commas and decimal places when you finish typing.</p>
+              <p>After adding an expense, you'll be taken directly to your expenses list to see your new entry.</p>
 
               <h4>Viewing Your Expenses</h4>
               <p>Click "View Expenses" to see your complete expense list. You can:</p>
@@ -663,10 +668,48 @@ const AppContent: React.FC = () => {
               <ol>
                 <li>Go to "View Expenses"</li>
                 <li>Find the expense in the table</li>
-                <li>Click the three-line menu icon on the right</li>
-                <li>Select "Edit" to modify or "Delete" to remove</li>
+                <li>Click the three-dot menu icon on the right</li>
+                <li>Select "View" to see details and attachments</li>
+                <li>Select "Edit" to modify or add/remove attachments</li>
+                <li>Select "Delete" to remove the expense</li>
               </ol>
-              <p>When editing, all fields can be updated just like when adding a new expense. Click "Save Changes" to apply your updates.</p>
+
+              <h3>Managing Income</h3>
+
+              <h4>Adding Income</h4>
+              <p>Click "Add Income" from your dashboard. You'll need to provide:</p>
+              <ul>
+                <li><strong>Date:</strong> When the income was received (required)</li>
+                <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
+                <li><strong>Tip:</strong> Any tip amount received (optional)</li>
+                <li><strong>Category:</strong> Choose from options like Product Sales, Services, Consulting, Grants, and more (required)</li>
+                <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Venmo, Check, Bank Transfer, or Other (optional)</li>
+                <li><strong>Customer:</strong> Customer name if applicable (optional)</li>
+                <li><strong>Title:</strong> A brief description of the income (optional)</li>
+                <li><strong>Attachments:</strong> Upload invoices, receipts, or documents (optional)</li>
+              </ul>
+              <p>After adding income, you'll be taken directly to your income list to see your new entry.</p>
+
+              <h4>Viewing and Editing Income</h4>
+              <p>Click "View Income" to see your complete income list. Just like expenses, you can filter, sort, view, edit, and delete entries using the three-dot menu.</p>
+
+              <h3>Uploading Attachments</h3>
+              <p>You can upload receipts, photos, PDFs, or any file to your expenses and income:</p>
+              <ul>
+                <li><strong>When adding:</strong> Drag and drop files or click the upload area to browse</li>
+                <li><strong>When editing:</strong> Add new files or remove existing attachments</li>
+                <li><strong>When viewing:</strong> Click on any attachment to open it</li>
+              </ul>
+              <p>This works on both desktop and mobile - upload photos directly from your phone!</p>
+
+              <h3>Statistics</h3>
+              <p>The Statistics page gives you insights into your finances:</p>
+              <ul>
+                <li>View your total expenses, income, and profit</li>
+                <li>See breakdowns by category</li>
+                <li>Filter by date range</li>
+                <li>Track your financial trends over time</li>
+              </ul>
 
               <h4>Importing Data</h4>
               <p>If you have expenses in a spreadsheet or file, use the "Import Data" feature to upload them in bulk. This is great for:</p>
@@ -691,22 +734,19 @@ const AppContent: React.FC = () => {
               <h4>Signing Out</h4>
               <p>Click on your name in the top right corner and select "Logout" from the dropdown menu. This will sign you out and return you to the home page.</p>
 
-              <h3>Tips for Success</h3>
-
-              <h4>Stay Organized</h4>
+              <h3>Settings & Preferences</h3>
               <ul>
-                <li>Add expenses regularly - don't wait until tax time!</li>
-                <li>Use consistent categories to make tracking easier</li>
-                <li>Include vendor names and descriptions for better records</li>
-                <li>Keep digital copies of receipts for reference</li>
+                <li><strong>Dark Mode:</strong> Toggle dark mode from the settings for comfortable viewing</li>
+                <li><strong>Auto-Logout:</strong> For your security, you'll be automatically logged out after 15 minutes of inactivity</li>
               </ul>
 
-              <h4>Best Practices</h4>
+              <h3>Tips for Success</h3>
               <ul>
-                <li><strong>Regular Updates:</strong> Add expenses weekly or as they occur</li>
-                <li><strong>Be Detailed:</strong> The more information you add, the better your records</li>
-                <li><strong>Use Categories:</strong> Proper categorization makes tax preparation much easier</li>
-                <li><strong>Review Regularly:</strong> Check your expense totals monthly to track spending trends</li>
+                <li>Add expenses and income regularly - don't wait until tax time!</li>
+                <li>Upload receipts right when you make a purchase so you don't lose them</li>
+                <li>Use consistent categories to make tracking and reporting easier</li>
+                <li>Check your Statistics page regularly to track your profit</li>
+                <li>Include customer names and descriptions for better records</li>
               </ul>
 
               <h3>Need More Help?</h3>

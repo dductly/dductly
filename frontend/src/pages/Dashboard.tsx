@@ -115,22 +115,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
               <div className="step-item">
                 <div className="step-number">1</div>
                 <div className="step-content">
-                  <h3>Import Your Data</h3>
-                  <p>Upload your expenses and receipts to get organized</p>
+                  <h3>Add Expenses & Income</h3>
+                  <p>Log transactions and upload receipts as you go</p>
                 </div>
               </div>
               <div className="step-item">
                 <div className="step-number">2</div>
                 <div className="step-content">
-                  <h3>Track Everything</h3>
-                  <p>Keep all your finances in one place</p>
+                  <h3>Track Your Progress</h3>
+                  <p>View statistics and see your profit over time</p>
                 </div>
               </div>
               <div className="step-item">
                 <div className="step-number">3</div>
                 <div className="step-content">
-                  <h3>Export at Tax Time</h3>
-                  <p>Generate reports with just one click</p>
+                  <h3>Stay Organized</h3>
+                  <p>All your finances and receipts in one place</p>
                 </div>
               </div>
             </div>
