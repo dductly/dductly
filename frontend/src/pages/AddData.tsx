@@ -9,7 +9,7 @@ interface AddDataProps {
 }
 
 const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
-  const { addExpense } = useExpenses();
+  const { addExpense, customCategories, customPaymentMethods } = useExpenses();
   const { user } = useAuth();
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
@@ -192,6 +192,13 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                   <option value="packaging">Packaging</option>
                   <option value="utilities">Utilities</option>
                   <option value="insurance">Insurance</option>
+                  {customCategories.length > 0 && (
+                    <optgroup label="Your Categories">
+                      {customCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -211,6 +218,13 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                   <option value="venmo">Venmo</option>
                   <option value="check">Check</option>
                   <option value="bank-transfer">Bank Transfer</option>
+                  {customPaymentMethods.length > 0 && (
+                    <optgroup label="Your Payment Methods">
+                      {customPaymentMethods.map(method => (
+                        <option key={method} value={method}>{method}</option>
+                      ))}
+                    </optgroup>
+                  )}
                   <option value="other">Other</option>
                 </select>
               </div>
