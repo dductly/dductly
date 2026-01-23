@@ -1,86 +1,42 @@
-import React, { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import React, { useState, useEffect } from "react";
 
 interface HomeProps {
   onNavigate?: (page: string) => void;
 }
 
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const FREE_TIER_LIMIT = 100;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      console.log('Attempting to submit form data:', formData);
-      
-      // Check if Supabase is properly configured
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY;
-
-      console.log('Environment check:', {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseKey,
-        urlValue: supabaseUrl,
-        urlLength: supabaseUrl?.length,
-        keyLength: supabaseKey?.length,
-        isPlaceholder: supabaseUrl?.includes('placeholder'),
-        allEnvVars: Object.keys(import.meta.env)
-      });
-      console.log('Testing with updated env vars');
-      
-      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
-        console.log('Supabase not configured, simulating success for demo');
-        // Simulate successful submission for demo purposes
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } else {
-        const { error } = await supabase
-          .from('waitlist')
-          .insert([
-            {
-              name: formData.fullName,
-              phone: formData.phone,
-              email: formData.email
-            }
-          ]);
-
-        if (error) {
-          console.error('Supabase error:', error);
-          alert(`Error adding to waitlist: ${error.message}`);
-          return;
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        // Get user count from backend API (most secure approach)
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+        const response = await fetch(`${backendUrl}/api/user-count`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserCount(data.count || 0);
+        } else {
+          console.error('Failed to fetch user count:', response.statusText);
+          setUserCount(null);
         }
+      } catch (error) {
+        console.error('Error fetching user count:', error);
+        setUserCount(null);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      console.log('Successfully added to waitlist!');
+    fetchUserCount();
+  }, []);
 
-      setShowSuccess(true);
-      setFormData({
-        fullName: '',
-        phone: '',
-        email: ''
-      });
-    } catch (err) {
-      console.error('Error:', err);
-      alert('There was an error adding you to the waitlist. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const spotsRemaining = userCount !== null ? FREE_TIER_LIMIT - userCount : null;
+  const isFull = userCount !== null && userCount >= FREE_TIER_LIMIT;
+  const isGoldAvailable = userCount !== null && userCount >= FREE_TIER_LIMIT;
 
   return (
     <section id="home" className="hero">
@@ -97,59 +53,67 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           <button className="btn btn-primary" onClick={() => window.location.href = '#contact'} style={{ width: '180px', padding: '16px 32px', textAlign: 'center', fontSize: '1.1rem' }}>Contact Us</button>
         </div>
       </div>
-      <div className="hero-right" aria-label="Waitlist panel">
+      <div className="hero-right" aria-label="Subscription plans">
         <div className="bubble-1"></div>
         <div className="bubble-2"></div>
-        {showSuccess ? (
-          <div className="waitlist-success">
-            <h2>Thank you for your interest!</h2>
-            <p>You have been added to the waitlist. We will keep you posted on further developments!</p>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setShowSuccess(false)}
-            >
-              Add Another Person
-            </button>
+        <div className="subscription-info-container">
+          <h2>Our Subscription Plans</h2>
+          <p>Simple, affordable pricing to help you manage your business finances without breaking the bank.</p>
+          <div className="subscription-plans">
+            <div className="subscription-plan">
+              <h3>Free for Life</h3>
+              <p>Be one of the first 100 people to sign up and get unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year, completely free forever.</p>
+              <div className="signup-counter">
+                {loading ? (
+                  <span className="counter-text">Loading...</span>
+                ) : userCount !== null ? (
+                  <>
+                    <div className="counter-numbers">
+                      <span className="counter-number">{userCount}</span>
+                      <span className="counter-separator">/</span>
+                      <span className="counter-total">{FREE_TIER_LIMIT}</span>
+                    </div>
+                    <span className="counter-label">people signed up</span>
+                    {isFull ? (
+                      <span className="counter-status full">Free tier is full</span>
+                    ) : spotsRemaining !== null && spotsRemaining <= 10 ? (
+                      <span className="counter-status warning">Only {spotsRemaining} spots left!</span>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="counter-text">Sign up now to secure your free spot!</span>
+                )}
+              </div>
+              <button className="btn btn-primary btn-small" onClick={() => onNavigate?.('signup')}>Sign Up for Free</button>
+            </div>
+            <div className={`subscription-plan ${!isGoldAvailable ? 'disabled' : ''}`}>
+              <h3>Standard Subscription</h3>
+              <p>Unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year.</p>
+              <div className="subscription-pricing">
+                <div className="pricing-option">
+                  <span className="price">$7</span>
+                  <span className="price-period">/ month</span>
+                  <span className="yearly-label">(billed monthly)</span>
+                </div>
+                <div className="pricing-option yearly">
+                  <span className="price">$5</span>
+                  <span className="price-period">/ month</span>
+                  <span className="yearly-label">(billed yearly)</span>
+                </div>
+              </div>
+              {!isGoldAvailable && (
+                <div className="availability-notice">
+                  Available after {FREE_TIER_LIMIT} users sign up
+                </div>
+              )}
+              {isGoldAvailable ? (
+                <a className="btn btn-primary btn-small" href="#contact">Learn More</a>
+              ) : (
+                <span className="btn btn-primary btn-small disabled">Coming Soon</span>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="waitlist-form-container">
-            <h2>Start Your Free Trial</h2>
-            <p>Take the stress out of managing your business, we'll handle the details!</p>
-            <form onSubmit={handleSubmit} className="waitlist-form">
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Full Name"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-              />
-              <button 
-                type="submit" 
-                className="btn btn-primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Starting Trial...' : 'Start Free Trial'}
-              </button>
-            </form>
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );

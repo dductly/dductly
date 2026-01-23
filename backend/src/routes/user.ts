@@ -1,5 +1,5 @@
 import express from 'express';
-import supabase, { supabaseAdmin } from '../lib/supabaseClient';
+import supabase from '../lib/supabaseClient';
 import { authenticateUser, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -33,31 +33,22 @@ router.get('/profile', async (req: AuthRequest, res) => {
       console.error('Profile fetch error:', profileError);
     }
 
-    // Get user from Supabase auth (for email and other auth info)
-    let authUser = null;
-    if (supabaseAdmin) {
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      if (!authError && user) {
-        authUser = user;
-      }
-    }
-
-    // If no profile and no auth user, user doesn't exist
-    if (!profile && !authUser) {
+    // If no profile, user doesn't exist
+    if (!profile) {
       return res.status(404).json({ 
         error: 'Not Found',
-        message: 'User not found' 
+        message: 'User profile not found' 
       });
     }
 
     res.json({
       user: {
         id: userId,
-        email: profile?.email || authUser?.email || req.user?.email,
-        first_name: profile?.first_name || authUser?.user_metadata?.first_name || '',
-        last_name: profile?.last_name || authUser?.user_metadata?.last_name || '',
-        created_at: profile?.created_at || authUser?.created_at,
-        updated_at: profile?.updated_at || authUser?.updated_at
+        email: profile.email || req.user?.email,
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        created_at: profile.created_at,
+        updated_at: profile.updated_at
       }
     });
   } catch (error) {
@@ -195,29 +186,24 @@ router.delete('/account', async (req: AuthRequest, res) => {
       });
     }
 
-    if (!supabaseAdmin) {
-      return res.status(500).json({ 
-        error: 'Configuration Error',
-        message: 'Admin operations not available. Please set SUPABASE_SERVICE_ROLE_KEY in your .env file.' 
-      });
-    }
-
-    // Delete profile first (cascade will handle this, but explicit is clearer)
-    await supabase
+    // Delete profile from profiles table
+    // Note: The auth user will be deleted via database cascade (ON DELETE CASCADE)
+    // If you need to delete the auth user directly, create a database function
+    // with SECURITY DEFINER instead of using service role keys
+    const { error: profileError } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId);
 
-    // Delete user from auth (requires admin privileges)
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-
-    if (error) {
+    if (profileError) {
       return res.status(400).json({ 
         error: 'Delete Failed',
-        message: error.message 
+        message: profileError.message 
       });
     }
 
+    // The auth user should be deleted automatically via CASCADE
+    // If you need explicit auth user deletion, use a database function
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Account deletion error:', error);
