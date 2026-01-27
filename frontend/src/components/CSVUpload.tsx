@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 interface CSVUploadProps {
   userName: string | null;
   onEmailSuccess: (fileName: string) => void;
+}
+
+interface PreviewData {
+  headers: string[];
+  rows: string[][];
+  file: File;
 }
 
 const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
@@ -10,6 +18,59 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
   const [fileName, setFileName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+
+  // Parse CSV file
+  const parseCSV = (file: File): Promise<PreviewData> => {
+    return new Promise((resolve, reject) => {
+      Papa.parse(file, {
+        complete: (results) => {
+          const data = results.data as string[][];
+          if (data.length === 0) {
+            reject(new Error("File is empty"));
+            return;
+          }
+          resolve({
+            headers: data[0] || [],
+            rows: data.slice(1).filter(row => row.some(cell => cell.trim() !== "")),
+            file,
+          });
+        },
+        error: (err) => reject(err),
+      });
+    });
+  };
+
+  // Parse Excel file
+  const parseExcel = (file: File): Promise<PreviewData> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { type: "binary" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+
+          if (jsonData.length === 0) {
+            reject(new Error("File is empty"));
+            return;
+          }
+
+          resolve({
+            headers: jsonData[0] || [],
+            rows: jsonData.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== "")),
+            file,
+          });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsBinaryString(file);
+    });
+  };
 
   // --- Helper: convert File -> base64 (strip prefix) and send to Supabase function
   const sendFileToEmail = (file: File) => {
@@ -54,13 +115,10 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
           resolve();
         } catch (err) {
           reject(err);
-        } finally {
-          setIsLoading(false);
         }
       };
 
       reader.onerror = () => {
-        setIsLoading(false);
         reject(new Error("Failed to read file"));
       };
 
@@ -72,21 +130,58 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
     setIsLoading(true);
     setError("");
     setFileName(file.name);
+    setPreviewData(null);
 
-    // Send file to Edge Function (fire-and-warn if it fails, but attempt parsing still)
     try {
-      await sendFileToEmail(file);
-      // optional: you could set a success state here
+      let parsed: PreviewData;
+
+      if (file.name.endsWith(".csv")) {
+        parsed = await parseCSV(file);
+      } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        parsed = await parseExcel(file);
+      } else {
+        throw new Error("Unsupported file format. Please use CSV or Excel files.");
+      }
+
+      setPreviewData(parsed);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error parsing file:", err);
+      setError(
+        (err instanceof Error && err.message) ||
+          "Failed to parse file."
+      );
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmSend = async () => {
+    if (!previewData) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await sendFileToEmail(previewData.file);
+      setPreviewData(null);
+      setFileName("");
     } catch (err) {
       console.error("Error sending file to email function:", err);
-      // show a non-blocking error to the user
       setError(
         (err instanceof Error && err.message) ||
           "Failed to send file to email function."
       );
-      // allow parsing to continue even if email send failed
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
+
+  const handleCancel = () => {
+    setPreviewData(null);
+    setFileName("");
+    setError("");
+  };
+
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -113,6 +208,76 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
       handleFile(file);
     }
   };
+
+  // Show preview table if data is available
+  if (previewData) {
+    const maxPreviewRows = 10;
+    const displayRows = previewData.rows.slice(0, maxPreviewRows);
+    const hasMoreRows = previewData.rows.length > maxPreviewRows;
+
+    return (
+      <div className="csv-upload-container">
+        <div className="preview-container">
+          <div className="preview-header">
+            <h3>Review Your Data</h3>
+            <p className="preview-subtitle">
+              Please review the data below before submitting. Showing {displayRows.length} of {previewData.rows.length} rows.
+            </p>
+          </div>
+
+          <div className="preview-table-wrapper">
+            <table className="preview-table">
+              <thead>
+                <tr>
+                  {previewData.headers.map((header, index) => (
+                    <th key={index}>{header || `Column ${index + 1}`}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {displayRows.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {previewData.headers.map((_, colIndex) => (
+                      <td key={colIndex}>{row[colIndex] || ""}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {hasMoreRows && (
+            <p className="preview-more-rows">
+              ...and {previewData.rows.length - maxPreviewRows} more rows
+            </p>
+          )}
+
+          <div className="preview-actions">
+            <button
+              className="btn btn-ghost"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleConfirmSend}
+              disabled={isLoading}
+            >
+              {isLoading ? "Sending..." : "Confirm & Send"}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="upload-error">
+            <p>{error}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="csv-upload-container">
@@ -158,7 +323,6 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ userName, onEmailSuccess }) => {
               Choose File
             </label>
             <p className="upload-formats">Supports: CSV, XLSX, XLS</p>
-            {fileName && !error && <p className="upload-success">Ready for processing: {fileName}</p>}
           </>
         )}
       </div>
