@@ -97,38 +97,34 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '30px' }}>
+          <div className="stats-page-grid">
             {/* Total Income Card */}
-            <div className="stat-card" style={{ padding: '20px 16px', backgroundColor: 'var(--card-bg)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '0.875rem', color: 'var(--text-medium)', marginBottom: '8px', fontWeight: 600 }}>Total Income</h3>
-              <p style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: 'var(--primary-purple)', margin: 0, wordBreak: 'break-word' }}>{formatCurrency(totalIncome)}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-medium)', marginTop: '8px' }}>{incomes.length} entries</p>
+            <div className="stat-card-uniform">
+              <h3 className="stat-card-label">Total Income</h3>
+              <p className="stat-card-value" style={{ color: 'var(--primary-purple)' }}>{formatCurrency(totalIncome)}</p>
+              <p className="stat-card-subtitle">{incomes.length} entries</p>
             </div>
 
             {/* Net Profit Card */}
-            <div className="stat-card" style={{ padding: '20px 16px', backgroundColor: 'var(--card-bg)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '0.875rem', color: 'var(--text-medium)', marginBottom: '8px', fontWeight: 600 }}>Net Profit</h3>
-              <p style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: netProfit >= 0 ? '#66BB6A' : '#EF9A9A', margin: 0, wordBreak: 'break-word' }}>{formatCurrency(netProfit)}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-medium)', marginTop: '8px' }}>
-                {netProfit >= 0 ? 'Profitable' : 'Loss'}
-              </p>
+            <div className="stat-card-uniform">
+              <h3 className="stat-card-label">Net Profit</h3>
+              <p className="stat-card-value" style={{ color: netProfit >= 0 ? '#66BB6A' : '#EF9A9A' }}>{formatCurrency(netProfit)}</p>
+              <p className="stat-card-subtitle">{netProfit >= 0 ? 'Profitable' : 'Loss'}</p>
             </div>
 
             {/* Total Expenses Card */}
-            <div className="stat-card" style={{ padding: '20px 16px', backgroundColor: 'var(--card-bg)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '0.875rem', color: 'var(--text-medium)', marginBottom: '8px', fontWeight: 600 }}>Total Expenses</h3>
-              <p style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: '#EF9A9A', margin: 0, wordBreak: 'break-word' }}>{formatCurrency(totalExpenses)}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-medium)', marginTop: '8px' }}>{expenses.length} entries</p>
+            <div className="stat-card-uniform">
+              <h3 className="stat-card-label">Total Expenses</h3>
+              <p className="stat-card-value" style={{ color: '#EF9A9A' }}>{formatCurrency(totalExpenses)}</p>
+              <p className="stat-card-subtitle">{expenses.length} entries</p>
             </div>
 
             {/* Best Month Card */}
-            {bestMonth && (
-              <div className="stat-card" style={{ padding: '20px 16px', backgroundColor: 'var(--card-bg)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ fontSize: '0.875rem', color: 'var(--text-medium)', marginBottom: '8px', fontWeight: 600 }}>Best Month</h3>
-                <p style={{ fontSize: 'clamp(1.125rem, 3vw, 1.25rem)', fontWeight: 700, color: 'var(--primary-purple)', margin: 0, wordBreak: 'break-word' }}>{formatMonth(bestMonth)}</p>
-                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'var(--text-medium)', marginTop: '8px', wordBreak: 'break-word' }}>{formatCurrency(bestMonthAmount)}</p>
-              </div>
-            )}
+            <div className="stat-card-uniform">
+              <h3 className="stat-card-label">Best Month</h3>
+              <p className="stat-card-value" style={{ color: 'var(--primary-purple)' }}>{bestMonth ? formatMonth(bestMonth) : 'N/A'}</p>
+              <p className="stat-card-subtitle">{bestMonth ? formatCurrency(bestMonthAmount) : 'No data yet'}</p>
+            </div>
           </div>
 
           {/* Expenses by Category */}

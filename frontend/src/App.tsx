@@ -11,6 +11,7 @@ import Expenses from "./pages/Expenses";
 import AddIncome from "./pages/AddIncome";
 import IncomePage from "./pages/Income";
 import Stats from "./pages/Stats";
+import Settings from "./pages/Settings";
 import InactivityWarningModal from "./components/InactivityWarningModal";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
@@ -123,28 +124,6 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
                   >
                     Contact
                   </a>
-
-                  <a
-                    href="#import"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onNavigate("import");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Import Data
-                  </a>
-
-                  <a
-                    href="#profile"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onNavigate("profile");
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    Profile
-                  </a>
                   <a
                     href="#settings"
                     onClick={(e) => {
@@ -158,11 +137,11 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
                   <a
                     href="#logout"
                     onClick={(e) => {
-                      e.preventDefault(); // prevent default navigation
-                      handleLogout();     // call your logout function
-                      setIsMenuOpen(false); // close the dropdown
+                      e.preventDefault();
+                      handleLogout();
+                      setIsMenuOpen(false);
                     }}
-                    >
+                  >
                     Logout
                   </a>
                 </div>
@@ -397,6 +376,8 @@ const AppContent: React.FC = () => {
         return <IncomePage onNavigate={handleNavigate} />;
       case 'stats':
         return <Stats onNavigate={handleNavigate} />;
+      case 'settings':
+        return <Settings onNavigate={handleNavigate} />;
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {

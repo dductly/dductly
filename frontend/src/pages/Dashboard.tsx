@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "../hooks/useAuth";
-import editIcon from "../img/pencil-edit.svg";
+import { useExpenses } from "../contexts/ExpensesContext";
+import { useIncome } from "../contexts/IncomeContext";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -9,59 +10,22 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGuideClick }) => {
-  const { user, updateProfile, refreshSession } = useAuth();
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    firstName: user?.user_metadata?.first_name || "",
-    lastName: user?.user_metadata?.last_name || "",
-    email: user?.email || "",
-    businessName: user?.user_metadata?.business_name || "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { expenses } = useExpenses();
+  const { incomes } = useIncome();
 
-  const handleEditClick = () => {
-    setProfileForm({
-      firstName: user?.user_metadata?.first_name || "",
-      lastName: user?.user_metadata?.last_name || "",
-      email: user?.email || "",
-      businessName: user?.user_metadata?.business_name || "",
-    });
-    setIsEditingProfile(true);
-    setError(null);
-  };
+  // Calculate stats for preview
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
+  const netProfit = totalIncome - totalExpenses;
 
-  const handleSaveProfile = async () => {
-    setLoading(true);
-    setError(null);
-
-    const emailChanged = profileForm.email !== user?.email;
-
-    const { error } = await updateProfile(
-      profileForm.firstName,
-      profileForm.lastName,
-      profileForm.email,
-      profileForm.businessName,
-    );
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setIsEditingProfile(false);
-      if (emailChanged) {
-        alert("Profile updated! A confirmation email has been sent to your new email address. Please verify it and then refresh this page to see the changes.");
-      } else {
-        // Only reload for name changes (immediate effect)
-        window.location.reload();
-      }
-    }
-
-    setLoading(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingProfile(false);
-    setError(null);
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -99,12 +63,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
               >
                 Import Data
               </button>
-              <button
-                className="btn btn-primary btn-large"
-                onClick={() => onNavigate('stats')}
-              >
-                Statistics
-              </button>
             </div>
           </div>
 
@@ -136,46 +94,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
             </div>
           </div>
 
-          {/* Account Overview Card */}
-          <div className="dashboard-card account-overview">
+          {/* Statistics Preview Card */}
+          <div className="dashboard-card stats-preview">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 className="card-title">Your Account</h2>
+              <h2 className="card-title">Statistics</h2>
               <button
-                className="icon-btn"
-                onClick={handleEditClick}
-                aria-label="Edit profile"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}
+                className="btn btn-ghost btn-small"
+                onClick={() => onNavigate('stats')}
               >
-                <img src={editIcon} alt="Edit" style={{ width: '20px', height: '20px' }} />
+                View All →
               </button>
             </div>
-            <div className="account-info">
-              <div className="info-row">
-                <span className="info-label">Name:</span>
-                <span className="info-value">
-                  {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}
+            <div className="stats-preview-grid">
+              <div className="stats-preview-item">
+                <span className="stats-preview-label">Total Income</span>
+                <span className="stats-preview-value income">{formatCurrency(totalIncome)}</span>
+              </div>
+              <div className="stats-preview-item">
+                <span className="stats-preview-label">Total Expenses</span>
+                <span className="stats-preview-value expenses">{formatCurrency(totalExpenses)}</span>
+              </div>
+              <div className="stats-preview-item">
+                <span className="stats-preview-label">Net Profit</span>
+                <span className={`stats-preview-value ${netProfit >= 0 ? 'profit' : 'loss'}`}>
+                  {formatCurrency(netProfit)}
                 </span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Email:</span>
-                <span className="info-value">{user?.email}</span>
-              </div>
-              {user?.user_metadata?.business_name && (
-                <div className="info-row">
-                  <span className="info-label">Business:</span>
-                  <span className="info-value">{user?.user_metadata?.business_name}</span>
-                </div>
-              )}
-              <div style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-medium)' }}>
-                Changed your email?{' '}
-                <a
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); refreshSession(); }}
-                  className="link"
-                  style={{ color: 'var(--primary-purple)', fontWeight: 600 }}
-                >
-                  Click here to refresh
-                </a>
               </div>
             </div>
           </div>
@@ -203,84 +146,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
           </div>
         </div>
       </section>
-
-      {/* Edit Profile Modal */}
-      {isEditingProfile && (
-        <div className="modal-overlay" onClick={handleCancelEdit}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Profile</h2>
-              <button className="modal-close" onClick={handleCancelEdit}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              {error && (
-                <div className="error-message" style={{ marginBottom: '16px', padding: '12px', background: '#fee', color: '#c33', borderRadius: '8px' }}>
-                  {error}
-                </div>
-              )}
-              <div className="form-group">
-                <label>First Name</label>
-                <input
-                  type="text"
-                  value={profileForm.firstName}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, firstName: e.target.value })
-                  }
-                  className="form-input"
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  value={profileForm.lastName}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, lastName: e.target.value })
-                  }
-                  className="form-input"
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={profileForm.email}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, email: e.target.value })
-                  }
-                  className="form-input"
-                  disabled={loading}
-                />
-              </div>
-              <div className="form-group">
-                <label>Business Name</label>
-                <input
-                  type="text"
-                  value={profileForm.businessName}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, businessName: e.target.value })
-                  }
-                  className="form-input"
-                  placeholder="e.g. Smith's Organic Farm"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={handleCancelEdit} disabled={loading}>
-                Cancel
-              </button>
-              <button className="btn btn-primary" onClick={handleSaveProfile} disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
