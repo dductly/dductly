@@ -28,6 +28,7 @@ app.get('/health', (req, res) => {
 });
 
 // Public endpoint to get user count (for subscription counter)
+// This endpoint is accessible to anonymous/logged-out users
 // Uses database function approach (recommended by Supabase)
 app.get('/api/user-count', async (req, res) => {
   try {
@@ -37,15 +38,32 @@ app.get('/api/user-count', async (req, res) => {
       .rpc('get_user_count');
 
     if (functionError) {
-      console.error('Error fetching user count:', functionError);
+      console.error('Error fetching user count from database:', {
+        message: functionError.message,
+        code: functionError.code,
+        details: functionError.details,
+        hint: functionError.hint
+      });
+      
+      // If function doesn't exist, provide helpful error message
+      if (functionError.code === '42883' || functionError.message?.includes('does not exist')) {
+        return res.status(500).json({ 
+          error: 'Database Function Missing',
+          message: 'The get_user_count() database function does not exist. Please run the SQL in create-user-count-function.sql in your Supabase SQL Editor.',
+          details: functionError.message
+        });
+      }
+      
       return res.status(500).json({ 
         error: 'Internal Server Error',
-        message: 'Failed to fetch user count. Please ensure the get_user_count() database function exists.',
+        message: 'Failed to fetch user count from database.',
         details: functionError.message
       });
     }
 
-    res.json({ count: functionCount || 0 });
+    const count = functionCount || 0;
+    console.log('User count retrieved successfully:', count);
+    res.json({ count });
   } catch (error: any) {
     console.error('Error in user count endpoint:', error);
     res.status(500).json({ 

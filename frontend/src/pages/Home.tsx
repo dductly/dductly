@@ -13,19 +13,34 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     const fetchUserCount = async () => {
       try {
         // Get user count from backend API (most secure approach)
+        // This endpoint is public and accessible to anonymous/logged-out users
         const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-        const response = await fetch(`${backendUrl}/api/user-count`);
+        const response = await fetch(`${backendUrl}/api/user-count`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (response.ok) {
           const data = await response.json();
-          setUserCount(data.count || 0);
+          const count = data.count || 0;
+          console.log('User count fetched successfully:', count);
+          setUserCount(count);
         } else {
-          console.error('Failed to fetch user count:', response.statusText);
-          setUserCount(null);
+          const errorData = await response.json().catch(() => ({ message: response.statusText }));
+          console.error('Failed to fetch user count:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+          // Still show 0 if we get an error, so the counter shows something
+          setUserCount(0);
         }
       } catch (error) {
         console.error('Error fetching user count:', error);
-        setUserCount(null);
+        // Network error or backend not running - show 0 as fallback
+        setUserCount(0);
       } finally {
         setLoading(false);
       }
