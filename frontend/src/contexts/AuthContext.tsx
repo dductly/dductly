@@ -11,6 +11,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   updateProfile: (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string) => Promise<{ error: AuthError | null }>;
+  updateAutoLogoutTimeout: (timeoutMinutes: number) => Promise<{ error: AuthError | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
   refreshSession: () => Promise<void>;
 }
 
@@ -166,6 +168,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(session?.user ?? null);
   };
 
+  const updateAutoLogoutTimeout = async (timeoutMinutes: number) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...user?.user_metadata,
+          auto_logout_timeout: timeoutMinutes,
+        },
+      });
+      if (!error) {
+        // Refresh session to get updated user data
+        await refreshSession();
+      }
+      return { error };
+    } catch (err) {
+      console.error('Update auto-logout timeout error:', err);
+      return {
+        error: {
+          message: 'Unable to update auto-logout timeout. Please try again later.',
+          name: 'UpdateError',
+          status: 500
+        } as AuthError
+      };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      return { error };
+    } catch (err) {
+      console.error('Update password error:', err);
+      return {
+        error: {
+          message: 'Unable to update password. Please try again later.',
+          name: 'UpdateError',
+          status: 500
+        } as AuthError
+      };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -178,6 +223,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     updateProfile,
+    updateAutoLogoutTimeout,
+    updatePassword,
     refreshSession,
   };
 
