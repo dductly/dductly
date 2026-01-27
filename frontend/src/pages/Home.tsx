@@ -1,57 +1,92 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useEffect, useState, useRef } from 'react';
 
 interface HomeProps {
   onNavigate?: (page: string) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-  const [userCount, setUserCount] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const FREE_TIER_LIMIT = 100;
+const UserCountRealtime: React.FC = () => {
+  const [count, setCount] = useState<number | null>(null);
+  const [error, setError] = useState(false);
+  const channelRef = useRef<any>(null);
+
+  const fetchCount = async () => {
+    try {
+      // Use Supabase RPC to call the database function directly
+      // This avoids CORS issues and is the recommended approach
+      const { data, error } = await supabase.rpc('get_user_count');
+      
+      if (error) {
+        console.error('Failed to fetch user count:', error);
+        setError(true);
+        setCount(0);
+        return;
+      }
+      
+      // The RPC function returns an integer directly
+      const countValue = typeof data === 'number' ? data : 0;
+      setCount(countValue);
+      setError(false);
+    } catch (err: any) {
+      console.error('UserCount fetch error', err);
+      setError(true);
+      // Set a default count if fetch fails to prevent breaking the UI
+      setCount(0);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserCount = async () => {
-      try {
-        // Get user count from backend API (most secure approach)
-        // This endpoint is public and accessible to anonymous/logged-out users
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-        const response = await fetch(`${backendUrl}/api/user-count`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          const count = data.count || 0;
-          console.log('User count fetched successfully:', count);
-          setUserCount(count);
-        } else {
-          const errorData = await response.json().catch(() => ({ message: response.statusText }));
-          console.error('Failed to fetch user count:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData
-          });
-          // Still show 0 if we get an error, so the counter shows something
-          setUserCount(0);
+    fetchCount();
+
+    try {
+      // Create a channel for user events; config.broadcast.self true lets the sender also receive the broadcast
+      const channel = supabase.channel('public:user-events', { 
+        config: { broadcast: { self: true } } 
+      });
+      channelRef.current = channel;
+
+      // Listen to the broadcast event 'user_signed_in'
+      channel.on('broadcast', { event: 'user_signed_in' }, (_payload: any) => {
+        // Optionally inspect payload; always refetch to get fresh count
+        fetchCount();
+      });
+
+      // Subscribe
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscribed to user-events channel');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Channel subscription error');
         }
-      } catch (error) {
-        console.error('Error fetching user count:', error);
-        // Network error or backend not running - show 0 as fallback
-        setUserCount(0);
-      } finally {
-        setLoading(false);
+      });
+    } catch (err) {
+      console.error('Failed to set up realtime channel:', err);
+    }
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-
-    fetchUserCount();
   }, []);
 
-  const spotsRemaining = userCount !== null ? FREE_TIER_LIMIT - userCount : null;
-  const isFull = userCount !== null && userCount >= FREE_TIER_LIMIT;
-  const isGoldAvailable = userCount !== null && userCount >= FREE_TIER_LIMIT;
+  // Show loading state
+  if (count === null && !error) {
+    return <span className="counter-text" style={{ color: 'var(--deep-blue)', fontSize: '2.5rem', fontWeight: 'bold' }}>Loading…</span>;
+  }
+  
+  // Show count or fallback in blue
+  return (
+    <span className="counter-text" style={{ color: 'var(--deep-blue)', fontSize: '2.5rem', fontWeight: 'bold' }}>
+      {count ?? 0} / 100
+    </span>
+  );
+}
+
+const Home: React.FC<HomeProps> = ({ onNavigate }) => {
+  const FREE_TIER_LIMIT = 100;
 
   return (
     <section id="home" className="hero">
@@ -79,29 +114,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <h3>Free for Life</h3>
               <p>Be one of the first 100 people to sign up and get unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year, completely free forever.</p>
               <div className="signup-counter">
-                {loading ? (
-                  <span className="counter-text">Loading...</span>
-                ) : userCount !== null ? (
-                  <>
-                    <div className="counter-numbers">
-                      <span className="counter-number">{userCount}</span>
-                      <span className="counter-separator">/</span>
-                      <span className="counter-total">{FREE_TIER_LIMIT}</span>
-                    </div>
-                    <span className="counter-label">people signed up</span>
-                    {isFull ? (
-                      <span className="counter-status full">Free tier is full</span>
-                    ) : spotsRemaining !== null && spotsRemaining <= 10 ? (
-                      <span className="counter-status warning">Only {spotsRemaining} spots left!</span>
-                    ) : null}
-                  </>
-                ) : (
-                  <span className="counter-text">Sign up now to secure your free spot!</span>
-                )}
+                <UserCountRealtime />
               </div>
               <button className="btn btn-primary btn-small" onClick={() => onNavigate?.('signup')}>Sign Up for Free</button>
             </div>
-            <div className={`subscription-plan ${!isGoldAvailable ? 'disabled' : ''}`}>
+            <div className="subscription-plan disabled">
               <h3>Standard Subscription</h3>
               <p>Unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year.</p>
               <div className="subscription-pricing">
@@ -116,16 +133,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                   <span className="yearly-label">(billed yearly)</span>
                 </div>
               </div>
-              {!isGoldAvailable && (
-                <div className="availability-notice">
-                  Available after {FREE_TIER_LIMIT} users sign up
-                </div>
-              )}
-              {isGoldAvailable ? (
-                <a className="btn btn-primary btn-small" href="#contact">Learn More</a>
-              ) : (
-                <span className="btn btn-primary btn-small disabled">Coming Soon</span>
-              )}
+              <div className="availability-notice">
+                Available after {FREE_TIER_LIMIT} users sign up
+              </div>
+              <span className="btn btn-primary btn-small disabled">Coming Soon</span>
             </div>
           </div>
         </div>

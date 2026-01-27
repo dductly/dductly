@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
-import supabase from './lib/supabaseClient';
 
 dotenv.config();
 
@@ -25,69 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Public endpoint to get user count (for subscription counter)
-// This endpoint is accessible to anonymous/logged-out users
-// Uses database function approach (recommended by Supabase)
-app.get('/api/user-count', async (req, res) => {
-  try {
-    // Use database function - works with anon key, no service role key needed
-    // This is the recommended Supabase approach using SECURITY DEFINER
-    const { data: functionCount, error: functionError } = await supabase
-      .rpc('get_user_count');
-
-    if (functionError) {
-      console.error('Error fetching user count from database function:', {
-        message: functionError.message,
-        code: functionError.code,
-        details: functionError.details,
-        hint: functionError.hint
-      });
-      
-      // If function doesn't exist, try fallback: query profiles table directly
-      if (functionError.code === '42883' || functionError.message?.includes('does not exist')) {
-        console.log('Function does not exist, trying fallback: query profiles table directly');
-        
-        // Fallback: Try to count from profiles table directly
-        // Note: This requires RLS policy to allow anonymous reads, or use service role
-        const { count: profileCount, error: profileError } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
-        
-        if (profileError) {
-          console.error('Fallback query also failed:', profileError);
-          return res.status(500).json({ 
-            error: 'Database Function Missing',
-            message: 'The get_user_count() database function does not exist. Please run the SQL in create-user-count-function.sql in your Supabase SQL Editor.',
-            details: functionError.message,
-            fallbackError: profileError.message
-          });
-        }
-        
-        const count = profileCount || 0;
-        console.log('User count retrieved via fallback:', count);
-        return res.json({ count });
-      }
-      
-      return res.status(500).json({ 
-        error: 'Internal Server Error',
-        message: 'Failed to fetch user count from database.',
-        details: functionError.message
-      });
-    }
-
-    const count = functionCount || 0;
-    console.log('User count retrieved successfully via function:', count);
-    res.json({ count });
-  } catch (error: any) {
-    console.error('Error in user count endpoint:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error',
-      message: 'Failed to fetch user count',
-      details: error?.message
-    });
-  }
 });
 
 // Routes

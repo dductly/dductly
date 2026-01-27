@@ -93,6 +93,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
       });
+      
+      // Emit broadcast after successful sign-in
+      if (!error) {
+        try {
+          const channel = supabase.channel('public:user-events', { 
+            config: { broadcast: { self: true } } 
+          });
+          
+          // Subscribe to the channel
+          await channel.subscribe();
+          
+          // Send broadcast to notify other clients
+          await channel.send({
+            type: 'broadcast',
+            event: 'user_signed_in',
+            payload: { timestamp: new Date().toISOString() }
+          });
+          
+          // Clean up the channel after sending
+          setTimeout(() => {
+            supabase.removeChannel(channel);
+          }, 1000);
+        } catch (broadcastErr) {
+          // Log but don't fail the sign-in if broadcast fails
+          console.error('Failed to emit sign-in broadcast:', broadcastErr);
+        }
+      }
+      
       return { error };
     } catch (err) {
       console.error('Sign in error:', err);
