@@ -173,6 +173,98 @@
     color: #90CDF4;
   }
 
+  /* Dark mode subscription plans */
+  [data-theme="dark"] .subscription-info-container h2 {
+    color: #90CDF4;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .subscription-plans::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  [data-theme="dark"] .subscription-plan {
+    background: #1A202C;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .subscription-plan:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-color: #90CDF4;
+  }
+
+  [data-theme="dark"] .subscription-plan.disabled {
+    background: #2D3748;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .subscription-plan.disabled::before {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .subscription-plan h3 {
+    color: #90CDF4;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .subscription-plan p {
+    color: #CBD5E0;
+  }
+
+  [data-theme="dark"] .pricing-option .price {
+    color: #90CDF4;
+  }
+
+  [data-theme="dark"] .pricing-option .price-period {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .yearly-label {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .signup-counter {
+    background: rgba(45, 55, 72, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  [data-theme="dark"] .counter-text {
+    color: #CBD5E0;
+  }
+
+  [data-theme="dark"] .counter-number {
+    color: #90CDF4; /* Matches counter-total blue color */
+  }
+
+  [data-theme="dark"] .counter-separator {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .counter-total {
+    color: #90CDF4;
+  }
+
+  [data-theme="dark"] .counter-label {
+    color: #A0AEC0;
+  }
+
+  [data-theme="dark"] .counter-status.warning {
+    background: #F6AD55;
+    color: #1A202C;
+  }
+
+  [data-theme="dark"] .counter-status.full {
+    background: #FC8181;
+    color: #1A202C;
+  }
+
+  [data-theme="dark"] .availability-notice {
+    background: rgba(45, 55, 72, 0.6);
+    color: #A0AEC0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   /* Dark mode select dropdowns */
   [data-theme="dark"] .expense-select {
     background: #2D3748;
@@ -887,7 +979,7 @@
   .pricing-option .price {
     font-size: 1.2rem;
     font-weight: 800;
-    color: var(--market-brown);
+    color: var(--market-brown); /* Matches counter-total color */
   }
 
   .pricing-option .price-period {
@@ -944,7 +1036,7 @@
   .counter-number {
     font-size: 2rem;
     font-weight: 900;
-    color: var(--poppy-red);
+    color: var(--market-brown); /* Matches counter-total blue color */
     line-height: 1;
   }
 
