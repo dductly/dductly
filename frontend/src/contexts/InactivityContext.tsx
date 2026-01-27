@@ -1,21 +1,32 @@
-import React, { createContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 interface InactivityContextType {
   showWarning: boolean;
   remainingSeconds: number;
   resetActivity: () => void;
+  currentTimeoutMinutes: number;
 }
 
 const InactivityContext = createContext<InactivityContextType | undefined>(undefined);
 
 export { InactivityContext };
 
+// Default timeout options in minutes
+export const TIMEOUT_OPTIONS = [5, 10, 15, 30, 60];
+export const DEFAULT_TIMEOUT_MINUTES = 15;
+
 export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuth();
 
-  // Timeout durations
-  const WARNING_TIME = import.meta.env.DEV ? 30 * 1000 : 15 * 60 * 1000; // 30s dev, 15min prod
+  // Get user's preferred timeout or default to 15 minutes
+  const userTimeoutMinutes = user?.user_metadata?.auto_logout_timeout ?? DEFAULT_TIMEOUT_MINUTES;
+
+  // Timeout durations - use user preference in production, 30s in dev for testing
+  const WARNING_TIME = useMemo(() =>
+    import.meta.env.DEV ? 30 * 1000 : userTimeoutMinutes * 60 * 1000,
+    [userTimeoutMinutes]
+  );
   const COUNTDOWN_SECONDS = 120; // 2 minutes
   const DEBOUNCE_DELAY = 300; // 300ms debounce
 
@@ -156,7 +167,7 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
 
-    console.log('[Inactivity] User authenticated, initializing inactivity timer');
+    console.log(`[Inactivity] User authenticated, initializing inactivity timer (${userTimeoutMinutes} minutes)`);
     // Start initial warning timer
     startWarningTimer();
 
@@ -178,12 +189,13 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Only re-run when user changes, not when callbacks change
+  }, [user, userTimeoutMinutes]); // Re-run when user changes or timeout preference changes
 
   const value = {
     showWarning,
     remainingSeconds,
     resetActivity,
+    currentTimeoutMinutes: userTimeoutMinutes,
   };
 
   return <InactivityContext.Provider value={value}>{children}</InactivityContext.Provider>;
