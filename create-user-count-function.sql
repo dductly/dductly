@@ -16,10 +16,9 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 BEGIN
-  -- Count from auth.users (always exists in Supabase)
-  -- If you prefer to count from profiles table, change this to:
-  -- RETURN (SELECT COUNT(*) FROM public.profiles);
-  RETURN (SELECT COUNT(*) FROM auth.users);
+  -- Count from profiles table (more reliable - only counts users with profiles)
+  -- This ensures we're counting actual signed-up users, not just auth records
+  RETURN (SELECT COUNT(*) FROM public.profiles);
 END;
 $$;
 
@@ -32,4 +31,6 @@ GRANT EXECUTE ON FUNCTION public.get_user_count() TO anon, authenticated;
 -- The backend already uses this function via:
 -- const { data, error } = await supabase.rpc('get_user_count');
 -- 
--- Run this SQL in your Supabase SQL Editor to create the function.
+-- IMPORTANT: Run this SQL in your Supabase SQL Editor to create the function.
+-- The function uses SECURITY DEFINER which allows it to bypass RLS policies
+-- and count profiles even for anonymous users.
