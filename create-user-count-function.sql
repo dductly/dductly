@@ -16,9 +16,12 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 BEGIN
-  -- Count from profiles table (more reliable - only counts users with profiles)
-  -- This ensures we're counting actual signed-up users, not just auth records
-  RETURN (SELECT COUNT(*) FROM public.profiles);
+  -- Count from auth.users (built-in Supabase auth table)
+  -- This counts all users who have signed up
+  -- If you want to count only verified users, uncomment the WHERE clause below
+  RETURN (SELECT COUNT(*) FROM auth.users);
+  -- To count only verified/confirmed users, use this instead:
+  -- RETURN (SELECT COUNT(*) FROM auth.users WHERE email_confirmed_at IS NOT NULL);
 END;
 $$;
 
