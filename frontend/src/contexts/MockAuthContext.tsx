@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // Mock Authentication Context for testing without Supabase
 import React, { createContext, useContext, useEffect, useState } from 'react';
 

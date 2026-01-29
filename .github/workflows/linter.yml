@@ -36,11 +36,17 @@ jobs:
 
           IGNORE_GITIGNORED_FILES: true
           ENABLE_GIT_PULL_REQUEST_SUMMARY_COMMENT: true
+          SAVE_SUPER_LINTER_SUMMARY: true
 
-          # Languages in your repo
-          VALIDATE_TYPESCRIPT_ES: true
-          VALIDATE_JAVASCRIPT_ES: true
-          VALIDATE_JSON: true
-          VALIDATE_CSS: true
-          VALIDATE_HTML: true
-          VALIDATE_SQL: true
+          # Exclude-only: only set VALIDATE_*=false. Do not set any to true.
+          # TS/JS linting runs via "npm run lint" in frontend-tests (has node_modules);
+          # Super-Linter has no node_modules, so n/no-missing-import fails on imports.
+          VALIDATE_TYPESCRIPT_ES: false
+          VALIDATE_JAVASCRIPT_ES: false
+          # No commitlint config in repo.
+          VALIDATE_GIT_COMMITLINT: false
+          # Avoid Black vs Ruff format conflict; we have no Python.
+          VALIDATE_PYTHON_RUFF_FORMAT: false
+          # Use Prettier + ESLint + Stylelint; disable Biome to avoid conflicts.
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
