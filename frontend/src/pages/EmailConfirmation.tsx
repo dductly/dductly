@@ -91,6 +91,14 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     handleEmailConfirmation();
   }, [user, refreshSession]);
 
+  // Redirect to home when no tokens, not verified, and no error (must run before any returns)
+  useEffect(() => {
+    if (!isVerifying && !isVerified && !user?.email_confirmed_at && !error) {
+      const timer = setTimeout(() => onNavigate('home'), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isVerifying, isVerified, user, error, onNavigate]);
+
   // If user is verified, show success
   if (isVerified || user?.email_confirmed_at) {
     return (
@@ -164,17 +172,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
       </div>
     );
   }
-
-  // If no tokens and not verified, redirect to home
-  useEffect(() => {
-    if (!isVerifying && !isVerified && !user?.email_confirmed_at && !error) {
-      // Small delay to avoid flash, then redirect
-      const timer = setTimeout(() => {
-        onNavigate('home');
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isVerifying, isVerified, user, error, onNavigate]);
 
   // Show verifying state or nothing (will redirect)
   return (

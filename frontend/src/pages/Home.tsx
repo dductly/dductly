@@ -1,4 +1,5 @@
 import React from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import { useEffect, useState, useRef } from 'react';
 
@@ -9,7 +10,7 @@ interface HomeProps {
 const UserCountRealtime: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [error, setError] = useState(false);
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchCount = async () => {
     try {
@@ -28,7 +29,7 @@ const UserCountRealtime: React.FC = () => {
       const countValue = typeof data === 'number' ? data : 0;
       setCount(countValue);
       setError(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('UserCount fetch error', err);
       setError(true);
       // Set a default count if fetch fails to prevent breaking the UI
@@ -47,8 +48,7 @@ const UserCountRealtime: React.FC = () => {
       channelRef.current = channel;
 
       // Listen to the broadcast event 'user_signed_in'
-      channel.on('broadcast', { event: 'user_signed_in' }, (_payload: any) => {
-        // Optionally inspect payload; always refetch to get fresh count
+      channel.on('broadcast', { event: 'user_signed_in' }, () => {
         fetchCount();
       });
 

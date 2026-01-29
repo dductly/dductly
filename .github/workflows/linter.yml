@@ -38,8 +38,10 @@ jobs:
           ENABLE_GIT_PULL_REQUEST_SUMMARY_COMMENT: true
 
           # Languages in your repo
-          VALIDATE_TYPESCRIPT_ES: true
-          VALIDATE_JAVASCRIPT_ES: true
+          # TS/JS linting runs via "npm run lint" in frontend-tests (has node_modules);
+          # Super-Linter has no node_modules, so n/no-missing-import fails on imports.
+          VALIDATE_TYPESCRIPT_ES: false
+          VALIDATE_JAVASCRIPT_ES: false
           VALIDATE_JSON: true
           VALIDATE_CSS: true
           VALIDATE_HTML: true
