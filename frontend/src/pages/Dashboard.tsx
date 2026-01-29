@@ -96,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
 
           {/* Statistics Preview Card */}
           <div className="dashboard-card stats-preview">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stats-preview-header">
               <h2 className="card-title">Statistics</h2>
               <button
                 className="btn btn-ghost btn-small"
