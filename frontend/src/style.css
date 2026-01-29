@@ -351,6 +351,32 @@
     border-color: rgba(255, 255, 255, 0.15);
   }
 
+  /* Dark mode delete account modal */
+  [data-theme="dark"] .delete-warning {
+    background: #3B1A1A;
+    border-color: #7F1D1D;
+  }
+
+  [data-theme="dark"] .delete-warning-content p,
+  [data-theme="dark"] .delete-warning-content ul {
+    color: #FCA5A5 !important;
+  }
+
+  [data-theme="dark"] .modal-header h2 {
+    color: #F7FAFC;
+  }
+
+  /* Dark mode delete button in settings */
+  [data-theme="dark"] .settings-danger-btn {
+    color: #FCA5A5 !important;
+    border-color: #FCA5A5 !important;
+  }
+
+  [data-theme="dark"] .settings-danger-btn:hover:not(:disabled) {
+    background: #DC2626 !important;
+    color: white !important;
+  }
+
   /* Dark mode body background */
   [data-theme="dark"] body::before {
     background:
