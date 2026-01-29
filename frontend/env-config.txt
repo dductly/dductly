@@ -1,6 +1,11 @@
 # Frontend Environment Configuration
 # Copy this content to frontend/.env.local
 
+# Email confirmation: Add your redirect URL in Supabase Dashboard so "Confirm email" works.
+# Go to: Authentication → URL Configuration → Redirect URLs
+# Add: https://yourdomain.com/confirm-email (production) and http://localhost:5173/confirm-email (dev).
+# If this URL is missing, users may see "path is invalid" when clicking the confirm link in email.
+
 VITE_SUPABASE_URL=https://waxtxjnhrrcyxcvuaujn.supabase.co
 VITE_SUPABASE_ANON_PUBLIC_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndheHR4am5ocnJjeXhjdnVhdWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNTQ4NTUsImV4cCI6MjA3MzYzMDg1NX0.3Zm-FfXjAofjYSMBNB6LhJRDYTx08lAFWYQtZquxGfw
 

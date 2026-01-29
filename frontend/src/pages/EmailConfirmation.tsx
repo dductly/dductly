@@ -91,9 +91,16 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     handleEmailConfirmation();
   }, [user, refreshSession]);
 
-  // Redirect to home when no tokens, not verified, and no error (must run before any returns)
+  // Redirect to home only when there are no confirmation tokens in URL, not verifying, not verified, and no error.
+  // Do NOT redirect when the URL has tokens—we need to stay on this page to process them.
   useEffect(() => {
-    if (!isVerifying && !isVerified && !user?.email_confirmed_at && !error) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    const hasTokensInUrl =
+      (hashParams.get('access_token') && hashParams.get('type') === 'email') ||
+      (queryParams.get('token') && queryParams.get('type') === 'email');
+
+    if (!hasTokensInUrl && !isVerifying && !isVerified && !user?.email_confirmed_at && !error) {
       const timer = setTimeout(() => onNavigate('home'), 100);
       return () => clearTimeout(timer);
     }
