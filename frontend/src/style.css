@@ -3580,7 +3580,8 @@
   z-index: 1000;
   overflow: hidden;
   padding: 4px;
-  width: auto;
+  width: fit-content;
+  min-width: 0;
 }
 
 .dropdown-menu a {
