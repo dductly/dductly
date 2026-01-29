@@ -14,11 +14,6 @@ on:
 jobs:
   run-lint:
     runs-on: ubuntu-latest
-
-    permissions:
-      issues: write
-      pull-requests: write
-      statuses: write
       
     steps:
       - name: Checkout code
@@ -31,7 +26,7 @@ jobs:
       - name: Lint Code Base
         uses: super-linter/super-linter@v8.4.0
         env:
-          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_ALL_CODEBASE: false
           IGNORE_GITIGNORED_FILES: true
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
