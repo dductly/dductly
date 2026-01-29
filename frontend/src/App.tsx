@@ -311,7 +311,7 @@ const AppContent: React.FC = () => {
     const currentPath = window.location.pathname;
     let initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
     
-    // If we have confirmation tokens, route to confirm-email page
+    // If we have confirmation tokens, route to confirm-email page (even if path is /)
     if (hasConfirmationToken) {
       initialPage = 'confirm-email';
     }
@@ -323,8 +323,10 @@ const AppContent: React.FC = () => {
       setCurrentPage(initialPage);
     }
 
+    // Use /confirm-email in the URL when we have confirmation tokens so the path is valid and refresh works
+    const pathForHistory = hasConfirmationToken ? '/confirm-email' : currentPath;
     if (!window.history.state) {
-      window.history.replaceState({ page: initialPage }, '', currentPath);
+      window.history.replaceState({ page: initialPage }, '', pathForHistory);
     }
 
     return () => {
