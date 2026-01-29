@@ -1,0 +1,46 @@
+name: Lint Code Base
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    # Mondays at 4:00 AM Utah time (MDT, UTC-6)
+    - cron: "0 10 * * 1"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  super-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v8.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+
+          # Only lint changed files on PRs/pushes,
+          # full repo on weekly schedule
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'schedule' }}
+
+          IGNORE_GITIGNORED_FILES: true
+          ENABLE_GIT_PULL_REQUEST_SUMMARY_COMMENT: true
+
+          # Languages in your repo
+          VALIDATE_TYPESCRIPT_ES: true
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_JSON: true
+          VALIDATE_CSS: true
+          VALIDATE_HTML: true
+          VALIDATE_SQL: true
