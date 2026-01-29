@@ -1,5 +1,8 @@
 {
   "devDependencies": {
-    "supabase": "^2.63.1"
+    "supabase": "^2.63.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@vitejs/plugin-react": "^5.0.0",
+    "vitest": "^3.0.5"
   }
 }
