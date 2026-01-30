@@ -285,6 +285,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     lastName: user?.user_metadata?.last_name || "",
     email: user?.email || "",
     businessName: user?.user_metadata?.business_name || "",
+    productsSold: user?.user_metadata?.products_sold || "",
+    farmersMarkets: user?.user_metadata?.farmers_markets || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -296,6 +298,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       lastName: user?.user_metadata?.last_name || "",
       email: user?.email || "",
       businessName: user?.user_metadata?.business_name || "",
+      productsSold: user?.user_metadata?.products_sold || "",
+      farmersMarkets: user?.user_metadata?.farmers_markets || "",
     });
     setIsEditing(true);
     setError(null);
@@ -314,6 +318,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       profileForm.lastName,
       profileForm.email,
       profileForm.businessName,
+      profileForm.productsSold,
+      profileForm.farmersMarkets,
     );
 
     if (error) {
@@ -399,6 +405,30 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   >
                     Click here to refresh
                   </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Business Details */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <h2 className="settings-card-title">Business Details</h2>
+                <button
+                  className="icon-btn"
+                  onClick={handleEditClick}
+                  aria-label="Edit business details"
+                >
+                  <img src={editIcon} alt="Edit" className="edit-icon" />
+                </button>
+              </div>
+              <div className="settings-card-content">
+                <div className="settings-row">
+                  <span className="settings-label">Products & Services</span>
+                  <span className="settings-value">{user?.user_metadata?.products_sold || '-'}</span>
+                </div>
+                <div className="settings-row">
+                  <span className="settings-label">Platforms & Locations</span>
+                  <span className="settings-value">{user?.user_metadata?.farmers_markets || '-'}</span>
                 </div>
               </div>
             </div>
@@ -566,6 +596,34 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   className="form-input"
                   placeholder="e.g. Smith's Organic Farm"
                   disabled={loading}
+                />
+              </div>
+              <div className="form-group">
+                <label>Products & Services</label>
+                <textarea
+                  value={profileForm.productsSold}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, productsSold: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="e.g. nail services, jewelry, consulting, etc."
+                  disabled={loading}
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Platforms & Locations</label>
+                <textarea
+                  value={profileForm.farmersMarkets}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, farmersMarkets: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="e.g. Instagram, Etsy, salon, home-based, etc."
+                  disabled={loading}
+                  rows={3}
+                  style={{ resize: 'vertical' }}
                 />
               </div>
             </div>
