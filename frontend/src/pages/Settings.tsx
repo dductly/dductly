@@ -24,10 +24,11 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   // Delete account state
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const canDelete = deleteConfirmText === "DELETE";
+  const canDelete = deleteConfirmText === "DELETE" && deleteReason.trim().length > 0;
 
   const handleDeleteAccount = async () => {
     if (!canDelete || !user) return;
@@ -51,6 +52,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
         },
         body: JSON.stringify({
           userId: user.id,
+          reason: deleteReason.trim(),
+          email: user.email,
         }),
       });
 
@@ -71,6 +74,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const handleCloseDelete = () => {
     setIsDeleting(false);
     setDeleteConfirmText("");
+    setDeleteReason("");
     setDeleteError(null);
   };
 
@@ -825,6 +829,26 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
               )}
 
               <div className="form-group" style={{ marginTop: '24px' }}>
+                <label style={{ fontWeight: 500 }}>
+                  Why are you deleting your account?
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  className="form-input"
+                  placeholder="Please let us know why you're leaving..."
+                  disabled={deleteLoading}
+                  rows={3}
+                  style={{ marginTop: '8px', resize: 'vertical' }}
+                />
+                {deleteReason.trim().length === 0 && deleteConfirmText === "DELETE" && (
+                  <p style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '6px' }}>
+                    Please provide a reason before deleting your account.
+                  </p>
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginTop: '16px' }}>
                 <label style={{ fontWeight: 500 }}>
                   Type <strong>DELETE</strong> to confirm
                 </label>

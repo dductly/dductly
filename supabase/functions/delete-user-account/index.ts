@@ -14,7 +14,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { userId } = await req.json();
+    const { userId, reason, email } = await req.json();
 
     if (!userId) {
       return new Response(
@@ -28,6 +28,17 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Save deletion reason before deleting the account
+    if (reason) {
+      const { error: reasonError } = await supabaseAdmin.from("deletion_reasons").insert({
+        user_email: email || null,
+        reason: reason,
+      });
+      if (reasonError) {
+        console.error("Failed to save deletion reason:", reasonError);
+      }
+    }
 
     // Delete user's expenses
     await supabaseAdmin.from("expenses").delete().eq("user_id", userId);
