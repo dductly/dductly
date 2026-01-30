@@ -386,6 +386,7 @@
   }
   
   *{box-sizing:border-box}
+  input, textarea, select, button { font-family: inherit; }
   html,body,#root{height:100%}
   body{
     margin:0;
@@ -3986,6 +3987,15 @@
 .settings-value {
   color: var(--text-medium);
   font-size: 0.95rem;
+  text-align: left;
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.settings-label {
+  min-width: 180px;
+  flex-shrink: 0;
 }
 
 .settings-hint {
