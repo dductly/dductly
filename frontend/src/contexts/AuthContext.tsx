@@ -138,6 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
     try {
+      // Refresh session before updating to avoid "auth session missing" errors
+      await supabase.auth.refreshSession();
       const { error } = await supabase.auth.updateUser({
         email,
         data: {
