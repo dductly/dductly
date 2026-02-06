@@ -274,14 +274,10 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
                 name="description"
                 placeholder="Add a title or additional details about this expense..."
                 rows={4}
-                maxLength={50}
                 value={formData.description}
                 onChange={handleChange}
                 disabled={loading}
               />
-              <div style={{ fontSize: '0.85rem', color: formData.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
-                {formData.description.length}/50 characters
-              </div>
             </div>
 
             <div className="form-group">
