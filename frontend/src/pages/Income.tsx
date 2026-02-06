@@ -355,17 +355,17 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                 </thead>
                 <tbody>
                   {sortedIncomes.map((income) => (
-                    <tr key={income.id}>
+                    <tr key={income.id} onClick={() => handleViewIncome(income)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(income.income_date)}</td>
                       <td>
                         <span className="category-badge">{income.category}</span>
                       </td>
                       <td>{income.customer}</td>
                       {/* <td>{income.market}</td> */}
-                      <td>{income.description}</td>
+                      <td><span className="description-cell">{income.description}</span></td>
                       <td>{income.payment_method}</td>
                       <td>{formatCurrency(income.amount + (income.tip || 0))}</td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <div className="menu-wrapper">
                           <button
                             className="menu-btn"
@@ -472,7 +472,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </div> */}
                   <div className="form-group">
                     <label>Title</label>
-                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                    <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default', minHeight: '60px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                       {viewingIncome.description}
                     </div>
                   </div>
@@ -626,12 +626,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                         setEditForm({ ...editForm, description: e.target.value })
                       }
                       className="form-input"
-                      maxLength={50}
                       rows={3}
                     />
-                    <div style={{ fontSize: '0.85rem', color: editForm.description.length >= 50 ? 'var(--error-red)' : 'var(--text-light)', marginTop: '4px' }}>
-                      {editForm.description.length}/50 characters
-                    </div>
                   </div>
                   <div className="form-group">
                     <label>Payment Method</label>
