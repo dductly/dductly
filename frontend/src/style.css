@@ -450,8 +450,8 @@
   transform: scale(1.05);
 }
 .brand-logo{
-  width: 36px;
-  height: 36px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(45, 80, 22, 0.1));
 }
