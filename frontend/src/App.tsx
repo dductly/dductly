@@ -12,6 +12,7 @@ import AddIncome from "./pages/AddIncome";
 import IncomePage from "./pages/Income";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
+import Features from "./pages/Features";
 import InactivityWarningModal from "./components/InactivityWarningModal";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
@@ -390,6 +391,7 @@ const AppContent: React.FC = () => {
           <>
             <Home onNavigate={handleNavigate} />
             <Services />
+            <Features />
             <Contact onNavigate={handleNavigate} />
           </>
         );
