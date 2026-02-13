@@ -13,7 +13,7 @@ const services: Service[] = [
 const Services: React.FC = () => (
   <section id="services" className="section">
     <h2 className="section-title">Simplify your business and focus on what you love.</h2>
-    <p className="section-subtitle">Built for small business owners, dductly helps you spend less time on paperwork and more time doing what you love: creating, connecting, and growing your business.</p>
+    <p className="section-subtitle">Built for small business owners, dductly helps you spend less time on bookkeeping and more time doing what you love: creating, connecting, and growing your business.</p>
     <div className="services-list">
       {services.map((s) => (
         <div className="service-item" key={s.title}>
