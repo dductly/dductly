@@ -18,6 +18,7 @@ import InactivityWarningModal from "./components/InactivityWarningModal";
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
+import dductlyLogo from "./img/dductlylogo.png";
 import { useInactivity } from "./hooks/useInactivity";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
 import { IncomeProvider } from "./contexts/IncomeContext";
@@ -67,7 +68,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
             onNavigate("home");
           }}
         >
-          <img src="/blue-and-purple-store.svg" alt="dductly logo" className="brand-logo" />
+          <img src={dductlyLogo} alt="dductly logo" className="brand-logo" />
           dductly
         </a>
 
