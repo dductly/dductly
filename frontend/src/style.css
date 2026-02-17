@@ -1725,6 +1725,31 @@
   }
 }
 
+.stats-chart-card {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: clamp(12px, 3vw, 24px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .stats-chart-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .recharts-cartesian-grid-horizontal line,
+[data-theme="dark"] .recharts-cartesian-grid-vertical line {
+  stroke: #3A4A5C;
+}
+
+[data-theme="dark"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #1E293B !important;
+  border-color: #3A4A5C !important;
+}
+
+[data-theme="dark"] .recharts-legend-item-text {
+  color: #CBD5E1 !important;
+}
+
 .card{
   background:rgba(255,255,255,.04);
   border-radius:12px; overflow:hidden; box-shadow:var(--shadow);

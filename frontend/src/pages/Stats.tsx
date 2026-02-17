@@ -2,6 +2,10 @@ import React, { useState, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer
+} from "recharts";
 
 type TimeRange = '1M' | '3M' | 'YTD' | '1Y' | 'ALL';
 
@@ -109,6 +113,32 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
     }
   });
 
+  const monthlyChartData = useMemo(() => {
+    const monthMap: Record<string, { income: number; expenses: number }> = {};
+
+    filteredIncomes.forEach(inc => {
+      const date = parseLocalDate(inc.income_date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthMap[key]) monthMap[key] = { income: 0, expenses: 0 };
+      monthMap[key].income += inc.amount;
+    });
+
+    filteredExpenses.forEach(exp => {
+      const date = parseLocalDate(exp.expense_date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthMap[key]) monthMap[key] = { income: 0, expenses: 0 };
+      monthMap[key].expenses += exp.amount;
+    });
+
+    return Object.entries(monthMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, val]) => {
+        const [y, m] = key.split('-');
+        const label = new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        return { month: label, Income: val.income, Expenses: val.expenses };
+      });
+  }, [filteredExpenses, filteredIncomes]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -190,6 +220,52 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                   <p className="stat-card-subtitle">{bestMonth ? formatCurrency(bestMonthAmount) : 'No data yet'}</p>
                 </div>
               </div>
+
+              {monthlyChartData.length > 1 && (
+                <div style={{ marginTop: '32px' }}>
+                  <h2 className="section-title" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', marginBottom: '16px' }}>Income vs Expenses Over Time</h2>
+                  <div className="stats-chart-card">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={monthlyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-secondary)" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-medium)' }} />
+                        <YAxis tick={{ fontSize: 12, fill: 'var(--text-medium)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                        <Tooltip
+                          formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
+                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px' }}
+                          labelStyle={{ color: 'var(--text-primary)' }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="Income" stroke="var(--primary-purple)" strokeWidth={2} dot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="Expenses" stroke="#EF9A9A" strokeWidth={2} dot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {monthlyChartData.length > 0 && (
+                <div style={{ marginTop: '32px' }}>
+                  <h2 className="section-title" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', marginBottom: '16px' }}>Monthly Comparison</h2>
+                  <div className="stats-chart-card">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={monthlyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-secondary)" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-medium)' }} />
+                        <YAxis tick={{ fontSize: 12, fill: 'var(--text-medium)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                        <Tooltip
+                          formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
+                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px' }}
+                          labelStyle={{ color: 'var(--text-primary)' }}
+                        />
+                        <Legend />
+                        <Bar dataKey="Income" fill="var(--primary-purple)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Expenses" fill="#EF9A9A" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
               {Object.keys(expensesByCategory).length > 0 && (
                 <div style={{ marginTop: '32px' }}>
