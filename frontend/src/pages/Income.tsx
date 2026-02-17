@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useIncome } from "../contexts/IncomeContext";
+import AutocompleteInput from "../components/AutocompleteInput";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useAuth } from "../hooks/useAuth";
 import type { Income } from "../contexts/IncomeContext";
@@ -18,6 +19,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const { incomes, updateIncome, deleteIncome } = useIncome();
   const { expenses } = useExpenses();
   const { user } = useAuth();
+  const customerSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.customer).filter(Boolean))), [incomes]);
+  const descriptionSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.description).filter(Boolean))), [incomes]);
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
       ? user.user_metadata.business_name
@@ -584,12 +587,10 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </div>
                   <div className="form-group">
                     <label>Customer</label>
-                    <input
-                      type="text"
+                    <AutocompleteInput
                       value={editForm.customer}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, customer: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, customer: val })}
+                      suggestions={customerSuggestions}
                       className="form-input"
                     />
                   </div>
@@ -620,12 +621,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   )} */}
                   <div className="form-group">
                     <label>Title</label>
-                    <textarea
+                    <AutocompleteInput
                       value={editForm.description}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, description: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, description: val })}
+                      suggestions={descriptionSuggestions}
                       className="form-input"
+                      multiline
                       rows={3}
                     />
                   </div>

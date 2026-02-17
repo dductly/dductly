@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
+import AutocompleteInput from "../components/AutocompleteInput";
 import { useAuth } from "../hooks/useAuth";
 import FileUpload from "../components/FileUpload";
 import { storageService, type Attachment } from "../services/storageService";
@@ -9,7 +10,9 @@ interface AddDataProps {
 }
 
 const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
-  const { addExpense, customCategories, customPaymentMethods } = useExpenses();
+  const { addExpense, customCategories, customPaymentMethods, expenses } = useExpenses();
+  const vendorSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.vendor).filter(Boolean))), [expenses]);
+  const descriptionSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.description).filter(Boolean))), [expenses]);
   const { user } = useAuth();
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
@@ -258,24 +261,26 @@ const AddData: React.FC<AddDataProps> = ({ onNavigate }) => {
 
             <div className="form-group">
               <label>Vendor/Store Name</label>
-              <input
-                type="text"
+              <AutocompleteInput
                 name="vendor"
                 placeholder="Where did you make this purchase?"
                 value={formData.vendor}
-                onChange={handleChange}
+                onChange={(val) => setFormData({ ...formData, vendor: val })}
+                suggestions={vendorSuggestions}
                 disabled={loading}
               />
             </div>
 
             <div className="form-group">
               <label>Title</label>
-              <textarea
+              <AutocompleteInput
                 name="description"
                 placeholder="Add a title or additional details about this expense..."
+                multiline
                 rows={4}
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(val) => setFormData({ ...formData, description: val })}
+                suggestions={descriptionSuggestions}
                 disabled={loading}
               />
             </div>
