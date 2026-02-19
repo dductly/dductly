@@ -75,6 +75,34 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
   const netProfit = totalIncome - totalExpenses;
 
+  // Previous period comparison
+  const prevPeriod = useMemo(() => {
+    if (timeRange === 'ALL') return null;
+    const currentStart = getStartDate(timeRange);
+    if (!currentStart) return null;
+    currentStart.setHours(0, 0, 0, 0);
+
+    const now = new Date();
+    const periodMs = now.getTime() - currentStart.getTime();
+    const prevStart = new Date(currentStart.getTime() - periodMs);
+    const prevEnd = currentStart;
+
+    const prevIncome = incomes
+      .filter(i => { const d = parseLocalDate(i.income_date); return d >= prevStart && d < prevEnd; })
+      .reduce((sum, i) => sum + i.amount, 0);
+    const prevExpense = expenses
+      .filter(e => { const d = parseLocalDate(e.expense_date); return d >= prevStart && d < prevEnd; })
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    return { income: prevIncome, expenses: prevExpense, profit: prevIncome - prevExpense };
+  }, [expenses, incomes, timeRange]);
+
+  const getChangeIndicator = (current: number, previous: number | null) => {
+    if (previous === null || previous === 0) return null;
+    const change = ((current - previous) / previous) * 100;
+    return { change, direction: change >= 0 ? 'up' as const : 'down' as const };
+  };
+
   const expensesByCategory: Record<string, number> = {};
   filteredExpenses.forEach(expense => {
     if (expensesByCategory[expense.category]) {
@@ -134,7 +162,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, val]) => {
         const [y, m] = key.split('-');
-        const label = new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        const label = new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         return { month: label, Income: val.income, Expenses: val.expenses };
       });
   }, [filteredExpenses, filteredIncomes]);
@@ -160,6 +188,43 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
     'YTD': 'YTD',
     '1Y': '1Y',
     'ALL': 'All',
+  };
+
+  const [showMore, setShowMore] = useState(false);
+  const [revenueGoal, setRevenueGoal] = useState<number>(() => {
+    const saved = localStorage.getItem('dductly_revenue_goal');
+    return saved ? parseFloat(saved) : 0;
+  });
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
+
+  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+  const profitMarginLabel = profitMargin >= 60 ? 'Excellent' : profitMargin >= 40 ? 'Strong' : profitMargin >= 20 ? 'Healthy' : profitMargin >= 0 ? 'Needs attention' : 'Negative margin';
+
+  const goalProgressRaw = revenueGoal > 0 ? (totalIncome / revenueGoal) * 100 : 0;
+  const goalProgress = Math.min(goalProgressRaw, 100);
+  const goalExceeded = goalProgressRaw > 100;
+
+  const incomeByItem: Record<string, number> = {};
+  filteredIncomes.forEach(inc => {
+    const key = inc.description || inc.category || 'Uncategorized';
+    incomeByItem[key] = (incomeByItem[key] || 0) + inc.amount;
+  });
+  const topItemEntry = Object.entries(incomeByItem).sort(([, a], [, b]) => b - a)[0];
+  const topItem = topItemEntry ? topItemEntry[0] : null;
+  const topItemAmount = topItemEntry ? topItemEntry[1] : 0;
+
+  const taxRate = 0.25;
+  const taxSetAside = netProfit > 0 ? netProfit * taxRate : 0;
+
+  const handleSaveGoal = () => {
+    const val = parseFloat(goalInput.replace(/,/g, ''));
+    if (!isNaN(val) && val > 0) {
+      setRevenueGoal(val);
+      localStorage.setItem('dductly_revenue_goal', val.toString());
+    }
+    setEditingGoal(false);
+    setGoalInput('');
   };
 
   const hasData = expenses.length > 0 || incomes.length > 0;
@@ -199,19 +264,40 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                 <div className="stat-card-uniform">
                   <h3 className="stat-card-label">Total Income</h3>
                   <p className="stat-card-value" style={{ color: 'var(--primary-purple)' }}>{formatCurrency(totalIncome)}</p>
-                  <p className="stat-card-subtitle">{filteredIncomes.length} entries</p>
+                  <p className="stat-card-subtitle">
+                    {filteredIncomes.length} entries
+                    {(() => {
+                      const ind = getChangeIndicator(totalIncome, prevPeriod?.income ?? null);
+                      if (!ind) return null;
+                      return <span className={`change-indicator ${ind.direction === 'up' ? 'change-up' : 'change-down'}`}>{ind.direction === 'up' ? '↑' : '↓'} {Math.abs(ind.change).toFixed(0)}% vs last period</span>;
+                    })()}
+                  </p>
                 </div>
 
                 <div className="stat-card-uniform">
                   <h3 className="stat-card-label">Net Profit</h3>
                   <p className="stat-card-value" style={{ color: netProfit >= 0 ? '#66BB6A' : '#EF9A9A' }}>{formatCurrency(netProfit)}</p>
-                  <p className="stat-card-subtitle">{netProfit >= 0 ? 'Profitable' : 'Loss'}</p>
+                  <p className="stat-card-subtitle">
+                    {netProfit >= 0 ? 'Profitable' : 'Loss'}
+                    {(() => {
+                      const ind = getChangeIndicator(netProfit, prevPeriod?.profit ?? null);
+                      if (!ind) return null;
+                      return <span className={`change-indicator ${ind.direction === 'up' ? 'change-up' : 'change-down'}`}>{ind.direction === 'up' ? '↑' : '↓'} {Math.abs(ind.change).toFixed(0)}% vs last period</span>;
+                    })()}
+                  </p>
                 </div>
 
                 <div className="stat-card-uniform">
                   <h3 className="stat-card-label">Total Expenses</h3>
                   <p className="stat-card-value" style={{ color: '#EF9A9A' }}>{formatCurrency(totalExpenses)}</p>
-                  <p className="stat-card-subtitle">{filteredExpenses.length} entries</p>
+                  <p className="stat-card-subtitle">
+                    {filteredExpenses.length} entries
+                    {(() => {
+                      const ind = getChangeIndicator(totalExpenses, prevPeriod?.expenses ?? null);
+                      if (!ind) return null;
+                      return <span className={`change-indicator ${ind.direction === 'up' ? 'change-up' : 'change-down'}`}>{ind.direction === 'up' ? '↑' : '↓'} {Math.abs(ind.change).toFixed(0)}% vs last period</span>;
+                    })()}
+                  </p>
                 </div>
 
                 <div className="stat-card-uniform">
@@ -221,6 +307,78 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  className="stats-view-more-btn"
+                  onClick={() => setShowMore(!showMore)}
+                >
+                  {showMore ? 'View Less' : 'View More'}
+                </button>
+              </div>
+
+              {showMore && (
+                <div className="stats-page-grid" style={{ marginTop: '16px' }}>
+                  <div className="stat-card-uniform">
+                    <h3 className="stat-card-label">Profit Margin</h3>
+                    <p className="stat-card-value" style={{ color: profitMargin >= 40 ? '#66BB6A' : profitMargin >= 20 ? 'var(--primary-purple)' : profitMargin >= 0 ? '#FFA726' : '#EF9A9A' }}>{profitMargin.toFixed(1)}%</p>
+                    <p className="stat-card-subtitle">{totalIncome > 0 ? profitMarginLabel : 'No income yet'}</p>
+                    <p className="stat-card-subtitle">How much of your income you keep after expenses</p>
+                  </div>
+
+                  <div className="stat-card-uniform">
+                    <h3 className="stat-card-label">Revenue Goal</h3>
+                    {editingGoal ? (
+                      <div className="goal-edit-inline">
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-medium)', fontSize: '0.875rem' }}>$</span>
+                          <input
+                            type="text"
+                            className="goal-input"
+                            placeholder="e.g. 20,000"
+                            value={goalInput}
+                            onChange={(e) => setGoalInput(e.target.value.replace(/[^0-9.,]/g, ''))}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveGoal(); if (e.key === 'Escape') { setEditingGoal(false); setGoalInput(''); } }}
+                            autoFocus
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                          <button className="goal-save-btn" onClick={handleSaveGoal}>Save</button>
+                          <button className="goal-cancel-btn" onClick={() => { setEditingGoal(false); setGoalInput(''); }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : revenueGoal > 0 ? (
+                      <>
+                        <p className="stat-card-value" style={{ color: goalExceeded ? '#66BB6A' : 'var(--primary-purple)', fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
+                          {goalExceeded ? `${goalProgressRaw.toFixed(0)}% of goal` : `${formatCurrency(totalIncome)} of ${formatCurrency(revenueGoal)}`}
+                        </p>
+                        <div className="goal-progress-bar">
+                          <div className="goal-progress-fill" style={{ width: `${goalProgress}%`, background: goalExceeded ? '#66BB6A' : undefined }}></div>
+                        </div>
+                        <p className="stat-card-subtitle">{goalExceeded ? 'Goal reached! Consider raising your target.' : `${goalProgress.toFixed(0)}% complete`}</p>
+                        <button className="goal-edit-btn" onClick={() => { setEditingGoal(true); setGoalInput(revenueGoal.toString()); }}>{goalExceeded ? 'Raise Goal' : 'Edit Goal'}</button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="stat-card-value" style={{ color: 'var(--text-medium)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>No goal set</p>
+                        <button className="goal-edit-btn" onClick={() => setEditingGoal(true)} style={{ marginTop: '8px' }}>Set a Goal</button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="stat-card-uniform">
+                    <h3 className="stat-card-label">Top Earner</h3>
+                    <p className="stat-card-value" style={{ color: 'var(--primary-purple)', fontSize: topItem && topItem.length > 15 ? 'clamp(0.875rem, 2.5vw, 1.1rem)' : 'clamp(1rem, 3vw, 1.25rem)' }}>{topItem || 'N/A'}</p>
+                    <p className="stat-card-subtitle">{topItem ? `${formatCurrency(topItemAmount)} (${totalIncome > 0 ? ((topItemAmount / totalIncome) * 100).toFixed(0) : 0}% of revenue)` : 'No income data'}</p>
+                  </div>
+
+                  <div className="stat-card-uniform">
+                    <h3 className="stat-card-label">Tax Set-Aside</h3>
+                    <p className="stat-card-value" style={{ color: taxSetAside > 0 ? '#FFA726' : 'var(--text-medium)' }}>{taxSetAside > 0 ? formatCurrency(taxSetAside) : '$0.00'}</p>
+                    <p className="stat-card-subtitle">{taxSetAside > 0 ? 'Based on estimated 25% self-employment tax' : 'No profit to set aside'}</p>
+                  </div>
+                </div>
+              )}
+
               {monthlyChartData.length > 1 && (
                 <div style={{ marginTop: '32px' }}>
                   <h2 className="section-title" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', marginBottom: '16px' }}>Income vs Expenses Over Time</h2>
@@ -228,12 +386,13 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={monthlyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-secondary)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-medium)' }} />
-                        <YAxis tick={{ fontSize: 12, fill: 'var(--text-medium)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                        <XAxis dataKey="month" tick={{ fontSize: 13, fill: 'var(--text-primary)' }} />
+                        <YAxis tick={{ fontSize: 13, fill: 'var(--text-primary)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
                         <Tooltip
                           formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
-                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px' }}
-                          labelStyle={{ color: 'var(--text-primary)' }}
+                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                          labelStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                          itemStyle={{ color: 'var(--text-primary)' }}
                         />
                         <Legend />
                         <Line type="monotone" dataKey="Income" stroke="var(--primary-purple)" strokeWidth={2} dot={{ r: 4 }} />
@@ -251,12 +410,13 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={monthlyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-secondary)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-medium)' }} />
-                        <YAxis tick={{ fontSize: 12, fill: 'var(--text-medium)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                        <XAxis dataKey="month" tick={{ fontSize: 13, fill: 'var(--text-primary)' }} />
+                        <YAxis tick={{ fontSize: 13, fill: 'var(--text-primary)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
                         <Tooltip
                           formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
-                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px' }}
-                          labelStyle={{ color: 'var(--text-primary)' }}
+                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                          labelStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                          itemStyle={{ color: 'var(--text-primary)' }}
                         />
                         <Legend />
                         <Bar dataKey="Income" fill="var(--primary-purple)" radius={[4, 4, 0, 0]} />
@@ -265,6 +425,12 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                     </ResponsiveContainer>
                   </div>
                 </div>
+              )}
+
+              {monthlyChartData.length <= 1 && monthlyChartData.length > 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--text-medium)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', marginTop: '12px' }}>
+                  Add data across more months to see trend lines
+                </p>
               )}
 
               {Object.keys(expensesByCategory).length > 0 && (

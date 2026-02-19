@@ -44,6 +44,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
   const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -190,10 +191,15 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   };
 
   const handleDeleteExpense = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      deleteExpense(id);
-    }
+    setDeleteConfirmId(id);
     setOpenMenuId(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteExpense(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
   };
 
   const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -641,6 +647,21 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   <button className="btn btn-primary" onClick={handleSaveEdit}>
                     Save Changes
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {deleteConfirmId && (
+            <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+              <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                <div className="confirm-modal-icon">
+                  <img src={recycleIcon} alt="" style={{ width: '32px', height: '32px', opacity: 0.8 }} />
+                </div>
+                <h3 className="confirm-modal-title">Delete Expense</h3>
+                <p className="confirm-modal-text">Are you sure you want to delete this expense? This action cannot be undone.</p>
+                <div className="confirm-modal-actions">
+                  <button className="btn btn-ghost" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                  <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
                 </div>
               </div>
             </div>
