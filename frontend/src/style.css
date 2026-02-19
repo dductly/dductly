@@ -3035,6 +3035,45 @@
   font-size: 0.95rem;
 }
 
+.forgot-password-link {
+  text-align: center;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.forgot-password-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 80px) clamp(20px, 4vw, 40px);
+  min-height: calc(100vh - 300px);
+  text-align: center;
+}
+
+.forgot-password-container .section-title {
+  margin-bottom: 12px;
+}
+
+.forgot-password-subtitle {
+  color: var(--text-medium);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.forgot-password-card {
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: left;
+}
+
 /* Wizard Onboarding Styles */
 .signup-wizard {
   background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f7 100%);

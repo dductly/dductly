@@ -71,10 +71,16 @@ const SignIn: React.FC<SignInProps> = ({ onNavigate }) => {
               />
             </div>
             
+            <p className="forgot-password-link">
+              <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('forgot-password'); }} className="link">
+                Forgot your password?
+              </a>
+            </p>
+
             <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
               {loading ? "Signing In..." : "Sign In"}
             </button>
-            
+
             <p className="signup-login">
               Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('signup'); }} className="link">Sign up here</a>
             </p>

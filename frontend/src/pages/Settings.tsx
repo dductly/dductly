@@ -249,6 +249,27 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const passwordsMatch = newPassword === confirmNewPassword;
   const canChangePassword = isPasswordValid && passwordsMatch && newPassword.length > 0;
 
+  const sendNotificationEmail = (type: 'password_changed' | 'email_changed', email: string) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY as string;
+    if (!supabaseUrl || !anonKey) return;
+
+    fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        email,
+        type,
+        firstName: user?.user_metadata?.first_name || "",
+      }),
+    }).catch(() => {
+      // Fire-and-forget: don't block UI on notification email failures
+    });
+  };
+
   const handleChangePassword = async () => {
     if (!canChangePassword) return;
 
@@ -261,6 +282,10 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       setPasswordError(error.message);
     } else {
       setPasswordSuccess(true);
+      // Send notification email
+      if (user?.email) {
+        sendNotificationEmail('password_changed', user.email);
+      }
       setTimeout(() => {
         setIsChangingPassword(false);
         setNewPassword("");
@@ -327,7 +352,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     } else {
       setIsEditing(false);
       setSuccess(true);
-      if (emailChanged) {
+      if (emailChanged && user?.email) {
+        // Send notification to the old email address
+        sendNotificationEmail('email_changed', user.email);
         alert("Profile updated! A confirmation email has been sent to your new email address. Please verify it and then refresh this page to see the changes.");
       } else {
         window.location.reload();
