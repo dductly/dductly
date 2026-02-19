@@ -13,6 +13,8 @@ import IncomePage from "./pages/Income";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import InactivityWarningModal from "./components/InactivityWarningModal";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
@@ -174,9 +176,10 @@ const Footer: React.FC<FooterProps> = ({ onLegalClick }) => (
 interface SignInModalProps {
   onClose: () => void;
   onSignUpClick: () => void;
+  onForgotPasswordClick: () => void;
 }
 
-const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => {
+const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick, onForgotPasswordClick }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -252,10 +255,16 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick }) => 
             </div>
           </div>
           
+          <p className="forgot-password-link">
+            <a href="#" onClick={(e) => { e.preventDefault(); onClose(); onForgotPasswordClick(); }} className="link">
+              Forgot your password?
+            </a>
+          </p>
+
           <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
             {loading ? "Signing In..." : "Sign In"}
           </button>
-          
+
           <p className="modal-footer-text">
             Don't have an account?{' '}
             <a href="#" onClick={(e) => { e.preventDefault(); onClose(); onSignUpClick(); }} className="link">
@@ -281,7 +290,7 @@ const AppContent: React.FC = () => {
 
   // Redirect to home page when user logs out (only after auth has finished loading)
   useEffect(() => {
-    if (!loading && !user && currentPage !== 'home' && currentPage !== 'signup' && currentPage !== 'confirm-email') {
+    if (!loading && !user && currentPage !== 'home' && currentPage !== 'signup' && currentPage !== 'confirm-email' && currentPage !== 'forgot-password' && currentPage !== 'reset-password') {
       console.log('[AppContent] User logged out, navigating to home');
       setCurrentPage('home');
     }
@@ -305,16 +314,23 @@ const AppContent: React.FC = () => {
     // Check for email confirmation tokens in URL (hash or query params)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const queryParams = new URLSearchParams(window.location.search);
-    const hasConfirmationToken = 
+    const hasConfirmationToken =
       (hashParams.get('access_token') && hashParams.get('type') === 'email') ||
       (queryParams.get('token') && queryParams.get('type') === 'email');
+    const hasRecoveryToken =
+      (hashParams.get('access_token') && hashParams.get('type') === 'recovery') ||
+      (queryParams.get('token') && queryParams.get('type') === 'recovery');
 
     // Set initial state from URL on page load/refresh
     const currentPath = window.location.pathname;
     let initialPage = currentPath === '/' || currentPath === '' ? 'home' : currentPath.substring(1);
-    
+
+    // If we have recovery tokens, route to reset-password page
+    if (hasRecoveryToken) {
+      initialPage = 'reset-password';
+    }
     // If we have confirmation tokens, route to confirm-email page (even if path is /)
-    if (hasConfirmationToken) {
+    else if (hasConfirmationToken) {
       initialPage = 'confirm-email';
     }
     
@@ -325,8 +341,8 @@ const AppContent: React.FC = () => {
       setCurrentPage(initialPage);
     }
 
-    // Use /confirm-email in the URL when we have confirmation tokens so the path is valid and refresh works
-    const pathForHistory = hasConfirmationToken ? '/confirm-email' : currentPath;
+    // Use appropriate URL when we have tokens so the path is valid and refresh works
+    const pathForHistory = hasRecoveryToken ? '/reset-password' : hasConfirmationToken ? '/confirm-email' : currentPath;
     if (!window.history.state) {
       window.history.replaceState({ page: initialPage }, '', pathForHistory);
     }
@@ -368,6 +384,10 @@ const AppContent: React.FC = () => {
         return <SignUp onNavigate={handleNavigate} />;
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
+      case 'forgot-password':
+        return <ForgotPassword onNavigate={handleNavigate} onSignInClick={handleSignInClick} />;
+      case 'reset-password':
+        return <ResetPassword onNavigate={handleNavigate} onSignInClick={handleSignInClick} />;
       case 'import':
         return <Import onNavigate={handleNavigate} />;
       case 'add-data':
@@ -420,7 +440,7 @@ const AppContent: React.FC = () => {
       </main>
       <Footer onLegalClick={setLegalModal} />
       {isSignInOpen && (
-        <SignInModal onClose={handleCloseSignIn} onSignUpClick={handleSignUpClick} />
+        <SignInModal onClose={handleCloseSignIn} onSignUpClick={handleSignUpClick} onForgotPasswordClick={() => handleNavigate('forgot-password')} />
       )}
 
       {/* Inactivity Warning Modal - Only for authenticated users */}
