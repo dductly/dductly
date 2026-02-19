@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useIncome } from "../contexts/IncomeContext";
+import AutocompleteInput from "../components/AutocompleteInput";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useAuth } from "../hooks/useAuth";
 import type { Income } from "../contexts/IncomeContext";
@@ -18,6 +19,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const { incomes, updateIncome, deleteIncome } = useIncome();
   const { expenses } = useExpenses();
   const { user } = useAuth();
+  const customerSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.customer).filter(Boolean))), [incomes]);
+  const descriptionSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.description).filter(Boolean))), [incomes]);
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
       ? user.user_metadata.business_name
@@ -44,6 +47,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   // const [otherMarket, setOtherMarket] = useState("");
   const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -213,10 +217,15 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   };
 
   const handleDeleteIncome = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this income entry?")) {
-      deleteIncome(id);
-    }
+    setDeleteConfirmId(id);
     setOpenMenuId(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteIncome(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
   };
 
   const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -584,12 +593,10 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </div>
                   <div className="form-group">
                     <label>Customer</label>
-                    <input
-                      type="text"
+                    <AutocompleteInput
                       value={editForm.customer}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, customer: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, customer: val })}
+                      suggestions={customerSuggestions}
                       className="form-input"
                     />
                   </div>
@@ -620,12 +627,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   )} */}
                   <div className="form-group">
                     <label>Title</label>
-                    <textarea
+                    <AutocompleteInput
                       value={editForm.description}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, description: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, description: val })}
+                      suggestions={descriptionSuggestions}
                       className="form-input"
+                      multiline
                       rows={3}
                     />
                   </div>
@@ -739,6 +746,21 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   <button className="btn btn-primary" onClick={handleSaveEdit}>
                     Save Changes
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {deleteConfirmId && (
+            <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+              <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                <div className="confirm-modal-icon">
+                  <img src={recycleIcon} alt="" style={{ width: '32px', height: '32px', opacity: 0.8 }} />
+                </div>
+                <h3 className="confirm-modal-title">Delete Income</h3>
+                <p className="confirm-modal-text">Are you sure you want to delete this income entry? This action cannot be undone.</p>
+                <div className="confirm-modal-actions">
+                  <button className="btn btn-ghost" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                  <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
                 </div>
               </div>
             </div>

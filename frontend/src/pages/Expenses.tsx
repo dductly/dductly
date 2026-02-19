@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
+import AutocompleteInput from "../components/AutocompleteInput";
 import { useIncome } from "../contexts/IncomeContext";
 import { useAuth } from "../hooks/useAuth";
 import type { Expense } from "../contexts/ExpensesContext";
@@ -18,6 +19,8 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const { expenses, updateExpense, deleteExpense } = useExpenses();
   const { incomes } = useIncome();
   const { user } = useAuth();
+  const vendorSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.vendor).filter(Boolean))), [expenses]);
+  const descriptionSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.description).filter(Boolean))), [expenses]);
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
       ? user.user_metadata.business_name
@@ -41,6 +44,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [otherPaymentMethod, setOtherPaymentMethod] = useState("");
   const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Calculate totals
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -187,10 +191,15 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   };
 
   const handleDeleteExpense = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      deleteExpense(id);
-    }
+    setDeleteConfirmId(id);
     setOpenMenuId(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteExpense(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
   };
 
   const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -539,23 +548,21 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   </div>
                   <div className="form-group">
                     <label>Vendor</label>
-                    <input
-                      type="text"
+                    <AutocompleteInput
                       value={editForm.vendor}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, vendor: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, vendor: val })}
+                      suggestions={vendorSuggestions}
                       className="form-input"
                     />
                   </div>
                   <div className="form-group">
                     <label>Title</label>
-                    <textarea
+                    <AutocompleteInput
                       value={editForm.description}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, description: e.target.value })
-                      }
+                      onChange={(val) => setEditForm({ ...editForm, description: val })}
+                      suggestions={descriptionSuggestions}
                       className="form-input"
+                      multiline
                       rows={3}
                     />
                   </div>
@@ -640,6 +647,21 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   <button className="btn btn-primary" onClick={handleSaveEdit}>
                     Save Changes
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {deleteConfirmId && (
+            <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+              <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                <div className="confirm-modal-icon">
+                  <img src={recycleIcon} alt="" style={{ width: '32px', height: '32px', opacity: 0.8 }} />
+                </div>
+                <h3 className="confirm-modal-title">Delete Expense</h3>
+                <p className="confirm-modal-text">Are you sure you want to delete this expense? This action cannot be undone.</p>
+                <div className="confirm-modal-actions">
+                  <button className="btn btn-ghost" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                  <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
                 </div>
               </div>
             </div>

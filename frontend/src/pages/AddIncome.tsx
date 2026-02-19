@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useIncome } from "../contexts/IncomeContext";
+import AutocompleteInput from "../components/AutocompleteInput";
 import { useAuth } from "../hooks/useAuth";
 import FileUpload from "../components/FileUpload";
 import { storageService, type Attachment } from "../services/storageService";
@@ -9,7 +10,9 @@ interface AddIncomeProps {
 }
 
 const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
-  const { addIncome, customCategories, customPaymentMethods } = useIncome();
+  const { addIncome, customCategories, customPaymentMethods, incomes } = useIncome();
+  const customerSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.customer).filter(Boolean))), [incomes]);
+  const descriptionSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.description).filter(Boolean))), [incomes]);
   const { user } = useAuth();
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
@@ -312,12 +315,12 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
             <div className="form-row">
               <div className="form-group">
                 <label>Customer</label>
-                <input
-                  type="text"
+                <AutocompleteInput
                   name="customer"
                   placeholder="Customer name (if applicable)"
                   value={formData.customer}
-                  onChange={handleChange}
+                  onChange={(val) => setFormData({ ...formData, customer: val })}
+                  suggestions={customerSuggestions}
                   disabled={loading}
                 />
               </div>
@@ -351,12 +354,14 @@ const AddIncome: React.FC<AddIncomeProps> = ({ onNavigate }) => {
 
             <div className="form-group">
               <label>Title</label>
-              <textarea
+              <AutocompleteInput
                 name="description"
                 placeholder="Add a title or additional details about this income..."
+                multiline
                 rows={4}
                 value={formData.description}
-                onChange={handleChange}
+                onChange={(val) => setFormData({ ...formData, description: val })}
+                suggestions={descriptionSuggestions}
                 disabled={loading}
               />
             </div>
