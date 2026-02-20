@@ -21,6 +21,7 @@ import InactivityWarningModal from "./components/InactivityWarningModal";
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
+import { supabase } from "./lib/supabaseClient";
 import dductlyLogo from "./img/dductlylogo.png";
 import { useInactivity } from "./hooks/useInactivity";
 import { ExpensesProvider } from "./contexts/ExpensesContext";
@@ -277,8 +278,30 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick, onFor
   );
 };
 
+const getInitialPage = () => {
+  const path = window.location.pathname;
+  const page = path === '/' || path === '' ? 'home' : path.substring(1);
+  // Also check for recovery/confirmation tokens in URL
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const queryParams = new URLSearchParams(window.location.search);
+  if (
+    (hashParams.get('access_token') && hashParams.get('type') === 'recovery') ||
+    (queryParams.get('token') && queryParams.get('type') === 'recovery') ||
+    (queryParams.get('code') && page === 'reset-password')
+  ) {
+    return 'reset-password';
+  }
+  if (
+    (hashParams.get('access_token') && hashParams.get('type') === 'email') ||
+    (queryParams.get('token') && queryParams.get('type') === 'email')
+  ) {
+    return 'confirm-email';
+  }
+  return page;
+};
+
 const AppContent: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | 'guide' | null>(null);
   const { loading, user } = useAuth();
@@ -287,6 +310,17 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     console.log('[AppContent] showWarning changed to:', showWarning, 'user:', !!user);
   }, [showWarning, user]);
+
+  // Listen for PASSWORD_RECOVERY event and navigate to reset-password page
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setCurrentPage('reset-password');
+        window.history.replaceState({ page: 'reset-password' }, '', '/reset-password');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Redirect to home page when user logs out (only after auth has finished loading)
   useEffect(() => {

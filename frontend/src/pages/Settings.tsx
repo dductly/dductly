@@ -20,6 +20,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
   const [savingTimeout, setSavingTimeout] = useState(false);
+  const [emailChangeNotice, setEmailChangeNotice] = useState(false);
 
   // Delete account state
   const [isDeleting, setIsDeleting] = useState(false);
@@ -355,7 +356,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       if (emailChanged && user?.email) {
         // Send notification to the old email address
         sendNotificationEmail('email_changed', user.email);
-        alert("Profile updated! A confirmation email has been sent to your new email address. Please verify it and then refresh this page to see the changes.");
+        setEmailChangeNotice(true);
       } else {
         window.location.reload();
       }
@@ -873,6 +874,41 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                 disabled={!hasExportSelection}
               >
                 Download Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Change Notice Modal */}
+      {emailChangeNotice && (
+        <div className="modal-overlay" onClick={() => setEmailChangeNotice(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setEmailChangeNotice(false)}>
+              &times;
+            </button>
+            <div className="modal-header">
+              <h2>Email Updated</h2>
+            </div>
+            <div className="modal-body">
+              <div className="success-banner" style={{ marginBottom: '16px' }}>
+                Profile updated successfully!
+              </div>
+              <p style={{ color: 'var(--text-medium)', lineHeight: 1.6 }}>
+                A confirmation email has been sent to your new email address. Please verify it and then{' '}
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); refreshSession(); setEmailChangeNotice(false); }}
+                  className="link"
+                >
+                  click here to refresh
+                </a>
+                {' '}to see the changes.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-primary" onClick={() => setEmailChangeNotice(false)}>
+                Got it
               </button>
             </div>
           </div>
