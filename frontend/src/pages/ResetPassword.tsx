@@ -16,25 +16,29 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onNavigate, onSignInClick
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  // Listen for the PASSWORD_RECOVERY event from Supabase
+  // Wait for Supabase to establish the recovery session from the URL token/code
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setSessionReady(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        setReady(true);
       }
     });
 
-    // Also check if we already have a session (in case the event fired before this component mounted)
+    // Also check if session already exists (PKCE may have processed before mount)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        setSessionReady(true);
+        setReady(true);
       }
     });
+
+    // Fallback: show the form after 2 seconds regardless
+    const timeout = setTimeout(() => setReady(true), 2000);
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -83,26 +87,26 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onNavigate, onSignInClick
   return (
     <div className="page">
       <section className="section">
-        <div className="signup-container">
-          <div className="signup-left">
-            <h1 className="section-title">Set New Password</h1>
-            <p>Choose a new password for your dductly account.</p>
-          </div>
+        <div className="forgot-password-container">
+          <h1 className="section-title">Set New Password</h1>
+          <p className="forgot-password-subtitle">
+            Choose a new password for your dductly account.
+          </p>
 
           {success ? (
-            <div className="signup-form">
-              <div className="success-banner" style={{ marginBottom: "16px" }}>
+            <div className="forgot-password-card">
+              <div className="success-banner">
                 Password updated successfully! Redirecting to sign in...
               </div>
             </div>
-          ) : !sessionReady ? (
-            <div className="signup-form">
+          ) : !ready ? (
+            <div className="forgot-password-card">
               <p style={{ color: "var(--text-medium)", textAlign: "center" }}>
                 Verifying your reset link...
               </p>
             </div>
           ) : (
-            <form className="signup-form" onSubmit={handleSubmit}>
+            <form className="forgot-password-card" onSubmit={handleSubmit}>
               {error && <div className="error-message">{error}</div>}
 
               <div className="form-group">
@@ -188,6 +192,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onNavigate, onSignInClick
                 className="btn btn-primary btn-large"
                 type="submit"
                 disabled={loading || !canSubmit}
+                style={{ width: "100%" }}
               >
                 {loading ? "Updating..." : "Update Password"}
               </button>

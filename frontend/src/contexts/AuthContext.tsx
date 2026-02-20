@@ -166,7 +166,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    // Use refreshSession() instead of getSession() to fetch updated user data from server
+    const { data: { session } } = await supabase.auth.refreshSession();
     setSession(session);
     setUser(session?.user ?? null);
   };
