@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer
@@ -42,6 +43,7 @@ const getStartDate = (range: TimeRange): Date | null => {
 
 const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
   const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
@@ -262,7 +264,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
             <>
               <div className="stats-page-grid">
                 <div className="stat-card-uniform">
-                  <h3 className="stat-card-label">Total Income</h3>
+                  <h3 className="stat-card-label">Revenue</h3>
                   <p className="stat-card-value" style={{ color: 'var(--primary-purple)' }}>{formatCurrency(totalIncome)}</p>
                   <p className="stat-card-subtitle">
                     {filteredIncomes.length} entries
@@ -390,9 +392,10 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                         <YAxis tick={{ fontSize: 13, fill: 'var(--text-primary)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
                         <Tooltip
                           formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
-                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                          labelStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
-                          itemStyle={{ color: 'var(--text-primary)' }}
+                          contentStyle={{ backgroundColor: isDarkMode ? '#1a202c' : '#ffffff', border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0', borderRadius: '8px', color: isDarkMode ? '#e2e8f0' : '#2D3748', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}
+                          labelStyle={{ color: isDarkMode ? '#e2e8f0' : '#2D3748', fontWeight: 700 }}
+                          itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#2D3748' }}
+                          isAnimationActive={false}
                         />
                         <Legend />
                         <Line type="monotone" dataKey="Income" stroke="var(--primary-purple)" strokeWidth={2} dot={{ r: 4 }} />
@@ -414,9 +417,10 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                         <YAxis tick={{ fontSize: 13, fill: 'var(--text-primary)' }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
                         <Tooltip
                           formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
-                          contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--bg-secondary)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                          labelStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
-                          itemStyle={{ color: 'var(--text-primary)' }}
+                          contentStyle={{ backgroundColor: isDarkMode ? '#1a202c' : '#ffffff', border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0', borderRadius: '8px', color: isDarkMode ? '#e2e8f0' : '#2D3748', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}
+                          labelStyle={{ color: isDarkMode ? '#e2e8f0' : '#2D3748', fontWeight: 700 }}
+                          itemStyle={{ color: isDarkMode ? '#e2e8f0' : '#2D3748' }}
+                          isAnimationActive={false}
                         />
                         <Legend />
                         <Bar dataKey="Income" fill="var(--primary-purple)" radius={[4, 4, 0, 0]} />

@@ -264,7 +264,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               <div className="summary-value">{formatCurrency(totalExpenses)}</div>
             </div>
             <div className="summary-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate('income')}>
-              <div className="summary-label">Total Income</div>
+              <div className="summary-label">Revenue</div>
               <div className="summary-value">{formatCurrency(totalIncome)}</div>
             </div>
             <div className="summary-card">

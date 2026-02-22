@@ -63,6 +63,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
               >
                 Import Data
               </button>
+              <button
+                className="btn btn-primary btn-large"
+                onClick={() => onNavigate('tax-insights')}
+              >
+                Tax Insights
+              </button>
             </div>
           </div>
 
@@ -107,7 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
             </div>
             <div className="stats-preview-grid">
               <div className="stats-preview-item">
-                <span className="stats-preview-label">Total Income</span>
+                <span className="stats-preview-label">Revenue</span>
                 <span className="stats-preview-value income">{formatCurrency(totalIncome)}</span>
               </div>
               <div className="stats-preview-item">
