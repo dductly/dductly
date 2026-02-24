@@ -26,6 +26,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       ? user.user_metadata.business_name
       : `${user.user_metadata.business_name}'s`)
     : "Your";
+  const [showImportBanner, setShowImportBanner] = useState(() => localStorage.getItem("dductly_recently_imported") === "true");
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -298,6 +299,22 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
               <div className="summary-value">{formatCurrency(totalProfit)}</div>
             </div>
           </div>
+
+          {showImportBanner && (
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 20px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px", marginBottom: "20px" }}>
+              <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>📥</span>
+              <div style={{ flex: 1, fontSize: "0.88rem", color: "var(--text-dark)", lineHeight: 1.6 }}>
+                <strong>Your imported data is all here.</strong> Head to{" "}
+                <span onClick={() => onNavigate("stats")} style={{ cursor: "pointer", fontWeight: 700, textDecoration: "underline", color: "var(--deep-blue)" }}>Statistics</span>
+                {" "}to see your overview — and keep adding income here to build your history.
+              </div>
+              <button
+                onClick={() => { localStorage.removeItem("dductly_recently_imported"); setShowImportBanner(false); }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--deep-blue)", fontSize: "1.3rem", lineHeight: 1, flexShrink: 0, padding: "0 4px", fontWeight: 700 }}
+                aria-label="Dismiss"
+              >×</button>
+            </div>
+          )}
 
           <div className="expenses-controls">
             <div className="control-group">
