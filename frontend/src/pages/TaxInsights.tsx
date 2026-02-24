@@ -58,7 +58,7 @@ const WRITEOFF_GUIDE = [
     title: "Vehicle & Mileage",
     description:
       "Every mile you drive for business counts. Use the standard mileage rate (70¢/mile in 2025) or track actual vehicle expenses. This includes driving to markets, picking up supplies, and client visits.",
-    note: "Keep a mileage log with date, destination, and business purpose for each trip.",
+    note: "Keep a mileage log with date, destination, and business purpose for each trip. Note: commuting from home to a regular place of business is not deductible.",
   },
   {
     icon: "🏠",
@@ -329,7 +329,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
             fontSize: "0.85rem",
             color: "var(--text-medium)",
           }}>
-            <strong>Heads up:</strong> This page is for informational purposes only and is not tax advice. Tax laws vary by situation. Always consult a qualified tax professional before filing.
+            <strong>Heads up:</strong> This page is for informational purposes only and is not tax advice. All deductions must be ordinary and necessary for your business. Tax laws vary by situation — always consult a qualified tax professional before filing. Based on current IRS guidance for 2025.
           </div>
 
           {/* ── Tabs ── */}
@@ -526,7 +526,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
           {activeTab === "guide" && (
             <div>
               <p style={{ fontSize: "0.9rem", color: "var(--text-medium)", marginBottom: "22px", lineHeight: 1.6 }}>
-                As a self-employed small business owner, you file a <strong>Schedule C</strong> with your Form 1040. Every legitimate business expense reduces your taxable income — and your self-employment tax. Here's what to look for:
+                As a self-employed small business owner, you file a <strong>Schedule C</strong> with your Form 1040. Every legitimate business expense reduces your taxable income — and your self-employment tax. To qualify, expenses must be <strong>ordinary and necessary</strong> for your trade or business. Here's what to look for:
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
                 {WRITEOFF_GUIDE.map((item) => (
