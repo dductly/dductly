@@ -34,7 +34,7 @@ const DEFAULT_PAYMENT_METHODS = [
 
 interface ExpensesContextType {
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
+  addExpense: (expense: Omit<Expense, "id" | "user_id">) => Promise<Expense | null>;
   updateExpense: (id: string, expense: Omit<Expense, "id" | "user_id">) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   loading: boolean;
@@ -84,7 +84,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchExpenses();
   }, [user]);
 
-  const addExpense = async (newExpense: Omit<Expense, "id" | "user_id">) => {
+  const addExpense = async (newExpense: Omit<Expense, "id" | "user_id">): Promise<Expense | null> => {
     if (!user) return;
 
     const expenseToInsert = {
@@ -106,8 +106,9 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       .select()
       .single();
 
-    if (error) console.error("Error adding expense:", error);
-    else setExpenses((prev) => [data, ...prev]);
+    if (error) { console.error("Error adding expense:", error); return null; }
+    setExpenses((prev) => [data, ...prev]);
+    return data;
   };
 
   const updateExpense = async (id: string, updatedExpense: Omit<Expense, "id" | "user_id">) => {

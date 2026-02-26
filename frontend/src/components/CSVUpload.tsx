@@ -7,6 +7,7 @@ import { useIncome } from "../contexts/IncomeContext";
 interface CSVUploadProps {
   userName: string | null;
   onEmailSuccess: (fileName: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
 interface ParsedData {
@@ -204,9 +205,9 @@ const processRow = (
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
-const CSVUpload: React.FC<CSVUploadProps> = () => {
-  const { addExpense } = useExpenses();
-  const { addIncome }  = useIncome();
+const CSVUpload: React.FC<CSVUploadProps> = ({ onNavigate }) => {
+  const { expenses, addExpense, deleteExpense } = useExpenses();
+  const { incomes, addIncome, deleteIncome }    = useIncome();
 
   const [step, setStep]               = useState<Step>("upload");
   const [isDragging, setIsDragging]   = useState(false);
@@ -227,6 +228,17 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
   const [results, setResults]         = useState<{
     expenses: number; income: number; skipped: number; failed: number;
   } | null>(null);
+
+  type ImportRecord = { expenseIds: string[]; incomeIds: string[]; fileName: string; importedAt: string };
+  const [lastImport, setLastImport] = useState<ImportRecord | null>(() => {
+    try { return JSON.parse(localStorage.getItem("dductly_last_import") || "null"); } catch { return null; }
+  });
+  const [allImports, setAllImports] = useState<{ expenseIds: string[]; incomeIds: string[] } | null>(() => {
+    try { return JSON.parse(localStorage.getItem("dductly_all_imports") || "null"); } catch { return null; }
+  });
+  const [deletingImport, setDeletingImport] = useState(false);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [successMsg, setSuccessMsg]             = useState("");
 
   // ── Parse CSV ──────────────────────────────────────────────────────────────
   const parseCSV = (file: File): Promise<ParsedData> =>
@@ -305,15 +317,17 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
     setStep("importing");
     setProgress(0);
     const res = { expenses: 0, income: 0, skipped: processedRows.length - valid.length, failed: 0 };
+    const newExpenseIds: string[] = [];
+    const newIncomeIds: string[]  = [];
 
     for (let i = 0; i < valid.length; i++) {
       try {
         if (valid[i].type === "expense") {
-          await addExpense(valid[i].expenseData as Parameters<typeof addExpense>[0]);
-          res.expenses++;
+          const saved = await addExpense(valid[i].expenseData as Parameters<typeof addExpense>[0]);
+          if (saved) { newExpenseIds.push(saved.id); res.expenses++; } else res.failed++;
         } else {
-          await addIncome(valid[i].incomeData as Parameters<typeof addIncome>[0]);
-          res.income++;
+          const saved = await addIncome(valid[i].incomeData as Parameters<typeof addIncome>[0]);
+          if (saved) { newIncomeIds.push(saved.id); res.income++; } else res.failed++;
         }
       } catch {
         res.failed++;
@@ -321,10 +335,22 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
       setProgress(Math.round(((i + 1) / valid.length) * 100));
     }
 
-    setResults(res);
-    if (res.expenses > 0 || res.income > 0) {
+    // Save last import record
+    if (newExpenseIds.length > 0 || newIncomeIds.length > 0) {
+      const record: ImportRecord = { expenseIds: newExpenseIds, incomeIds: newIncomeIds, fileName, importedAt: new Date().toISOString() };
+      localStorage.setItem("dductly_last_import", JSON.stringify(record));
+      setLastImport(record);
+
+      // Accumulate all-time import IDs
+      const prev = JSON.parse(localStorage.getItem("dductly_all_imports") || '{"expenseIds":[],"incomeIds":[]}');
+      const updated = { expenseIds: [...prev.expenseIds, ...newExpenseIds], incomeIds: [...prev.incomeIds, ...newIncomeIds] };
+      localStorage.setItem("dductly_all_imports", JSON.stringify(updated));
+      setAllImports(updated);
+
       localStorage.setItem("dductly_recently_imported", "true");
     }
+
+    setResults(res);
     setStep("summary");
   };
 
@@ -418,6 +444,55 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
     URL.revokeObjectURL(url);
   };
 
+  // ── Undo last import ───────────────────────────────────────────────────────
+  const handleUndoLastImport = async () => {
+    if (!lastImport) return;
+    setDeletingImport(true);
+    for (const id of lastImport.expenseIds) await deleteExpense(id);
+    for (const id of lastImport.incomeIds)  await deleteIncome(id);
+
+    // Remove these IDs from the all-time list
+    if (allImports) {
+      const expSet = new Set(lastImport.expenseIds);
+      const incSet = new Set(lastImport.incomeIds);
+      const updated = {
+        expenseIds: allImports.expenseIds.filter(id => !expSet.has(id)),
+        incomeIds:  allImports.incomeIds.filter(id => !incSet.has(id)),
+      };
+      if (updated.expenseIds.length === 0 && updated.incomeIds.length === 0) {
+        localStorage.removeItem("dductly_all_imports"); setAllImports(null);
+      } else {
+        localStorage.setItem("dductly_all_imports", JSON.stringify(updated)); setAllImports(updated);
+      }
+    }
+    localStorage.removeItem("dductly_last_import");
+    localStorage.removeItem("dductly_recently_imported");
+    setLastImport(null);
+    setDeletingImport(false);
+    showSuccess("Last import undone successfully.");
+  };
+
+  // ── Delete ALL ever-imported data ──────────────────────────────────────────
+  const handleDeleteAllImports = async () => {
+    if (!allImports) return;
+    setDeletingImport(true);
+    for (const id of allImports.expenseIds) await deleteExpense(id);
+    for (const id of allImports.incomeIds)  await deleteIncome(id);
+    localStorage.removeItem("dductly_all_imports");
+    localStorage.removeItem("dductly_last_import");
+    localStorage.removeItem("dductly_recently_imported");
+    setAllImports(null); setLastImport(null);
+    setConfirmDeleteAll(false);
+    setDeletingImport(false);
+    showSuccess("All imported data deleted successfully.");
+  };
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(""), 4000);
+  };
+
+
   const card = (children: React.ReactNode) => (
     <div className="csv-upload-container">
       <div className="preview-container">{children}</div>
@@ -430,6 +505,12 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
   // ─────────────────────────────────────────────────────────────────────────
   if (step === "upload") return (
     <div className="csv-upload-container">
+      {successMsg && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 18px", background: "#d1fae5", border: "1.5px solid #34d399", borderRadius: "10px", marginBottom: "16px" }}>
+          <span style={{ fontSize: "1.1rem" }}>✅</span>
+          <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#065f46" }}>{successMsg}</span>
+        </div>
+      )}
       <div
         className={`upload-dropzone ${isDragging ? "dragging" : ""}`}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -461,6 +542,37 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
         )}
       </div>
       {error && <div className="upload-error"><p>{error}</p></div>}
+
+      {/* Manage previously imported data */}
+      {allImports && (allImports.expenseIds.length > 0 || allImports.incomeIds.length > 0) && (
+        <div style={{ marginTop: "20px", padding: "16px 20px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px" }}>
+          <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-dark)", marginBottom: "6px" }}>Previously Imported Data</p>
+          <p style={{ fontSize: "0.83rem", color: "var(--text-medium)", marginBottom: "12px" }}>
+            {allImports.expenseIds.length + allImports.incomeIds.length} total records imported
+            {lastImport && ` — last: ${new Date(lastImport.importedAt).toLocaleDateString()} (${lastImport.fileName})`}
+          </p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            {lastImport && (
+              <button className="btn btn-ghost" style={{ fontSize: "0.82rem" }} onClick={handleUndoLastImport} disabled={deletingImport}>
+                {deletingImport ? "Undoing…" : `Undo Last Import (${lastImport.expenseIds.length + lastImport.incomeIds.length} records)`}
+              </button>
+            )}
+            {!confirmDeleteAll ? (
+              <button className="btn btn-ghost" style={{ fontSize: "0.82rem", color: "var(--error-red)" }} onClick={() => setConfirmDeleteAll(true)} disabled={deletingImport}>
+                Delete All Imported Data
+              </button>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.82rem", color: "var(--error-red)", fontWeight: 600 }}>This can't be undone — are you sure?</span>
+                <button className="btn btn-ghost" style={{ fontSize: "0.82rem", color: "var(--error-red)" }} onClick={handleDeleteAllImports} disabled={deletingImport}>
+                  {deletingImport ? "Deleting…" : "Yes, delete all"}
+                </button>
+                <button className="btn btn-ghost" style={{ fontSize: "0.82rem" }} onClick={() => setConfirmDeleteAll(false)}>Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -533,11 +645,22 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
   // STEP: PREVIEW + VALIDATE
   // ─────────────────────────────────────────────────────────────────────────
   if (step === "preview") {
-    const valid   = processedRows.filter(r => r.errors.length === 0);
-    const invalid = processedRows.filter(r => r.errors.length > 0);
-    const expenses = valid.filter(r => r.type === "expense");
-    const incomeRows = valid.filter(r => r.type === "income");
-    const preview = showAllPreview ? valid : valid.slice(0, 6);
+    const valid       = processedRows.filter(r => r.errors.length === 0);
+    const invalid     = processedRows.filter(r => r.errors.length > 0);
+    const expenseRows = valid.filter(r => r.type === "expense");
+    const incomeRows  = valid.filter(r => r.type === "income");
+    const preview     = showAllPreview ? valid : valid.slice(0, 6);
+
+    // Duplicate detection — flag valid rows that already exist in the DB (same date + amount)
+    const duplicateCount = valid.filter(r => {
+      if (r.type === "expense" && r.expenseData) {
+        return expenses.some(e => e.expense_date === r.expenseData!.expense_date && Number(e.amount) === Number(r.expenseData!.amount));
+      }
+      if (r.type === "income" && r.incomeData) {
+        return incomes.some(i => i.income_date === r.incomeData!.income_date && Number(i.amount) === Number(r.incomeData!.amount));
+      }
+      return false;
+    }).length;
 
     return card(
       <>
@@ -546,10 +669,37 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
           <p className="preview-subtitle">Here's what we found — review before saving to your account.</p>
         </div>
 
+        {/* Duplicate warning */}
+        {duplicateCount > 0 && (
+          <div style={{ padding: "14px 16px", background: "#fef3c7", border: "1.5px solid #f59e0b", borderRadius: "10px", margin: "12px 0" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>⚠️</span>
+              <p style={{ fontSize: "0.85rem", color: "#78350f", lineHeight: 1.5 }}>
+                <strong>{duplicateCount} row{duplicateCount !== 1 ? "s" : ""}</strong> look like they're already in your records (same date & amount). Importing again will create duplicates.
+              </p>
+            </div>
+            <p style={{ fontSize: "0.82rem", color: "#92400e", marginBottom: "8px" }}>
+              Want to delete the existing records first before re-importing?
+            </p>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {onNavigate && (
+                <>
+                  <button className="btn btn-ghost" style={{ fontSize: "0.8rem", padding: "5px 12px" }} onClick={() => onNavigate("expenses")}>
+                    Go to Expenses →
+                  </button>
+                  <button className="btn btn-ghost" style={{ fontSize: "0.8rem", padding: "5px 12px" }} onClick={() => onNavigate("income")}>
+                    Go to Income →
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Classification summary */}
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", margin: "16px 0" }}>
           <span style={{ padding: "6px 14px", background: "#fee2e2", color: "#991b1b", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 600 }}>
-            💸 {expenses.length} Expenses
+            💸 {expenseRows.length} Expenses
           </span>
           <span style={{ padding: "6px 14px", background: "#d1fae5", color: "#065f46", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 600 }}>
             💰 {incomeRows.length} Income
@@ -819,8 +969,20 @@ const CSVUpload: React.FC<CSVUploadProps> = () => {
             </div>
           )}
         </div>
-        <div className="preview-actions">
-          <button className="btn btn-ghost" onClick={reset}>Import Another File</button>
+        <div className="preview-actions" style={{ flexDirection: "column", alignItems: "stretch", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn btn-ghost" onClick={reset} style={{ flex: 1 }}>Import Another File</button>
+            {lastImport && (results.expenses > 0 || results.income > 0) && (
+              <button
+                className="btn btn-ghost"
+                style={{ flex: 1, color: "var(--error-red)", fontSize: "0.85rem" }}
+                onClick={handleUndoLastImport}
+                disabled={deletingImport}
+              >
+                {deletingImport ? "Undoing…" : "Undo This Import"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -41,9 +41,10 @@ const Import: React.FC<ImportProps> = ({ onNavigate }) => {
         </p>
       </div>
 
-      <CSVUpload 
+      <CSVUpload
         userName={userName}
         onEmailSuccess={handleEmailSuccess}
+        onNavigate={onNavigate}
       />
 
       {successMessage && (

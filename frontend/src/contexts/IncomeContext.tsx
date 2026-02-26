@@ -36,7 +36,7 @@ const DEFAULT_PAYMENT_METHODS = [
 
 interface IncomeContextType {
   incomes: Income[];
-  addIncome: (income: Omit<Income, "id" | "user_id">) => Promise<void>;
+  addIncome: (income: Omit<Income, "id" | "user_id">) => Promise<Income | null>;
   updateIncome: (id: string, income: Omit<Income, "id" | "user_id">) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
   loading: boolean;
@@ -86,8 +86,8 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     fetchIncomes();
   }, [user]);
 
-  const addIncome = async (newIncome: Omit<Income, "id" | "user_id">) => {
-    if (!user) return;
+  const addIncome = async (newIncome: Omit<Income, "id" | "user_id">): Promise<Income | null> => {
+    if (!user) return null;
 
     const incomeToInsert = {
       income_date: newIncome.income_date,
@@ -110,8 +110,9 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       .select()
       .single();
 
-    if (error) console.error("Error adding income:", error);
-    else setIncomes((prev) => [data, ...prev]);
+    if (error) { console.error("Error adding income:", error); return null; }
+    setIncomes((prev) => [data, ...prev]);
+    return data;
   };
 
   const updateIncome = async (id: string, updatedIncome: Omit<Income, "id" | "user_id">) => {

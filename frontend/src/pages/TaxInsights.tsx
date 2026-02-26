@@ -183,18 +183,23 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
   const currentYear = new Date().getFullYear();
   const [activeTab, setActiveTab] = useState<"snapshot" | "guide" | "deadlines">("snapshot");
 
+  // Parse year directly from "YYYY-MM-DD" string to avoid UTC/local timezone bugs
+  const yearOf = (dateStr: string) => parseInt(dateStr.substring(0, 4), 10);
+
   const availableYears = useMemo(() => {
-    const s = new Set<number>([currentYear]);
-    expenses.forEach((e) => s.add(new Date(e.expense_date).getFullYear()));
-    incomes.forEach((i) => s.add(new Date(i.income_date).getFullYear()));
+    const s = new Set<number>();
+    // Always show last 5 years so users can see empty years
+    for (let y = currentYear; y >= currentYear - 4; y--) s.add(y);
+    expenses.forEach((e) => s.add(yearOf(e.expense_date)));
+    incomes.forEach((i) => s.add(yearOf(i.income_date)));
     return Array.from(s).sort((a, b) => b - a);
   }, [expenses, incomes, currentYear]);
 
   // Default to the most recent year that has actual data, fallback to current year
   const defaultYear = useMemo(() => {
     const yearsWithData = new Set<number>();
-    expenses.forEach((e) => yearsWithData.add(new Date(e.expense_date).getFullYear()));
-    incomes.forEach((i) => yearsWithData.add(new Date(i.income_date).getFullYear()));
+    expenses.forEach((e) => yearsWithData.add(yearOf(e.expense_date)));
+    incomes.forEach((i) => yearsWithData.add(yearOf(i.income_date)));
     if (yearsWithData.size === 0) return currentYear;
     return Math.max(...yearsWithData);
   }, [expenses, incomes, currentYear]);
@@ -202,11 +207,11 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
   const [selectedYear, setSelectedYear] = useState(() => defaultYear);
 
   const yearExpenses = useMemo(
-    () => expenses.filter((e) => new Date(e.expense_date).getFullYear() === selectedYear),
+    () => expenses.filter((e) => yearOf(e.expense_date) === selectedYear),
     [expenses, selectedYear]
   );
   const yearIncomes = useMemo(
-    () => incomes.filter((i) => new Date(i.income_date).getFullYear() === selectedYear),
+    () => incomes.filter((i) => yearOf(i.income_date) === selectedYear),
     [incomes, selectedYear]
   );
 
@@ -350,6 +355,17 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
           ══════════════════════════════════════════════ */}
           {activeTab === "snapshot" && (
             <div>
+              {/* No data banner */}
+              {yearExpenses.length === 0 && yearIncomes.length === 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px", marginBottom: "24px" }}>
+                  <span style={{ fontSize: "1.3rem" }}>📭</span>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-dark)", marginBottom: "2px" }}>No data for {selectedYear}</p>
+                    <p style={{ fontSize: "0.83rem", color: "var(--text-medium)" }}>You haven't logged any expenses or income for this year yet. Select a different year or start adding records.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Summary cards */}
               <div className="expenses-summary" style={{ marginBottom: "28px" }}>
                 <div className="summary-card">
