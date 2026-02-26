@@ -85,7 +85,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [user]);
 
   const addExpense = async (newExpense: Omit<Expense, "id" | "user_id">): Promise<Expense | null> => {
-    if (!user) return;
+    if (!user) return null;
 
     const expenseToInsert = {
       expense_date: newExpense.expense_date,
