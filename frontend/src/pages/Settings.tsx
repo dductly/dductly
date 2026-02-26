@@ -195,10 +195,10 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     csv += `Business,${businessName}\n\n`;
 
     csv += "OVERVIEW\n";
-    csv += `Total Income,$${totalIncome.toFixed(2)}\n`;
+    csv += `Revenue,$${totalIncome.toFixed(2)}\n`;
     csv += `Total Expenses,$${totalExpenses.toFixed(2)}\n`;
     csv += `Net Profit,$${netProfit.toFixed(2)}\n`;
-    csv += `Total Income Entries,${incomes.length}\n`;
+    csv += `Revenue Entries,${incomes.length}\n`;
     csv += `Total Expense Entries,${expenses.length}\n\n`;
 
     if (Object.keys(expensesByCategory).length > 0) {

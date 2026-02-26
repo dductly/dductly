@@ -11,6 +11,7 @@ import Expenses from "./pages/Expenses";
 import AddIncome from "./pages/AddIncome";
 import IncomePage from "./pages/Income";
 import Stats from "./pages/Stats";
+import TaxInsights from "./pages/TaxInsights";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -434,6 +435,8 @@ const AppContent: React.FC = () => {
         return <IncomePage onNavigate={handleNavigate} />;
       case 'stats':
         return <Stats onNavigate={handleNavigate} />;
+      case 'tax-insights':
+        return <TaxInsights onNavigate={handleNavigate} />;
       case 'settings':
         return <Settings onNavigate={handleNavigate} />;
       default:
