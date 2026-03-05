@@ -1,6 +1,7 @@
 // /Users/andreapinto/Documents/dductly/frontend/src/contexts/AuthContext.tsx
 import React, { createContext, useEffect, useState } from 'react';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
+import posthog from 'posthog-js';
 import { supabase } from '../lib/supabaseClient';
 
 interface AuthContextType {
@@ -59,6 +60,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
   }, []);
+
+  // PostHog: identify when user is set (login, signup confirmation, session restore); reset is called in signOut
+  useEffect(() => {
+    if (user?.id && user?.email) {
+      posthog?.identify(user.id, { email: user.email });
+    }
+  }, [user?.id, user?.email]);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
     try {
@@ -216,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    posthog?.reset();
     await supabase.auth.signOut();
   };
 
