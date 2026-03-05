@@ -63,10 +63,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // PostHog: identify when user is set (login, signup confirmation, session restore); reset is called in signOut
   useEffect(() => {
-    if (user?.id && user?.email) {
-      posthog?.identify(user.id, { email: user.email });
-    }
-  }, [user?.id, user?.email]);
+    if (!user?.id || !user?.email || !posthog) return;
+    const meta = user.user_metadata ?? {};
+    const firstName = meta.first_name ?? '';
+    const lastName = meta.last_name ?? '';
+    const name = [firstName, lastName].filter(Boolean).join(' ') || undefined;
+    const signupDate = user.created_at ? new Date(user.created_at).toISOString().slice(0, 10) : undefined;
+    const plan = meta.plan ?? (meta.free_tier_eligible === true ? 'free' : meta.free_tier_eligible === false ? 'paid' : undefined);
+    posthog.identify(user.id, {
+      email: user.email,
+      name: name || undefined,
+      first_name: firstName || undefined,
+      last_name: lastName || undefined,
+      signup_date: signupDate,
+      plan: plan,
+      business_name: meta.business_name || undefined,
+      products_sold: meta.products_sold || undefined,
+      farmers_markets: meta.farmers_markets || undefined,
+    });
+  }, [user?.id, user?.email, user?.created_at, user?.user_metadata]);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
     try {
