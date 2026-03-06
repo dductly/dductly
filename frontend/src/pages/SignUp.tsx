@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { usePostHog } from "@posthog/react";
 import { useAuth } from "../hooks/useAuth";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
@@ -25,6 +26,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [showModal, setShowModal] = useState<'tos' | 'privacy' | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signUp } = useAuth();
+  const posthog = usePostHog();
 
   const totalSteps = 3;
 
@@ -82,6 +84,14 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
         setError(error.message);
       }
     } else {
+      posthog?.capture('user_signed_up', {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        business_name: businessName || undefined,
+        products_sold: productsSold || undefined,
+        farmers_markets: farmersMarkets || undefined,
+      });
       setSuccess(true);
     }
   
