@@ -148,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { error };
     } catch (err) {
-      console.error('Sign in error:', err);
+      console.error('Log in error:', err);
       return { 
         error: { 
           message: 'Unable to connect to authentication service. Please check your network connection or try again later.',

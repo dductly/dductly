@@ -96,7 +96,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onNavigate, onSignInClick
           {success ? (
             <div className="forgot-password-card">
               <div className="success-banner">
-                Password updated successfully! Redirecting to sign in...
+                Password updated successfully! Redirecting to log in...
               </div>
             </div>
           ) : !ready ? (
@@ -207,7 +207,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onNavigate, onSignInClick
                   }}
                   className="link"
                 >
-                  Back to Sign In
+                  Back to Log in
                 </a>
               </p>
             </form>
