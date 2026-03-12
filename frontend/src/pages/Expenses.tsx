@@ -28,6 +28,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     : "Your";
   const [showImportBanner, setShowImportBanner] = useState(() => localStorage.getItem("dductly_recently_imported") === "true");
   const [filterCategory, setFilterCategory] = useState("");
+  const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -47,15 +48,20 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Calculate totals
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalProfit = totalIncome - totalExpenses;
+  // Filter expenses (category + month)
+  const filteredExpenses = expenses.filter((e) => {
+    if (filterCategory && e.category !== filterCategory) return false;
+    if (filterMonth && e.expense_date?.slice(0, 7) !== filterMonth) return false;
+    return true;
+  });
 
-  // Filter expenses
-  const filteredExpenses = filterCategory
-    ? expenses.filter((e) => e.category === filterCategory)
-    : expenses;
+  // Totals: when month filter is on, income filtered by same month so summary matches
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const incomeForSummary = filterMonth
+    ? incomes.filter((i) => i.income_date?.slice(0, 7) === filterMonth)
+    : incomes;
+  const totalIncome = incomeForSummary.reduce((sum, income) => sum + income.amount, 0);
+  const totalProfit = totalIncome - totalExpenses;
 
   // Sort expenses
   const sortedExpenses = [...filteredExpenses].sort((a, b) => {
@@ -71,6 +77,12 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
 
   // Get unique categories for filter
   const categories = Array.from(new Set(expenses.map((e) => e.category)));
+
+  // Unique year-months from expenses (YYYY-MM), newest first
+  const availableMonths = useMemo(() => {
+    const months = Array.from(new Set(expenses.map((e) => e.expense_date?.slice(0, 7)).filter(Boolean))) as string[];
+    return months.sort((a, b) => b.localeCompare(a));
+  }, [expenses]);
 
   const formatDate = (dateString: string) => {
     // Parse the date string manually to avoid timezone issues
@@ -304,6 +316,26 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                     {category}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="control-group">
+              <label>Filter by Month:</label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="expense-select"
+              >
+                <option value="">All Months</option>
+                {availableMonths.map((ym) => {
+                  const [y, m] = ym.split("-").map(Number);
+                  const label = new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                  return (
+                    <option key={ym} value={ym}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

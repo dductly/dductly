@@ -77,7 +77,6 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     const { error } = await signUp(email, password, firstName, lastName, businessName, productsSold, farmersMarkets);
 
     if (error) {
-      // Replace the long password requirements message with a friendly one
       if (error.message.includes('Password should contain at least one character')) {
         setError('Please Choose a Stronger Password!');
       } else {
@@ -94,7 +93,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       });
       setSuccess(true);
     }
-  
+
     setLoading(false);
   };
 
@@ -369,7 +368,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
            </div>
           
           <p className="signup-login">
-            Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('signin'); }} className="link">Sign in here</a>
+            Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('signin'); }} className="link">Log in here</a>
           </p>
          </form>
          </div>

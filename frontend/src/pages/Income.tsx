@@ -28,6 +28,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     : "Your";
   const [showImportBanner, setShowImportBanner] = useState(() => localStorage.getItem("dductly_recently_imported") === "true");
   const [filterCategory, setFilterCategory] = useState("");
+  const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -50,15 +51,20 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Calculate totals
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount + (income.tip || 0), 0);
-  const totalProfit = totalIncome - totalExpenses;
+  // Filter incomes (category + month)
+  const filteredIncomes = incomes.filter((i) => {
+    if (filterCategory && i.category !== filterCategory) return false;
+    if (filterMonth && i.income_date?.slice(0, 7) !== filterMonth) return false;
+    return true;
+  });
 
-  // Filter incomes
-  const filteredIncomes = filterCategory
-    ? incomes.filter((i) => i.category === filterCategory)
-    : incomes;
+  // Totals: when month filter is on, expenses filtered by same month so summary matches
+  const totalIncome = filteredIncomes.reduce((sum, income) => sum + income.amount + (income.tip || 0), 0);
+  const expensesForSummary = filterMonth
+    ? expenses.filter((e) => e.expense_date?.slice(0, 7) === filterMonth)
+    : expenses;
+  const totalExpenses = expensesForSummary.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalProfit = totalIncome - totalExpenses;
 
   // Sort incomes
   const sortedIncomes = [...filteredIncomes].sort((a, b) => {
@@ -76,6 +82,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
 
   // Get unique categories for filter
   const categories = Array.from(new Set(incomes.map((i) => i.category)));
+
+  // Unique year-months from incomes (YYYY-MM), newest first
+  const availableMonths = useMemo(() => {
+    const months = Array.from(new Set(incomes.map((i) => i.income_date?.slice(0, 7)).filter(Boolean))) as string[];
+    return months.sort((a, b) => b.localeCompare(a));
+  }, [incomes]);
 
   const formatDate = (dateString: string) => {
     // Parse the date string manually to avoid timezone issues
@@ -330,6 +342,26 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                     {category}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="control-group">
+              <label>Filter by Month:</label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="expense-select"
+              >
+                <option value="">All Months</option>
+                {availableMonths.map((ym) => {
+                  const [y, m] = ym.split("-").map(Number);
+                  const label = new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                  return (
+                    <option key={ym} value={ym}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

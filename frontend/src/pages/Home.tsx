@@ -80,13 +80,13 @@ const UserCountRealtime: React.FC = () => {
   // Show count or fallback in blue
   return (
     <span className="counter-text" style={{ color: 'var(--deep-blue)', fontSize: '2.5rem', fontWeight: 'bold' }}>
-      {count ?? 0} / 100
+      {count ?? 0} / 50
     </span>
   );
 }
 
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-  const FREE_TIER_LIMIT = 100;
+  const FREE_TIER_LIMIT = 50;
 
   return (
     <section id="home" className="hero">
@@ -98,9 +98,9 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         <p className="sub">
           At dductly, we believe small businesses are the heart of every community. Our mission is to simplify the day-to-day of running a business, so you can focus on what matters most: your customers, your growth, and doing what you love.
         </p>
-        <div className="cta-row" style={{ display: 'flex', gap: '16px' }}>
-          <button className="btn btn-primary" onClick={() => onNavigate?.('signup')} style={{ width: '180px', padding: '16px 32px', textAlign: 'center', fontSize: '1.1rem' }}>Get Started</button>
-          <button className="btn btn-primary" onClick={() => window.location.href = '#contact'} style={{ width: '180px', padding: '16px 32px', textAlign: 'center', fontSize: '1.1rem' }}>Contact Us</button>
+        <div className="cta-row">
+          <button className="btn btn-primary btn-cta" onClick={() => onNavigate?.('signup')}>Get Started</button>
+          <button className="btn btn-primary" onClick={() => window.location.href = '#contact'}>Contact Us</button>
         </div>
       </div>
       <div className="hero-right" aria-label="Subscription plans">
@@ -112,11 +112,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           <div className="subscription-plans">
             <div className="subscription-plan">
               <h3>Free for Life</h3>
-              <p>Be one of the first 100 people to sign up and get unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year, completely free forever.</p>
+              <p>Be one of the first 50 people to sign up and get unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year, completely free forever.</p>
               <div className="signup-counter">
                 <UserCountRealtime />
               </div>
-              <button className="btn btn-primary btn-small" onClick={() => onNavigate?.('signup')}>Sign Up for Free</button>
+              <button className="btn btn-primary btn-cta" onClick={() => onNavigate?.('signup')}>Sign Up for Free</button>
             </div>
             <div className="subscription-plan disabled">
               <h3>Standard Subscription</h3>
