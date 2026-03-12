@@ -558,18 +558,18 @@
     animation: float 4s ease-in-out infinite reverse;
   }
   .kicker{
-    letter-spacing:.2em;
+    letter-spacing:.15em;
     font-size:18px;
-    color: var(--white);
-    font-weight:800;
+    color: var(--text-dark);
+    font-weight: 800;
     text-transform: uppercase;
-    background: var(--poppy-red);
+    background: var(--powder-blue);
     padding: 14px 24px;
-    border-radius: 35px;
+    border-radius: 24px;
     display: inline-block;
     width: fit-content;
-    border: 4px solid var(--sunflower-yellow);
-    box-shadow: 0 8px 25px rgba(168, 197, 232, 0.75);
+    border: 2px solid var(--primary-blue);
+    box-shadow: 0 2px 12px rgba(6, 32, 62, 0.2);
     transform: rotate(-2deg);
     animation: wiggle 3s ease-in-out infinite;
   }
@@ -577,7 +577,14 @@
     0%, 100% { transform: rotate(-1deg); }
     50% { transform: rotate(1deg); }
   }
-  h1{
+  h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1.1;
+    color: var(--market-brown);
+    font-weight: 900;
+  }
+  .hero-left h1{
     margin:0;
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     line-height:1.1;
@@ -585,7 +592,7 @@
     font-weight:900;
     text-shadow: 2px 2px 4px rgba(168, 197, 232, 0.4);
   }
-  .sub{
+  .hero-left .sub{
     margin:0; 
     font-size: clamp(1.1rem, 2.5vw, 1.3rem); 
     line-height:1.7; 
@@ -656,7 +663,32 @@
   box-shadow: 0 12px 30px rgba(168, 197, 232, 0.5);
   border-color: var(--cornflower-blue);
 }
-.btn-small{padding:12px 24px; font-size:0.9rem}
+  .btn-small{padding:10px 20px; font-size:0.85rem}
+  /* CTA blue: nav Sign up + landing CTAs (size reverted below) */
+  .btn-primary.btn-cta,
+  .nav .menu .btn-primary {
+    background: #4E7BB5;
+    border-color: #6B9BD6;
+    color: var(--white);
+    box-shadow: 0 6px 22px rgba(78, 123, 181, 0.35);
+  }
+  .btn-primary.btn-cta:hover,
+  .nav .menu .btn-primary:hover {
+    background: #3d6a9e;
+    border-color: #5B8FC9;
+    box-shadow: 0 10px 28px rgba(78, 123, 181, 0.45);
+  }
+  .btn-primary.btn-cta{
+    font-size: 1.1rem !important;
+    padding: 18px 32px !important;
+    font-weight: 800;
+  }
+  .subscription-plan .btn-primary.btn-cta {
+    font-size: 0.95rem !important;
+    padding: 12px 22px !important;
+    width: 100%;
+    min-width: 0;
+  }
   
   .hero-right{
     border-radius: 20px;
@@ -1112,10 +1144,10 @@
     color: var(--white);
   }
 
-  .subscription-plan .btn {
+  .subscription-plan .btn:not(.btn-cta) {
     width: 100%;
-    font-size: 0.8125rem;
-    padding: 8px 14px;
+    font-size: 0.8rem;
+    padding: 8px 12px;
     margin-top: auto;
   }
 
@@ -2506,7 +2538,7 @@
     padding: 12px 16px;
   }
 }
-/* Sign In Modal Styles */
+/* Log in Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2830,13 +2862,13 @@
     flex-direction: column;
     gap: 12px;
   }
-  .btn {
+  .cta-row .btn {
     width: 100%;
     justify-content: center;
   }
 }
 
-/* Sign Up/Sign In Page Styles */
+/* Sign Up/Log in Page Styles */
 .page {
   min-height: calc(100vh - 200px);
 }

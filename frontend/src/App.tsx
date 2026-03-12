@@ -102,7 +102,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
           {!user && (
             <>
               <button className="btn btn-ghost btn-small" onClick={onSignInClick}>
-                Sign In
+                Log in
               </button>
               <button
                 className="btn btn-primary btn-small"
@@ -210,7 +210,7 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick, onFor
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
         <h2 className="modal-title">Welcome Back</h2>
-        <p className="modal-subtitle">Sign in to your dductly account</p>
+        <p className="modal-subtitle">Log in to your dductly account</p>
         
         <form className="modal-form" onSubmit={handleSubmit}>
           {error && (
@@ -264,7 +264,7 @@ const SignInModal: React.FC<SignInModalProps> = ({ onClose, onSignUpClick, onFor
           </p>
 
           <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
 
           <p className="modal-footer-text">
@@ -635,7 +635,7 @@ const AppContent: React.FC = () => {
               <p>Yes! We take data security seriously. All data is encrypted and stored securely. Your uploaded files are protected with secure access. You'll also be automatically logged out after 15 minutes of inactivity for added security.</p>
 
               <h4>How do I reset my password?</h4>
-              <p>Click "Sign In" and then "Forgot Password" to receive a password reset link via email.</p>
+              <p>Click "Log in" and then "Forgot Password" to receive a password reset link via email.</p>
 
               <h4>Can I delete my account?</h4>
               <p>Yes, you can delete your account at any time from your account settings. Please note that this action is permanent and cannot be undone.</p>
@@ -675,7 +675,7 @@ const AppContent: React.FC = () => {
                 <li>One number</li>
                 <li>One special character (!@#$%^&*)</li>
               </ul>
-              <p>After signing up, check your email to verify your account. Once verified, you can sign in and access your dashboard.</p>
+              <p>After signing up, check your email to verify your account. Once verified, you can log in and access your dashboard.</p>
 
               <h4>2. Your Dashboard</h4>
               <p>After signing in, you'll land on your personalized dashboard. Here you can:</p>

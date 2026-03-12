@@ -37,7 +37,7 @@ const SignIn: React.FC<SignInProps> = ({ onNavigate }) => {
         <div className="signup-container">
           <div className="signup-left">
             <h1 className="section-title">Welcome Back</h1>
-            <p>Sign in to your dductly account to continue tracking your donations and maximizing your tax savings.</p>
+            <p>Log in to your dductly account to continue tracking your donations and maximizing your tax savings.</p>
           </div>
 
           <form className="signup-form" onSubmit={handleSubmit}>
@@ -78,7 +78,7 @@ const SignIn: React.FC<SignInProps> = ({ onNavigate }) => {
             </p>
 
             <button className="btn btn-primary btn-large" type="submit" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? "Logging in..." : "Log in"}
             </button>
 
             <p className="signup-login">

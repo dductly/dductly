@@ -58,7 +58,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onNavigate, onSignInCli
                   }}
                   className="link"
                 >
-                  Back to Sign In
+                  Back to Log in
                 </a>
               </p>
             </div>
@@ -100,7 +100,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onNavigate, onSignInCli
                   }}
                   className="link"
                 >
-                  Sign in here
+                  Log in here
                 </a>
               </p>
             </form>
