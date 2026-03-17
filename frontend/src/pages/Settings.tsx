@@ -313,6 +313,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     businessName: user?.user_metadata?.business_name || "",
     productsSold: user?.user_metadata?.products_sold || "",
     farmersMarkets: user?.user_metadata?.farmers_markets || "",
+    country: user?.user_metadata?.country || "",
+    currency: user?.user_metadata?.currency || "USD",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -326,6 +328,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       businessName: user?.user_metadata?.business_name || "",
       productsSold: user?.user_metadata?.products_sold || "",
       farmersMarkets: user?.user_metadata?.farmers_markets || "",
+      country: user?.user_metadata?.country || "",
+      currency: user?.user_metadata?.currency || "USD",
     });
     setIsEditing(true);
     setError(null);
@@ -346,6 +350,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       profileForm.businessName,
       profileForm.productsSold,
       profileForm.farmersMarkets,
+      profileForm.country,
+      profileForm.currency,
     );
 
     if (error) {
@@ -423,6 +429,14 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                 <div className="settings-row">
                   <span className="settings-label">Business Name</span>
                   <span className="settings-value">{user?.user_metadata?.business_name || '-'}</span>
+                </div>
+                <div className="settings-row">
+                  <span className="settings-label">Country</span>
+                  <span className="settings-value">{user?.user_metadata?.country || '-'}</span>
+                </div>
+                <div className="settings-row">
+                  <span className="settings-label">Currency</span>
+                  <span className="settings-value">{user?.user_metadata?.currency || 'USD'}</span>
                 </div>
                 <div className="settings-hint">
                   Changed your email?{' '}
@@ -653,6 +667,46 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   rows={3}
                   style={{ resize: 'vertical' }}
                 />
+              </div>
+              <div className="form-group">
+                <label>Country</label>
+                <select
+                  value={profileForm.country}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, country: e.target.value })
+                  }
+                  className="form-input"
+                  disabled={loading}
+                >
+                  <option value="">Select country</option>
+                  <option value="United States">United States</option>
+                  <option value="Canada">Canada</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Eurozone">Eurozone</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Currency</label>
+                <select
+                  value={profileForm.currency}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, currency: e.target.value })
+                  }
+                  className="form-input"
+                  disabled={loading}
+                >
+                  <option value="USD">US Dollar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                  <option value="JPY">Japanese Yen (JPY)</option>
+                  <option value="GBP">Pound Sterling (GBP)</option>
+                  <option value="AUD">Australian Dollar (AUD)</option>
+                  <option value="CAD">Canadian Dollar (CAD)</option>
+                  <option value="CHF">Swiss Franc (CHF)</option>
+                  <option value="CNY">Chinese Yuan (CNY)</option>
+                  <option value="INR">Indian Rupee (INR)</option>
+                </select>
               </div>
             </div>
             <div className="modal-footer">

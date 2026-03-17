@@ -18,6 +18,9 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [businessName, setBusinessName] = useState("");
   const [productsSold, setProductsSold] = useState("");
   const [farmersMarkets, setFarmersMarkets] = useState("");
+  const [country, setCountry] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [customCurrency, setCustomCurrency] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,7 +44,9 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
 
   const isPasswordValid = Object.values(passwordChecks).every(check => check);
 
-  const canProceedToStep2 = businessName && productsSold;
+  const hasCountry = !!country.trim();
+  const hasCurrency = currency === "OTHER" ? !!customCurrency.trim() : !!currency;
+  const canProceedToStep2 = businessName && productsSold && hasCountry && hasCurrency;
   const canProceedToStep3 = farmersMarkets;
   const canSubmit = firstName && lastName && email && password && confirmPassword && password === confirmPassword && isPasswordValid && agreedToTerms;
 
@@ -74,7 +79,20 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       return;
     }
 
-    const { error } = await signUp(email, password, firstName, lastName, businessName, productsSold, farmersMarkets);
+    const chosenCurrency =
+      currency === "OTHER" && customCurrency.trim() ? customCurrency.trim() : currency;
+
+    const { error } = await signUp(
+      email,
+      password,
+      firstName,
+      lastName,
+      businessName,
+      productsSold,
+      farmersMarkets,
+      country,
+      chosenCurrency
+    );
 
     if (error) {
       if (error.message.includes('Password should contain at least one character')) {
@@ -90,6 +108,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
         business_name: businessName || undefined,
         products_sold: productsSold || undefined,
         farmers_markets: farmersMarkets || undefined,
+        country: country || undefined,
+        currency: chosenCurrency || undefined,
       });
       setSuccess(true);
     }
@@ -178,6 +198,59 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                    className="textarea-input"
                  />
                  <small className="field-hint">Tell us about your products or services</small>
+               </div>
+
+               <div className="form-group">
+                 <label>Where is your business based? <span className="req">*</span></label>
+                 <input
+                   type="text"
+                   placeholder="e.g. United States, Canada, India, etc."
+                   value={country}
+                   onChange={(e) => setCountry(e.target.value)}
+                   disabled={loading}
+                   className="form-input"
+                 />
+                 <small className="field-hint">Type the country where you primarily operate.</small>
+               </div>
+
+              <div className="form-group">
+                <label>Default currency <span className="req">*</span></label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  disabled={loading}
+                  className="form-input"
+                  style={{
+                    color: currency ? "var(--text-dark)" : "var(--text-light)",
+                  }}
+                >
+                  <option value="">Select currency</option>
+                  <option value="USD">US Dollar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                  <option value="JPY">Japanese Yen (JPY)</option>
+                  <option value="GBP">Pound Sterling (GBP)</option>
+                  <option value="AUD">Australian Dollar (AUD)</option>
+                  <option value="CAD">Canadian Dollar (CAD)</option>
+                  <option value="CHF">Swiss Franc (CHF)</option>
+                  <option value="CNY">Chinese Yuan (CNY)</option>
+                  <option value="INR">Indian Rupee (INR)</option>
+                  <option value="OTHER">Other (type your own)</option>
+                </select>
+                 {currency === "OTHER" && (
+                   <div style={{ marginTop: 10 }}>
+                     <input
+                       type="text"
+                       placeholder="Enter your currency code or symbol"
+                       value={customCurrency}
+                       onChange={(e) => setCustomCurrency(e.target.value)}
+                       disabled={loading}
+                       className="form-input"
+                     />
+                   </div>
+                 )}
+                 <small className="field-hint">
+                   We&apos;ll use this currency across your income, expenses, and tax insights. You can change it later in Settings.
+                 </small>
                </div>
              </div>
            )}
@@ -375,7 +448,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
        </div>
      </section>
 
-     {/* Terms of Service Modal */}
+    {/* Terms of Service Modal */}
      {showModal === 'tos' && (
        <div className="modal-overlay" onClick={() => setShowModal(null)}>
          <div className="modal-content modal-legal" onClick={(e) => e.stopPropagation()}>
