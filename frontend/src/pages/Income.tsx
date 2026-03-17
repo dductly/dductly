@@ -70,6 +70,10 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
         totalAmount.toString().toLowerCase().includes(q);
       if (!matchesText) return false;
     }
+  // Filter incomes (category + month)
+  const filteredIncomes = incomes.filter((i) => {
+    if (filterCategory && i.category !== filterCategory) return false;
+    if (filterMonth && i.income_date?.slice(0, 7) !== filterMonth) return false;
     return true;
   });
 

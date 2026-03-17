@@ -66,6 +66,10 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
         e.amount.toString().toLowerCase().includes(q);
       if (!matchesText) return false;
     }
+  // Filter expenses (category + month)
+  const filteredExpenses = expenses.filter((e) => {
+    if (filterCategory && e.category !== filterCategory) return false;
+    if (filterMonth && e.expense_date?.slice(0, 7) !== filterMonth) return false;
     return true;
   });
 
