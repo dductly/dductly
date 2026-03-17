@@ -10,6 +10,7 @@ import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
+import magnifyIcon from "../img/magnify.svg";
 
 interface IncomeProps {
   onNavigate: (page: string) => void;
@@ -31,6 +32,9 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
@@ -51,10 +55,21 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Filter incomes (category + month)
+  // Filter incomes (category + month + search across non-date columns)
   const filteredIncomes = incomes.filter((i) => {
     if (filterCategory && i.category !== filterCategory) return false;
     if (filterMonth && i.income_date?.slice(0, 7) !== filterMonth) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const totalAmount = i.amount + (i.tip || 0);
+      const matchesText =
+        (i.customer || "").toLowerCase().includes(q) ||
+        (i.description || "").toLowerCase().includes(q) ||
+        (i.category || "").toLowerCase().includes(q) ||
+        (i.payment_method || "").toLowerCase().includes(q) ||
+        totalAmount.toString().toLowerCase().includes(q);
+      if (!matchesText) return false;
+    }
     return true;
   });
 
@@ -80,6 +95,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     }
   });
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedIncomes.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedIncomes = sortedIncomes.slice(startIndex, startIndex + pageSize);
+
   // Get unique categories for filter
   const categories = Array.from(new Set(incomes.map((i) => i.category)));
 
@@ -100,8 +121,15 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     });
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const currencyCode = (user?.user_metadata as any)?.currency || "USD";
+  const formatCurrency = (amount: number) => {
+    const options: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: currencyCode,
+      currencyDisplay: "narrowSymbol",
+    };
+    return new Intl.NumberFormat(undefined, options).format(amount);
+  };
 
   const formatAmount = (value: string) => {
     if (!value) return '';
@@ -396,6 +424,38 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
             </button>
           </div>
 
+          <div className="expenses-controls">
+            <div
+              className="control-group"
+              style={{ flex: 1, width: "100%", maxWidth: "100%" }}
+            >
+              <div style={{ position: "relative", width: "100%" }}>
+                <img
+                  src={magnifyIcon}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 16,
+                    height: 16,
+                    pointerEvents: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search income by customer, title, category, payment method, or amount"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="expense-select"
+                  style={{ width: "100%", maxWidth: "100%", paddingLeft: 34 }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="expenses-table-container">
             {sortedIncomes.length > 0 ? (
               <table className="expenses-table">
@@ -412,7 +472,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedIncomes.map((income) => (
+                  {paginatedIncomes.map((income) => (
                     <tr key={income.id} onClick={() => handleViewIncome(income)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(income.income_date)}</td>
                       <td>
@@ -493,6 +553,36 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {sortedIncomes.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+              <div style={{ fontSize: "0.9rem", color: "var(--text-medium)" }}>
+                Showing{" "}
+                <strong>
+                  {startIndex + 1}–{Math.min(startIndex + pageSize, sortedIncomes.length)}
+                </strong>{" "}
+                of <strong>{sortedIncomes.length}</strong> income entries
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {safePage > 1 && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </button>
+                )}
+                {safePage < totalPages && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {viewingIncome && (
             <div className="modal-overlay" onClick={handleCloseView}>

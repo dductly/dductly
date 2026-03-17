@@ -10,6 +10,7 @@ import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
+import magnifyIcon from "../img/magnify.svg";
 
 interface ExpenseProps {
   onNavigate: (page: string) => void;
@@ -31,6 +32,9 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
@@ -48,10 +52,20 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Filter expenses (category + month)
+  // Filter expenses (category + month + search across non-date columns)
   const filteredExpenses = expenses.filter((e) => {
     if (filterCategory && e.category !== filterCategory) return false;
     if (filterMonth && e.expense_date?.slice(0, 7) !== filterMonth) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesText =
+        (e.vendor || "").toLowerCase().includes(q) ||
+        (e.description || "").toLowerCase().includes(q) ||
+        (e.category || "").toLowerCase().includes(q) ||
+        (e.payment_method || "").toLowerCase().includes(q) ||
+        e.amount.toString().toLowerCase().includes(q);
+      if (!matchesText) return false;
+    }
     return true;
   });
 
@@ -75,6 +89,12 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     }
   });
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedExpenses.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedExpenses = sortedExpenses.slice(startIndex, startIndex + pageSize);
+
   // Get unique categories for filter
   const categories = Array.from(new Set(expenses.map((e) => e.category)));
 
@@ -95,8 +115,15 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     });
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const currencyCode = (user?.user_metadata as any)?.currency || "USD";
+  const formatCurrency = (amount: number) => {
+    const options: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: currencyCode,
+      currencyDisplay: "narrowSymbol",
+    };
+    return new Intl.NumberFormat(undefined, options).format(amount);
+  };
 
   const formatAmount = (value: string) => {
     if (!value) return '';
@@ -370,6 +397,38 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
             </button>
           </div>
 
+          <div className="expenses-controls">
+            <div
+              className="control-group"
+              style={{ flex: 1, width: "100%", maxWidth: "100%" }}
+            >
+              <div style={{ position: "relative", width: "100%" }}>
+                <img
+                  src={magnifyIcon}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 16,
+                    height: 16,
+                    pointerEvents: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search expenses by vendor, title, category, payment method, or amount"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="expense-select"
+                  style={{ width: "100%", maxWidth: "100%", paddingLeft: 34 }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="expenses-table-container">
             {sortedExpenses.length > 0 ? (
               <table className="expenses-table">
@@ -385,7 +444,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedExpenses.map((expense) => (
+                  {paginatedExpenses.map((expense) => (
                     <tr key={expense.id} onClick={() => handleViewExpense(expense)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(expense.expense_date)}</td>
                       <td>
@@ -465,6 +524,36 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {sortedExpenses.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+              <div style={{ fontSize: "0.9rem", color: "var(--text-medium)" }}>
+                Showing{" "}
+                <strong>
+                  {startIndex + 1}–{Math.min(startIndex + pageSize, sortedExpenses.length)}
+                </strong>{" "}
+                of <strong>{sortedExpenses.length}</strong> expense entries
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {safePage > 1 && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </button>
+                )}
+                {safePage < totalPages && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {viewingExpense && (
             <div className="modal-overlay" onClick={handleCloseView}>

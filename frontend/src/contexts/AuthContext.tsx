@@ -8,10 +8,29 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => Promise<{ error: AuthError | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    businessName?: string,
+    productsSold?: string,
+    farmersMarkets?: string,
+    country?: string,
+    currency?: string
+  ) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => Promise<{ error: AuthError | null }>;
+  updateProfile: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    businessName?: string,
+    productsSold?: string,
+    farmersMarkets?: string,
+    country?: string,
+    currency?: string
+  ) => Promise<{ error: AuthError | null }>;
   updateAutoLogoutTimeout: (timeoutMinutes: number) => Promise<{ error: AuthError | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
   refreshSession: () => Promise<void>;
@@ -83,7 +102,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user?.id, user?.email, user?.created_at, user?.user_metadata]);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    businessName?: string,
+    productsSold?: string,
+    farmersMarkets?: string,
+    country?: string,
+    currency?: string
+  ) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -96,6 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             business_name: businessName || '',
             products_sold: productsSold || '',
             farmers_markets: farmersMarkets || '',
+            country: country || '',
+            currency: currency || 'USD',
           },
         },
       });
@@ -159,7 +190,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (firstName: string, lastName: string, email: string, businessName?: string, productsSold?: string, farmersMarkets?: string) => {
+  const updateProfile = async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    businessName?: string,
+    productsSold?: string,
+    farmersMarkets?: string,
+    country?: string,
+    currency?: string
+  ) => {
     try {
       // Refresh session before updating to avoid "auth session missing" errors
       await supabase.auth.refreshSession();
@@ -171,6 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           business_name: businessName || '',
           products_sold: productsSold || '',
           farmers_markets: farmersMarkets || '',
+          country: country ?? user?.user_metadata?.country ?? '',
+          currency: currency ?? user?.user_metadata?.currency ?? 'USD',
         },
       }, {
         emailRedirectTo: window.location.origin
