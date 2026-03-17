@@ -33,6 +33,8 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
@@ -86,6 +88,12 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
       return sortOrder === "asc" ? comparison : -comparison;
     }
   });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedExpenses.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedExpenses = sortedExpenses.slice(startIndex, startIndex + pageSize);
 
   // Get unique categories for filter
   const categories = Array.from(new Set(expenses.map((e) => e.category)));
@@ -429,7 +437,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedExpenses.map((expense) => (
+                  {paginatedExpenses.map((expense) => (
                     <tr key={expense.id} onClick={() => handleViewExpense(expense)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(expense.expense_date)}</td>
                       <td>
@@ -509,6 +517,36 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {sortedExpenses.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+              <div style={{ fontSize: "0.9rem", color: "var(--text-medium)" }}>
+                Showing{" "}
+                <strong>
+                  {startIndex + 1}–{Math.min(startIndex + pageSize, sortedExpenses.length)}
+                </strong>{" "}
+                of <strong>{sortedExpenses.length}</strong> expense entries
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {safePage > 1 && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </button>
+                )}
+                {safePage < totalPages && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {viewingExpense && (
             <div className="modal-overlay" onClick={handleCloseView}>

@@ -33,6 +33,8 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
@@ -92,6 +94,12 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
       return sortOrder === "asc" ? comparison : -comparison;
     }
   });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedIncomes.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedIncomes = sortedIncomes.slice(startIndex, startIndex + pageSize);
 
   // Get unique categories for filter
   const categories = Array.from(new Set(incomes.map((i) => i.category)));
@@ -457,7 +465,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedIncomes.map((income) => (
+                  {paginatedIncomes.map((income) => (
                     <tr key={income.id} onClick={() => handleViewIncome(income)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(income.income_date)}</td>
                       <td>
@@ -538,6 +546,36 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {sortedIncomes.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+              <div style={{ fontSize: "0.9rem", color: "var(--text-medium)" }}>
+                Showing{" "}
+                <strong>
+                  {startIndex + 1}–{Math.min(startIndex + pageSize, sortedIncomes.length)}
+                </strong>{" "}
+                of <strong>{sortedIncomes.length}</strong> income entries
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {safePage > 1 && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </button>
+                )}
+                {safePage < totalPages && (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {viewingIncome && (
             <div className="modal-overlay" onClick={handleCloseView}>
