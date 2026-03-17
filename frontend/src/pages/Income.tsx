@@ -121,8 +121,15 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
     });
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const currencyCode = (user?.user_metadata as any)?.currency || "USD";
+  const formatCurrency = (amount: number) => {
+    const options: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: currencyCode,
+      currencyDisplay: "narrowSymbol",
+    };
+    return new Intl.NumberFormat(undefined, options).format(amount);
+  };
 
   const formatAmount = (value: string) => {
     if (!value) return '';

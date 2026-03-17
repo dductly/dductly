@@ -2808,6 +2808,8 @@
 .modal-body .form-group select.form-input {
   border-radius: var(--radius);
   cursor: pointer;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 .modal-body .form-group textarea.form-input {
@@ -2904,6 +2906,29 @@
   padding: clamp(24px, 4vw, 40px);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
+}
+
+.signup-form select {
+  width: 100%;
+  background: var(--warm-cream);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text-dark);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.signup-form select:focus {
+  border-color: var(--harvest-orange);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(168, 197, 232, 0.1);
+  transform: translateY(-1px);
 }
 
 .form-group {
