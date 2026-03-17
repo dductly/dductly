@@ -10,6 +10,7 @@ import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
+import magnifyIcon from "../img/magnify.svg";
 
 interface IncomeProps {
   onNavigate: (page: string) => void;
@@ -31,6 +32,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"income_date" | "amount">("income_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
@@ -51,10 +53,21 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Filter incomes (category + month)
+  // Filter incomes (category + month + search across non-date columns)
   const filteredIncomes = incomes.filter((i) => {
     if (filterCategory && i.category !== filterCategory) return false;
     if (filterMonth && i.income_date?.slice(0, 7) !== filterMonth) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const totalAmount = i.amount + (i.tip || 0);
+      const matchesText =
+        (i.customer || "").toLowerCase().includes(q) ||
+        (i.description || "").toLowerCase().includes(q) ||
+        (i.category || "").toLowerCase().includes(q) ||
+        (i.payment_method || "").toLowerCase().includes(q) ||
+        totalAmount.toString().toLowerCase().includes(q);
+      if (!matchesText) return false;
+    }
     return true;
   });
 
@@ -394,6 +407,38 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
             <button className="btn btn-primary" onClick={() => onNavigate("add-income")}>
               + Add Income
             </button>
+          </div>
+
+          <div className="expenses-controls">
+            <div
+              className="control-group"
+              style={{ flex: 1, width: "100%", maxWidth: "100%" }}
+            >
+              <div style={{ position: "relative", width: "100%" }}>
+                <img
+                  src={magnifyIcon}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 16,
+                    height: 16,
+                    pointerEvents: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search income by customer, title, category, payment method, or amount"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="expense-select"
+                  style={{ width: "100%", maxWidth: "100%", paddingLeft: 34 }}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="expenses-table-container">

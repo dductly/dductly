@@ -10,6 +10,7 @@ import recycleIcon from "../img/recycle.svg";
 import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
+import magnifyIcon from "../img/magnify.svg";
 
 interface ExpenseProps {
   onNavigate: (page: string) => void;
@@ -31,6 +32,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [filterMonth, setFilterMonth] = useState<string>("");
   const [sortBy, setSortBy] = useState<"expense_date" | "amount">("expense_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
@@ -48,10 +50,20 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Filter expenses (category + month)
+  // Filter expenses (category + month + search across non-date columns)
   const filteredExpenses = expenses.filter((e) => {
     if (filterCategory && e.category !== filterCategory) return false;
     if (filterMonth && e.expense_date?.slice(0, 7) !== filterMonth) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesText =
+        (e.vendor || "").toLowerCase().includes(q) ||
+        (e.description || "").toLowerCase().includes(q) ||
+        (e.category || "").toLowerCase().includes(q) ||
+        (e.payment_method || "").toLowerCase().includes(q) ||
+        e.amount.toString().toLowerCase().includes(q);
+      if (!matchesText) return false;
+    }
     return true;
   });
 
@@ -368,6 +380,38 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
             <button className="btn btn-primary" onClick={() => onNavigate("add-data")}>
               + Add Expense
             </button>
+          </div>
+
+          <div className="expenses-controls">
+            <div
+              className="control-group"
+              style={{ flex: 1, width: "100%", maxWidth: "100%" }}
+            >
+              <div style={{ position: "relative", width: "100%" }}>
+                <img
+                  src={magnifyIcon}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 16,
+                    height: 16,
+                    pointerEvents: "none",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search expenses by vendor, title, category, payment method, or amount"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="expense-select"
+                  style={{ width: "100%", maxWidth: "100%", paddingLeft: 34 }}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="expenses-table-container">
