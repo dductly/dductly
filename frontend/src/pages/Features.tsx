@@ -3,6 +3,11 @@ import expenseImg from "../img/expense.png";
 import incomeImg from "../img/income.png";
 import statsImg from "../img/stats.png";
 import dashImg from "../img/dash.png";
+import importRecordsImg from "../img/import-records.png";
+import keyDeadlinesImg from "../img/key-deadlines.png";
+import settingsImg from "../img/settings.png";
+import taxSnapshotImg from "../img/tax-snapshot.png";
+import writeOffGuideImg from "../img/write-off-guide.png";
 
 interface Feature {
   title: string;
@@ -30,6 +35,36 @@ const features: Feature[] = [
     title: "View Your Stats",
     description: "Get a bird's-eye view of your finances with visual breakdowns and insights that help you make smarter business decisions.",
     img: statsImg,
+  },
+  {
+    title: "Tax Insights Overview",
+    description:
+      "See your revenue, deductible expenses, and taxable net profit at a glance so you’re always prepared for tax season.",
+    img: taxSnapshotImg,
+  },
+  {
+    title: "Write-Off Guide",
+    description:
+      "Explore common deductible categories with plain-language tips so you know exactly what business costs you can write off.",
+    img: writeOffGuideImg,
+  },
+  {
+    title: "Key Tax Deadlines",
+    description:
+      "Stay on top of quarterly estimated payments and annual filing dates with a clear timeline of upcoming deadlines.",
+    img: keyDeadlinesImg,
+  },
+  {
+    title: "Import Your Records",
+    description:
+      "Upload your existing bookkeeping data from CSV or Excel so you can get organized fast without starting from scratch.",
+    img: importRecordsImg,
+  },
+  {
+    title: "Settings & Preferences",
+    description:
+      "Customize your account details, security, and preferences like dark mode so dductly works the way you do.",
+    img: settingsImg,
   },
 ];
 
