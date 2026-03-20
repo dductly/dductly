@@ -18,6 +18,8 @@ If this URL is not in the list, users may see a "path is invalid" (or similar) e
 
 **Stripe / billing curl testing:** see [backend/README.md → Stripe curl testing](backend/README.md#stripe-curl-testing).
 
+**Signup + billing message:** set `VITE_API_BASE_URL` in the frontend env to your API (e.g. `http://localhost:3001`) so the post-signup screen can load `/api/billing/config`. Threshold defaults: dev **1**, prod **50** (override with `BILLING_USER_THRESHOLD` on the backend).
+
 ### Stripe webhook via Supabase Edge Function
 
 If your backend is primarily Supabase-hosted, use an Edge Function as the Stripe webhook destination.

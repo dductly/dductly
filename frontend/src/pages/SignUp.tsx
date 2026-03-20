@@ -1,8 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePostHog } from "@posthog/react";
 import { useAuth } from "../hooks/useAuth";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
+import {
+  createCheckoutSession,
+  getPublicBillingConfig,
+  hasBillingApiBaseUrl,
+  type CheckoutPlan,
+  type PublicBillingConfig,
+} from "../services/billingService";
 
 interface SignUpProps {
   onNavigate?: (page: string) => void;
@@ -30,8 +37,13 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signUp } = useAuth();
   const posthog = usePostHog();
+  const [billingInfo, setBillingInfo] = useState<PublicBillingConfig | null>(null);
+  const [billingLoadError, setBillingLoadError] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const totalSteps = 3;
+  /** Steps 1–3 = profile/account fields; step 4 = plan + single submit (signUp → Stripe when possible). */
+  const LAST_FORM_STEP = 3;
 
   // Password validation checks
   const passwordChecks = {
@@ -60,18 +72,34 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       setError("Please tell us where you operate");
       return;
     }
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    if (currentStep === 3) {
+      if (!canSubmit) {
+        setError("Please complete all required fields");
+        return;
+      }
+      setCheckoutError(null);
+      setSelectedPlan(null);
+      setCurrentStep(4);
+      return;
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, LAST_FORM_STEP));
   };
 
   const handleBack = () => {
     setError(null);
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCheckoutError(null);
+    if (currentStep === 4) {
+      setCurrentStep(3);
+      return;
+    }
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** Step 4: create Supabase user, then redirect to Stripe Checkout when session + billing allow. */
+  const handleCompleteSignup = async (opts: { skipCheckout: boolean }) => {
     setLoading(true);
     setError(null);
+    setCheckoutError(null);
 
     if (!canSubmit) {
       setError("Please complete all required fields");
@@ -79,10 +107,33 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       return;
     }
 
+    const checkoutAvailable =
+      !!billingInfo &&
+      billingInfo.billingEnabled &&
+      billingInfo.hasStripeConfig &&
+      hasBillingApiBaseUrl() &&
+      (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
+
+    if (!opts.skipCheckout && checkoutAvailable) {
+      if (!selectedPlan) {
+        setError("Please select monthly or yearly to continue to checkout.");
+        setLoading(false);
+        return;
+      }
+      const planOk =
+        (selectedPlan === "monthly" && billingInfo.availablePlans.monthly) ||
+        (selectedPlan === "yearly" && billingInfo.availablePlans.yearly);
+      if (!planOk) {
+        setError("That plan isn't available right now.");
+        setLoading(false);
+        return;
+      }
+    }
+
     const chosenCurrency =
       currency === "OTHER" && customCurrency.trim() ? customCurrency.trim() : currency;
 
-    const { error } = await signUp(
+    const { error: signUpError, session } = await signUp(
       email,
       password,
       firstName,
@@ -94,29 +145,98 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       chosenCurrency
     );
 
-    if (error) {
-      if (error.message.includes('Password should contain at least one character')) {
-        setError('Please Choose a Stronger Password!');
+    if (signUpError) {
+      if (signUpError.message.includes("Password should contain at least one character")) {
+        setError("Please Choose a Stronger Password!");
       } else {
-        setError(error.message);
+        setError(signUpError.message);
       }
-    } else {
-      posthog?.capture('user_signed_up', {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        business_name: businessName || undefined,
-        products_sold: productsSold || undefined,
-        farmers_markets: farmersMarkets || undefined,
-        country: country || undefined,
-        currency: chosenCurrency || undefined,
-      });
-      setSuccess(true);
+      setLoading(false);
+      return;
     }
 
+    posthog?.capture("user_signed_up", {
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      business_name: businessName || undefined,
+      products_sold: productsSold || undefined,
+      farmers_markets: farmersMarkets || undefined,
+      country: country || undefined,
+      currency: chosenCurrency || undefined,
+    });
+
+    const wantStripeRedirect =
+      !opts.skipCheckout &&
+      checkoutAvailable &&
+      selectedPlan &&
+      !!session?.access_token;
+
+    if (wantStripeRedirect && session?.access_token && selectedPlan) {
+      try {
+        const url = await createCheckoutSession(session.access_token, email, selectedPlan);
+        posthog?.capture("signup_checkout_started", { plan: selectedPlan });
+        window.location.assign(url);
+        return;
+      } catch (err) {
+        setCheckoutError(err instanceof Error ? err.message : "Could not start checkout");
+        setSuccess(true);
+        setLoading(false);
+        return;
+      }
+    }
+
+    setSuccess(true);
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (!success && currentStep !== 4) return;
+    if (!hasBillingApiBaseUrl()) {
+      setBillingLoadError(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const config = await getPublicBillingConfig();
+        if (!cancelled) {
+          setBillingInfo(config);
+          posthog?.capture("signup_billing_rollout_loaded", {
+            billing_enabled: config.billingEnabled,
+            user_count: config.userCount,
+            user_threshold: config.userThreshold,
+            has_stripe_config: config.hasStripeConfig,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setBillingLoadError("We couldn't load plan availability right now. You can check Settings after you sign in.");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [success, currentStep, posthog]);
+
+  const stepCompleted = (n: number) => currentStep > n;
+  const stepActive = (n: number) => currentStep === n;
+
+  const billingLoading =
+    currentStep === 4 &&
+    !success &&
+    hasBillingApiBaseUrl() &&
+    !billingInfo &&
+    !billingLoadError;
+  const checkoutAvailable =
+    !!billingInfo &&
+    billingInfo.billingEnabled &&
+    billingInfo.hasStripeConfig &&
+    hasBillingApiBaseUrl() &&
+    (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
 
  if (success) {
    return (
@@ -125,14 +245,61 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
          <div className="signup-container">
            <div className="success-message">
              <h1 className="section-title">Check Your Email</h1>
-             <p>We've sent you a confirmation link. Please check your email and click the link to verify your account.</p>
+             <p>We&apos;ve sent you a confirmation link. Please check your email and click the link to verify your account.</p>
+
+             {billingInfo && (
+               <div
+                 className="success-billing-notice"
+                 style={{
+                   marginTop: "1.5rem",
+                   padding: "1rem 1.25rem",
+                   borderRadius: "12px",
+                   background: "var(--surface-elevated, rgba(0,0,0,0.04))",
+                   textAlign: "left",
+                   maxWidth: "36rem",
+                   marginLeft: "auto",
+                   marginRight: "auto",
+                 }}
+               >
+                 {billingInfo.billingEnabled ? (
+                   <>
+                     <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
+                     <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                       After you verify your email, you can start a plan (includes a free trial) from{" "}
+                       <strong>Settings</strong> when you&apos;re ready.
+                     </p>
+                   </>
+                 ) : (
+                   <>
+                     <p style={{ margin: 0, fontWeight: 600 }}>You&apos;re in early</p>
+                     <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                       Paid plans unlock once we reach <strong>{billingInfo.userThreshold}</strong> members.
+                       We&apos;re at <strong>{billingInfo.userCount}</strong> so far — thanks for helping us grow.
+                     </p>
+                   </>
+                 )}
+               </div>
+             )}
+
+             {billingLoadError && (
+               <p style={{ marginTop: "1rem", color: "var(--text-medium, #666)", fontSize: "0.9375rem" }}>
+                 {billingLoadError}
+               </p>
+             )}
+
+             {onNavigate && (
+               <p style={{ marginTop: "1.5rem" }}>
+                 <button type="button" className="btn btn-secondary" onClick={() => onNavigate("signin")}>
+                   Back to sign in
+                 </button>
+               </p>
+             )}
            </div>
          </div>
        </section>
      </div>
    );
  }
-
 
  return (
    <div className="page">
@@ -141,28 +308,38 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
          <div className="signup-wizard">
            <div className="wizard-header">
              <h1 className="section-title">Join dductly</h1>
-             <p className="wizard-subtitle">Make managing your business effortless</p>
+             <p className="wizard-subtitle">
+               {currentStep === 4
+                 ? "Pick a plan, then finish creating your account"
+                 : "Make managing your business effortless"}
+             </p>
              
              {/* Progress Steps */}
              <div className="progress-steps">
-               <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+               <div className={`step ${stepActive(1) ? 'active' : ''} ${stepCompleted(1) ? 'completed' : ''}`}>
                  <div className="step-number">1</div>
                  <div className="step-label">Business</div>
                </div>
-               <div className={`step-line ${currentStep > 1 ? 'completed' : ''}`}></div>
-               <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+               <div className={`step-line ${stepCompleted(1) ? 'completed' : ''}`}></div>
+               <div className={`step ${stepActive(2) ? 'active' : ''} ${stepCompleted(2) ? 'completed' : ''}`}>
                  <div className="step-number">2</div>
                  <div className="step-label">Markets</div>
                </div>
-               <div className={`step-line ${currentStep > 2 ? 'completed' : ''}`}></div>
-               <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+               <div className={`step-line ${stepCompleted(2) ? 'completed' : ''}`}></div>
+               <div className={`step ${stepActive(3) ? 'active' : ''} ${stepCompleted(3) ? 'completed' : ''}`}>
                  <div className="step-number">3</div>
                  <div className="step-label">Account</div>
+               </div>
+               <div className={`step-line ${stepCompleted(3) ? 'completed' : ''}`}></div>
+               <div className={`step ${stepActive(4) ? 'active' : ''} ${stepCompleted(4) ? 'completed' : ''}`}>
+                 <div className="step-number">4</div>
+                 <div className="step-label">Plan</div>
                </div>
              </div>
            </div>
 
-         <form className="signup-form wizard-form" onSubmit={handleSubmit}>
+         {currentStep <= 3 ? (
+         <form className="signup-form wizard-form" onSubmit={(e) => e.preventDefault()}>
            {error && (
              <div className="error-message">
                {error}
@@ -420,7 +597,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                  Back
                </button>
              )}
-             {currentStep < totalSteps ? (
+             {currentStep < LAST_FORM_STEP ? (
                <button 
                  type="button" 
                  className="btn btn-primary btn-large" 
@@ -431,11 +608,12 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
                </button>
              ) : (
                <button 
-                 type="submit" 
+                 type="button" 
                  className="btn btn-primary btn-large" 
+                 onClick={handleNext}
                  disabled={loading || !canSubmit}
                >
-                 {loading ? "Creating Account..." : "Create Account"}
+                 Continue to plan
                </button>
              )}
            </div>
@@ -444,6 +622,123 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
             Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('signin'); }} className="link">Log in here</a>
           </p>
          </form>
+         ) : (
+         <div className="signup-form wizard-form" style={{ paddingTop: "0.5rem" }}>
+           {error && (
+             <div className="error-message" style={{ marginBottom: "1rem" }}>
+               {error}
+             </div>
+           )}
+           {checkoutError && (
+             <div className="error-message" style={{ marginBottom: "1rem" }}>
+               {checkoutError}
+             </div>
+           )}
+
+           <h2 className="step-title">Choose your plan</h2>
+           <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem" }}>
+             When you continue, we&apos;ll create your account (you may need to confirm your email) and send you to
+             secure checkout. Billing starts after your trial.
+           </p>
+
+           {billingLoading && <p className="settings-hint">Loading plan options…</p>}
+
+           {billingLoadError && (
+             <p style={{ color: "var(--text-medium, #666)", marginBottom: "1rem" }}>{billingLoadError}</p>
+           )}
+
+           {billingInfo && !billingInfo.billingEnabled && (
+             <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
+               Paid plans unlock at <strong>{billingInfo.userThreshold}</strong> members (currently{" "}
+               <strong>{billingInfo.userCount}</strong>). You can subscribe later from Settings.
+             </p>
+           )}
+
+           {billingInfo?.billingEnabled && !billingInfo.hasStripeConfig && (
+             <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
+               Subscription checkout isn&apos;t fully configured yet. You can finish setup later in{" "}
+               <strong>Settings</strong>.
+             </p>
+           )}
+
+           {checkoutAvailable && (
+             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "1.25rem" }}>
+               {billingInfo!.availablePlans.monthly && (
+                 <button
+                   type="button"
+                   className={`btn btn-large ${selectedPlan === "monthly" ? "btn-primary" : "btn-secondary"}`}
+                   onClick={() => setSelectedPlan("monthly")}
+                   disabled={loading || billingLoading}
+                 >
+                   Monthly
+                 </button>
+               )}
+               {billingInfo!.availablePlans.yearly && (
+                 <button
+                   type="button"
+                   className={`btn btn-large ${selectedPlan === "yearly" ? "btn-primary" : "btn-secondary"}`}
+                   onClick={() => setSelectedPlan("yearly")}
+                   disabled={loading || billingLoading}
+                 >
+                   Yearly
+                 </button>
+               )}
+             </div>
+           )}
+
+           <div className="wizard-navigation" style={{ marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
+             <button
+               type="button"
+               className="btn btn-ghost btn-large"
+               onClick={handleBack}
+               disabled={loading}
+             >
+               Back
+             </button>
+             {checkoutAvailable && (
+               <button
+                 type="button"
+                 className="btn btn-primary btn-large"
+                 disabled={loading || billingLoading || !selectedPlan}
+                 onClick={() => void handleCompleteSignup({ skipCheckout: false })}
+               >
+                 {loading ? "Creating account…" : "Create account & continue to checkout"}
+               </button>
+             )}
+             {(!checkoutAvailable || billingLoadError) && !billingLoading && (
+               <button
+                 type="button"
+                 className="btn btn-primary btn-large"
+                 disabled={loading}
+                 onClick={() => void handleCompleteSignup({ skipCheckout: true })}
+               >
+                 {loading ? "Creating account…" : "Create account"}
+               </button>
+             )}
+             {checkoutAvailable && (
+               <button
+                 type="button"
+                 className="btn btn-ghost btn-large"
+                 disabled={loading || billingLoading}
+                 onClick={() => void handleCompleteSignup({ skipCheckout: true })}
+               >
+                 I&apos;ll subscribe later
+               </button>
+             )}
+           </div>
+
+           <p className="signup-login" style={{ marginTop: "1.5rem" }}>
+             <button
+               type="button"
+               className="link"
+               style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+               onClick={() => onNavigate?.("signin")}
+             >
+               Back to sign in
+             </button>
+           </p>
+         </div>
+         )}
          </div>
        </div>
      </section>

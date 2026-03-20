@@ -7,6 +7,7 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import stripeRoutes from "./routes/stripeRoutes";
 import webhookRoutes from "./routes/webhookRoutes";
+import billingRoutes from "./routes/billing";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/billing', billingRoutes);
 app.use('/api/stripe', stripeRoutes);
 
 // Error handling middleware

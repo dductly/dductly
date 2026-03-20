@@ -155,7 +155,41 @@ curl -s "http://localhost:3001/api/stripe/subscription-status" \
 | Test card rejected in Checkout | You are on **live** keys; switch to test keys + test prices + test webhook secret. |
 | `URL rejected: Bad hostname` | Replace `YOUR_PROJECT_REF` with real ref (no `<` `>` in URL). |
 
+### Signup success screen (frontend)
+
+After sign-up, the app calls **`GET /api/billing/config`** if `VITE_API_BASE_URL` is set in `frontend/.env` or `.env.local`, e.g.:
+
+```env
+VITE_API_BASE_URL=http://localhost:3001
+```
+
+### Billing rollout threshold
+
+- Env: **`BILLING_USER_THRESHOLD`** (optional).
+- If **unset**: **development** defaults to **1** (easy testing); **production** defaults to **50**.
+- Set explicitly in any environment to override, e.g. `BILLING_USER_THRESHOLD=3`.
+
+`POST /api/stripe/create-checkout-session` uses the same threshold as `/api/billing/config`.
+
+**Checkout body:** `{ "email": "user@example.com", "plan": "monthly" | "yearly" }` (`plan` defaults to `monthly` if omitted).
+
 ## API Endpoints
+
+### Billing
+
+#### GET `/api/billing/config`
+Public. Returns rollout status and profile count used for signup messaging and gating.
+
+**Response (example):**
+```json
+{
+  "billingEnabled": true,
+  "userCount": 12,
+  "userThreshold": 1,
+  "hasStripeConfig": true,
+  "availablePlans": { "monthly": true, "yearly": true }
+}
+```
 
 ### Authentication
 

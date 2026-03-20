@@ -1,10 +1,18 @@
 import express, { Response } from "express";
 import { authenticateUser, AuthRequest } from "../middleware/auth";
 import supabase from "../lib/supabaseClient";
+import { getBillingUserThreshold, getProfileUserCount } from "../lib/billingConfig";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
 const TRIAL_DAYS = Number(process.env.STRIPE_TRIAL_DAYS || 14);
+
+type BillingPlan = "monthly" | "yearly";
+
+const PRICE_IDS: Record<BillingPlan, string | undefined> = {
+  monthly: process.env.STRIPE_PRICE_ID_MONTHLY,
+  yearly: process.env.STRIPE_PRICE_ID_YEARLY,
+};
 
 router.post("/create-checkout-session", authenticateUser, async (req: AuthRequest, res: Response) => {
   try {
@@ -13,7 +21,7 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
     }
 
-    const { email } = req.body;
+    const { email, plan } = req.body as { email?: string; plan?: string };
     const userId = req.user?.id;
     const userEmail = req.user?.email;
 
@@ -25,10 +33,31 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       return res.status(400).json({ error: "Bad Request", message: "Email is required" });
     }
 
+    const selectedPlan: BillingPlan = plan === "yearly" ? "yearly" : "monthly";
+    const priceId = PRICE_IDS[selectedPlan];
+    if (!priceId) {
+      return res.status(500).json({
+        error: "Billing Not Configured",
+        message: `Missing STRIPE_PRICE_ID_${selectedPlan === "yearly" ? "YEARLY" : "MONTHLY"}`,
+      });
+    }
+
+    const userThreshold = getBillingUserThreshold();
+    const userCount = await getProfileUserCount(supabase);
+    if (userCount < userThreshold) {
+      return res.status(403).json({
+        error: "Billing Not Enabled",
+        message: `Paid checkout unlocks after ${userThreshold} members`,
+        userCount,
+        userThreshold,
+      });
+    }
+
     const customer = await stripe.customers.create({
       email: email || userEmail,
       metadata: {
         supabase_user_id: userId,
+        billing_plan: selectedPlan,
       },
     });
 
@@ -38,17 +67,19 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       client_reference_id: userId,
       metadata: {
         supabase_user_id: userId,
+        billing_plan: selectedPlan,
       },
       subscription_data: {
         trial_period_days: TRIAL_DAYS,
         metadata: {
           supabase_user_id: userId,
+          billing_plan: selectedPlan,
         },
       },
 
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID_MONTHLY || "price_abc123",
+          price: priceId,
           quantity: 1,
         },
       ],
