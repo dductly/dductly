@@ -15,3 +15,25 @@ If this URL is not in the list, users may see a "path is invalid" (or similar) e
 
 ### frontend
 ### backend
+
+**Stripe / billing curl testing:** see [backend/README.md → Stripe curl testing](backend/README.md#stripe-curl-testing).
+
+### Stripe webhook via Supabase Edge Function
+
+If your backend is primarily Supabase-hosted, use an Edge Function as the Stripe webhook destination.
+
+1. Deploy the function:
+   - `supabase functions deploy stripe-webhook`
+2. Set required secrets:
+   - `supabase secrets set STRIPE_SECRET_KEY=sk_...`
+   - `supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`
+   - `supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...`
+3. In Stripe Dashboard, create webhook destination:
+   - `https://<your-project-ref>.supabase.co/functions/v1/stripe-webhook`
+4. Subscribe to these events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+
+This function upserts subscription state into `billing_subscriptions` using `supabase_user_id` metadata.

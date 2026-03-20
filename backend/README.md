@@ -68,6 +68,93 @@ The server will start on `http://localhost:3001`
 - `npm run build` - Build TypeScript to JavaScript
 - `npm start` - Start production server
 
+<a id="stripe-curl-testing"></a>
+## Testing Stripe checkout & webhooks (curl)
+
+Use this flow when the billing UI is not wired yet. It creates a real Checkout Session and triggers your **Supabase** `stripe-webhook` function (or you can watch Stripe → Webhooks → event deliveries).
+
+### Prerequisites
+
+- **Stripe test mode:** `STRIPE_SECRET_KEY=sk_test_...`, test `price_...` IDs, and a **test-mode** webhook endpoint + `STRIPE_WEBHOOK_SECRET` (live vs test secrets differ).
+- Backend running: `npm run dev` (default `http://localhost:3001`). If port is busy, use `PORT=3002 npm run dev` and change URLs below.
+- `.env` in `backend/` includes `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (or `VITE_SUPABASE_ANON_PUBLIC_KEY`), and `STRIPE_SECRET_KEY`.
+- Table `billing_subscriptions` exists (see `database-billing-setup.sql` in repo root).
+
+### 1) Load env vars into your shell (optional but handy)
+
+From `backend/`:
+
+```bash
+cd backend
+set -a && source .env && set +a
+```
+
+Verify anon key is loaded (should print a short prefix, not empty):
+
+```bash
+echo "${VITE_SUPABASE_ANON_KEY:0:20}"
+```
+
+### 2) Get a Supabase access token (password grant)
+
+Replace `YOUR_PROJECT_REF`, email, and password. Use your real **anon** key in `apikey` (not placeholders like `YOUR_SUPABASE_ANON_KEY`).
+
+```bash
+curl -s -X POST "https://YOUR_PROJECT_REF.supabase.co/auth/v1/token?grant_type=password" \
+  -H "apikey: $VITE_SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"your-password"}'
+```
+
+Copy only the **`access_token`** string from the JSON (the long JWT), not the whole JSON.
+
+**With `jq`** (extract token in one step):
+
+```bash
+ACCESS_TOKEN=$(curl -s -X POST "https://YOUR_PROJECT_REF.supabase.co/auth/v1/token?grant_type=password" \
+  -H "apikey: $VITE_SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"your-password"}' | jq -r '.access_token')
+echo "$ACCESS_TOKEN"
+```
+
+Tokens expire (often ~1 hour). If checkout returns `401`, run step 2 again.
+
+### 3) Create a Stripe Checkout Session
+
+Use the JWT from step 2 — header value is `Bearer <jwt>` only, no JSON wrapper.
+
+```bash
+curl -s -X POST "http://localhost:3001/api/stripe/create-checkout-session" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com"}'
+```
+
+Response includes a `url`. Open it in a browser and pay with a **test** card, e.g. `4242 4242 4242 4242`.
+
+### 4) Confirm the webhook ran
+
+- **Stripe:** Developers → Webhooks → your endpoint → recent events → should show **2xx**.
+- **Supabase:** SQL editor — query `billing_subscriptions` for your user after checkout completes.
+
+### 5) Optional: subscription status (authenticated)
+
+```bash
+curl -s "http://localhost:3001/api/stripe/subscription-status" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+### Troubleshooting
+
+| Symptom | Likely fix |
+|--------|------------|
+| `curl: (7) Failed to connect to localhost:3001` | Start `npm run dev` or free port / use correct `PORT`. |
+| `Invalid API key` / `No API key found` | Use real anon key; run `source .env` from `backend/`. |
+| `Billing Not Configured` / missing Stripe key | `STRIPE_SECRET_KEY` in `backend/.env`; **restart** server after editing `.env`. |
+| Test card rejected in Checkout | You are on **live** keys; switch to test keys + test prices + test webhook secret. |
+| `URL rejected: Bad hostname` | Replace `YOUR_PROJECT_REF` with real ref (no `<` `>` in URL). |
+
 ## API Endpoints
 
 ### Authentication
