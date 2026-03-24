@@ -1,7 +1,8 @@
 import React from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from "react";
+import { STANDARD_SUBSCRIPTION_CARD, SUBSCRIPTION_PLANS_SECTION } from "../constants/subscriptionMarketing";
 
 interface HomeProps {
   onNavigate?: (page: string) => void;
@@ -107,8 +108,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         <div className="bubble-1"></div>
         <div className="bubble-2"></div>
         <div className="subscription-info-container">
-          <h2>Our Subscription Plans</h2>
-          <p>Simple, affordable pricing to help you manage your business finances without breaking the bank.</p>
+          <h2>{SUBSCRIPTION_PLANS_SECTION.title}</h2>
+          <p>{SUBSCRIPTION_PLANS_SECTION.subtitle}</p>
           <div className="subscription-plans">
             <div className="subscription-plan">
               <h3>Free for Life</h3>
@@ -119,18 +120,17 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <button className="btn btn-primary btn-cta" onClick={() => onNavigate?.('signup')}>Sign Up for Free</button>
             </div>
             <div className="subscription-plan disabled">
-              <h3>Standard Subscription</h3>
-              <p>Unlimited access to expense tracking, income management, financial reporting, and advanced analytics — everything you need to stay organized all year.</p>
+              <h3>{STANDARD_SUBSCRIPTION_CARD.title}</h3>
               <div className="subscription-pricing">
                 <div className="pricing-option">
-                  <span className="price">$7</span>
-                  <span className="price-period">/ month</span>
-                  <span className="yearly-label">(billed monthly)</span>
+                  <span className="price">{STANDARD_SUBSCRIPTION_CARD.monthly.price}</span>
+                  <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.monthly.period}</span>
+                  <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}</span>
                 </div>
                 <div className="pricing-option yearly">
-                  <span className="price">$5</span>
-                  <span className="price-period">/ month</span>
-                  <span className="yearly-label">(billed yearly)</span>
+                  <span className="price">{STANDARD_SUBSCRIPTION_CARD.yearly.price}</span>
+                  <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.yearly.period}</span>
+                  <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}</span>
                 </div>
               </div>
               <div className="availability-notice">

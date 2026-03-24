@@ -12,10 +12,14 @@ import {
   type CheckoutPlan,
   type PublicBillingConfig,
 } from "../services/billingService";
+import { STANDARD_SUBSCRIPTION_CARD } from "../constants/subscriptionMarketing";
+import { SIGNUP_PLAN_STEP_SECTION } from "../constants/signupPlanStep";
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
 const stripePromise = stripePublishableKey?.trim() ? loadStripe(stripePublishableKey.trim()) : null;
 const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
+/** Primary CTA on plan step when Stripe checkout is available */
+const SIGNUP_CONTINUE_TO_PAYMENT_LABEL = "Continue to payment method";
 
 interface SignUpProps {
   onNavigate?: (page: string) => void;
@@ -269,6 +273,13 @@ const SignUp: React.FC<SignUpProps> = ({
       cancelled = true;
     };
   }, [success, currentStep, posthog]);
+
+  useEffect(() => {
+    if (!billingInfo?.billingEnabled) return;
+    const { monthly, yearly } = billingInfo.availablePlans;
+    if (monthly && !yearly) setSelectedPlan("monthly");
+    else if (!monthly && yearly) setSelectedPlan("yearly");
+  }, [billingInfo]);
 
   useEffect(() => {
     if (!stripeCheckoutReturnSessionId) return;
@@ -748,11 +759,13 @@ const SignUp: React.FC<SignUpProps> = ({
              </>
            ) : (
              <>
-               <h2 className="step-title">Choose your plan</h2>
-               <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem" }}>
-                 When you continue, we&apos;ll create your account (you may need to confirm your email), then you&apos;ll
-                 enter payment details on the next screen. Your <strong>{DISPLAY_TRIAL_DAYS}-day trial</strong> starts
-                 after that — billing begins when the trial ends.
+               <h2 className="step-title">{SIGNUP_PLAN_STEP_SECTION.title}</h2>
+               <p style={{ color: "var(--text-medium, #555)", marginBottom: "0.75rem", textAlign: "center" }}>
+                 {SIGNUP_PLAN_STEP_SECTION.subtitle}
+               </p>
+               <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem", textAlign: "center" }}>
+                 Choose your billing method to start your{" "}
+                 <strong>{DISPLAY_TRIAL_DAYS === 14 ? "two-week" : `${DISPLAY_TRIAL_DAYS}-day`}</strong> free trial!
                </p>
 
                {billingLoading && <p className="settings-hint">Loading plan options…</p>}
@@ -776,27 +789,48 @@ const SignUp: React.FC<SignUpProps> = ({
                )}
 
                {checkoutAvailable && (
-                 <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "1.25rem" }}>
-                   {billingInfo!.availablePlans.monthly && (
-                     <button
-                       type="button"
-                       className={`btn btn-large ${selectedPlan === "monthly" ? "btn-primary" : "btn-secondary"}`}
-                       onClick={() => setSelectedPlan("monthly")}
-                       disabled={loading || billingLoading}
-                     >
-                       Monthly
-                     </button>
-                   )}
-                   {billingInfo!.availablePlans.yearly && (
-                     <button
-                       type="button"
-                       className={`btn btn-large ${selectedPlan === "yearly" ? "btn-primary" : "btn-secondary"}`}
-                       onClick={() => setSelectedPlan("yearly")}
-                       disabled={loading || billingLoading}
-                     >
-                       Yearly
-                     </button>
-                   )}
+                 <div className="signup-plan-picker">
+                   <div
+                     className="signup-plan-cards"
+                     role="group"
+                     aria-label={`${STANDARD_SUBSCRIPTION_CARD.title} billing options`}
+                   >
+                     {billingInfo!.availablePlans.monthly && (
+                       <button
+                         type="button"
+                         className={`signup-plan-card${selectedPlan === "monthly" ? " is-selected" : ""}`}
+                         onClick={() => setSelectedPlan("monthly")}
+                         disabled={loading || billingLoading}
+                         aria-pressed={selectedPlan === "monthly"}
+                       >
+                         <h3>{STANDARD_SUBSCRIPTION_CARD.monthly.cardTitle}</h3>
+                         <div className="pricing-option">
+                           <span className="price">{STANDARD_SUBSCRIPTION_CARD.monthly.price}</span>
+                           <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.monthly.period}</span>
+                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}</span>
+                         </div>
+                       </button>
+                     )}
+                     {billingInfo!.availablePlans.yearly && (
+                       <button
+                         type="button"
+                         className={`signup-plan-card${selectedPlan === "yearly" ? " is-selected" : ""}`}
+                         onClick={() => setSelectedPlan("yearly")}
+                         disabled={loading || billingLoading}
+                         aria-pressed={selectedPlan === "yearly"}
+                       >
+                         <h3>{STANDARD_SUBSCRIPTION_CARD.yearly.cardTitle}</h3>
+                         <div className="pricing-option yearly">
+                           <span className="price">{STANDARD_SUBSCRIPTION_CARD.yearly.price}</span>
+                           <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.yearly.period}</span>
+                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}</span>
+                         </div>
+                       </button>
+                     )}
+                   </div>
+                   <p className="signup-plan-hint">
+                     Tap a plan to select billing. Actual charge follows your trial.
+                   </p>
                  </div>
                )}
 
@@ -815,11 +849,14 @@ const SignUp: React.FC<SignUpProps> = ({
                      className="btn btn-primary btn-large"
                      disabled={loading || billingLoading || !selectedPlan}
                      onClick={() => void handleCompleteSignup({ skipCheckout: false })}
+                     aria-label={
+                       loading ? "Creating account" : SIGNUP_CONTINUE_TO_PAYMENT_LABEL
+                     }
                    >
-                     {loading ? "Creating account…" : "Create account & add payment"}
+                     {loading ? "Creating account…" : SIGNUP_CONTINUE_TO_PAYMENT_LABEL}
                    </button>
                  )}
-                 {(!checkoutAvailable || billingLoadError) && !billingLoading && (
+                 {!checkoutAvailable && !billingLoading && (
                    <button
                      type="button"
                      className="btn btn-primary btn-large"
@@ -827,16 +864,6 @@ const SignUp: React.FC<SignUpProps> = ({
                      onClick={() => void handleCompleteSignup({ skipCheckout: true })}
                    >
                      {loading ? "Creating account…" : "Create account"}
-                   </button>
-                 )}
-                 {checkoutAvailable && (
-                   <button
-                     type="button"
-                     className="btn btn-ghost btn-large"
-                     disabled={loading || billingLoading}
-                     onClick={() => void handleCompleteSignup({ skipCheckout: true })}
-                   >
-                     I&apos;ll subscribe later
                    </button>
                  )}
                </div>

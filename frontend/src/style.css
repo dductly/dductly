@@ -3258,6 +3258,88 @@
   text-align: center;
 }
 
+/* Signup step 4 — two selectable plan cards (monthly / yearly) */
+.signup-plan-picker {
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto 1.25rem;
+}
+
+.signup-plan-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.signup-plan-card {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1 1 12rem;
+  max-width: 17rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 18px 14px;
+  border: 2px solid var(--sunflower-yellow);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 15px rgba(168, 197, 232, 0.2);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-sizing: border-box;
+  font: inherit;
+  text-align: center;
+}
+
+.signup-plan-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(168, 197, 232, 0.35);
+  border-color: var(--primary-purple);
+}
+
+.signup-plan-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signup-plan-card:focus-visible {
+  outline: 2px solid var(--primary-purple);
+  outline-offset: 2px;
+}
+
+.signup-plan-card.is-selected {
+  border-color: var(--primary-purple);
+  background: rgba(168, 197, 232, 0.18);
+  box-shadow: 0 4px 16px rgba(168, 197, 232, 0.4);
+}
+
+.signup-plan-card h3 {
+  color: var(--market-brown);
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(168, 197, 232, 0.2);
+}
+
+.signup-plan-card .pricing-option {
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.signup-plan-hint {
+  font-size: 0.75rem;
+  color: var(--text-medium);
+  font-style: italic;
+  margin: 12px 0 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .field-hint {
   display: block;
   margin-top: 6px;
@@ -3384,6 +3466,15 @@
 
   .wizard-navigation .btn {
     width: 100%;
+  }
+
+  .signup-plan-cards {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .signup-plan-card {
+    max-width: none;
   }
 }
 
