@@ -1,5 +1,6 @@
 import express, { Response } from "express";
-import { authenticateUser, AuthRequest } from "../middleware/auth";
+import Stripe from "stripe";
+import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "../middleware/auth";
 import supabase from "../lib/supabaseClient";
 import { getBillingUserThreshold, getProfileUserCount } from "../lib/billingConfig";
 import { getStripe } from "../services/stripeService";
@@ -14,14 +15,18 @@ const PRICE_IDS: Record<BillingPlan, string | undefined> = {
   yearly: process.env.STRIPE_PRICE_ID_YEARLY,
 };
 
-router.post("/create-checkout-session", authenticateUser, async (req: AuthRequest, res: Response) => {
+router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (req: AuthRequest, res: Response) => {
   try {
     const stripe = getStripe();
     if (!stripe) {
       return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
     }
 
-    const { email, plan } = req.body as { email?: string; plan?: string };
+    const { email, plan, embedded } = req.body as {
+      email?: string;
+      plan?: string;
+      embedded?: boolean;
+    };
     const userId = req.user?.id;
     const userEmail = req.user?.email;
 
@@ -29,7 +34,7 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
     }
 
-    if (!email && !userEmail) {
+    if (!email?.trim() && !userEmail) {
       return res.status(400).json({ error: "Bad Request", message: "Email is required" });
     }
 
@@ -53,6 +58,14 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       });
     }
 
+    const clientBase = (process.env.CLIENT_URL || "").replace(/\/$/, "");
+    if (!clientBase) {
+      return res.status(500).json({
+        error: "Configuration Error",
+        message: "CLIENT_URL is required for checkout",
+      });
+    }
+
     const customer = await stripe.customers.create({
       email: email || userEmail,
       metadata: {
@@ -61,10 +74,11 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
       },
     });
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
       customer: customer.id,
       client_reference_id: userId,
+      payment_method_collection: "always",
       metadata: {
         supabase_user_id: userId,
         billing_plan: selectedPlan,
@@ -76,19 +90,42 @@ router.post("/create-checkout-session", authenticateUser, async (req: AuthReques
           billing_plan: selectedPlan,
         },
       },
-
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.CLIENT_URL}/success`,
-      cancel_url: `${process.env.CLIENT_URL}/cancel`,
-    });
+    };
 
-    res.json({ url: session.url });
+    if (embedded) {
+      sessionParams.ui_mode = "embedded";
+      sessionParams.return_url = `${clientBase}/signup?stripe_session_id={CHECKOUT_SESSION_ID}`;
+    } else {
+      sessionParams.success_url = `${clientBase}/success`;
+      sessionParams.cancel_url = `${clientBase}/cancel`;
+    }
 
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    if (embedded) {
+      if (!session.client_secret) {
+        return res.status(500).json({
+          error: "Checkout Error",
+          message: "Embedded checkout could not be started",
+        });
+      }
+      return res.json({ clientSecret: session.client_secret });
+    }
+
+    if (!session.url) {
+      return res.status(500).json({
+        error: "Checkout Error",
+        message: "Checkout URL missing",
+      });
+    }
+
+    return res.json({ url: session.url });
   } catch (err) {
     console.error(err);
     res.status(500).send("Stripe error");

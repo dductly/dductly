@@ -18,7 +18,7 @@ interface AuthContextType {
     farmersMarkets?: string,
     country?: string,
     currency?: string
-  ) => Promise<{ error: AuthError | null; session: Session | null }>;
+  ) => Promise<{ error: AuthError | null; session: Session | null; user: User | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   updateProfile: (
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
         },
       });
-      return { error, session: data.session ?? null };
+      return { error, session: data.session ?? null, user: data.user ?? null };
     } catch (err) {
       console.error('Sign up error:', err);
       return { 
@@ -140,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           status: 500
         } as AuthError,
         session: null,
+        user: null,
       };
     }
   };

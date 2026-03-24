@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { usePostHog } from "@posthog/react";
+import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { useAuth } from "../hooks/useAuth";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
@@ -11,11 +13,21 @@ import {
   type PublicBillingConfig,
 } from "../services/billingService";
 
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+const stripePromise = stripePublishableKey?.trim() ? loadStripe(stripePublishableKey.trim()) : null;
+const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
+
 interface SignUpProps {
   onNavigate?: (page: string) => void;
+  stripeCheckoutReturnSessionId?: string | null;
+  onStripeCheckoutReturnHandled?: () => void;
 }
 
-const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
+const SignUp: React.FC<SignUpProps> = ({
+  onNavigate,
+  stripeCheckoutReturnSessionId,
+  onStripeCheckoutReturnHandled,
+}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -32,7 +44,6 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [showModal, setShowModal] = useState<'tos' | 'privacy' | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signUp } = useAuth();
@@ -41,6 +52,9 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
   const [billingLoadError, setBillingLoadError] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [embeddedCheckoutClientSecret, setEmbeddedCheckoutClientSecret] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [completedSignupPayment, setCompletedSignupPayment] = useState(false);
 
   /** Steps 1–3 = profile/account fields; step 4 = plan + single submit (signUp → Stripe when possible). */
   const LAST_FORM_STEP = 3;
@@ -89,13 +103,17 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     setError(null);
     setCheckoutError(null);
     if (currentStep === 4) {
+      if (embeddedCheckoutClientSecret) {
+        setEmbeddedCheckoutClientSecret(null);
+        return;
+      }
       setCurrentStep(3);
       return;
     }
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  /** Step 4: create Supabase user, then redirect to Stripe Checkout when session + billing allow. */
+  /** Step 4: create Supabase user, then Stripe Embedded Checkout (trial; charge after trial). */
   const handleCompleteSignup = async (opts: { skipCheckout: boolean }) => {
     setLoading(true);
     setError(null);
@@ -133,7 +151,7 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     const chosenCurrency =
       currency === "OTHER" && customCurrency.trim() ? customCurrency.trim() : currency;
 
-    const { error: signUpError, session } = await signUp(
+    const { error: signUpError, session, user: signedUpUser } = await signUp(
       email,
       password,
       firstName,
@@ -166,17 +184,47 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       currency: chosenCurrency || undefined,
     });
 
+    const canStartCheckout = !!session?.access_token || !!signedUpUser?.id;
+
     const wantStripeRedirect =
       !opts.skipCheckout &&
       checkoutAvailable &&
       selectedPlan &&
-      !!session?.access_token;
+      canStartCheckout;
 
-    if (wantStripeRedirect && session?.access_token && selectedPlan) {
+    if (wantStripeRedirect && selectedPlan) {
       try {
-        const url = await createCheckoutSession(session.access_token, email, selectedPlan);
-        posthog?.capture("signup_checkout_started", { plan: selectedPlan });
-        window.location.assign(url);
+        if (!stripePromise) {
+          setCheckoutError(
+            "Payment form isn’t configured (missing VITE_STRIPE_PUBLISHABLE_KEY). You can subscribe later in Settings after you verify your email."
+          );
+          setSuccess(true);
+          setLoading(false);
+          return;
+        }
+        const result = await createCheckoutSession(
+          session?.access_token
+            ? {
+                email,
+                plan: selectedPlan,
+                embedded: true,
+                accessToken: session.access_token,
+              }
+            : {
+                email,
+                plan: selectedPlan,
+                embedded: true,
+                supabaseUserId: signedUpUser!.id,
+              }
+        );
+        if (result.embedded) {
+          posthog?.capture("signup_checkout_started", { plan: selectedPlan, embedded: true });
+          setEmbeddedCheckoutClientSecret(result.clientSecret);
+          setLoading(false);
+          return;
+        }
+        posthog?.capture("signup_checkout_started", { plan: selectedPlan, embedded: false });
+        window.location.assign(result.url);
         return;
       } catch (err) {
         setCheckoutError(err instanceof Error ? err.message : "Could not start checkout");
@@ -222,6 +270,19 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     };
   }, [success, currentStep, posthog]);
 
+  useEffect(() => {
+    if (!stripeCheckoutReturnSessionId) return;
+    setSuccess(true);
+    setCompletedSignupPayment(true);
+    setEmbeddedCheckoutClientSecret(null);
+    setCheckoutError(null);
+    setLoading(false);
+    posthog?.capture("signup_embedded_checkout_completed", {
+      stripe_session_id: stripeCheckoutReturnSessionId,
+    });
+    onStripeCheckoutReturnHandled?.();
+  }, [stripeCheckoutReturnSessionId, posthog, onStripeCheckoutReturnHandled]);
+
   const stepCompleted = (n: number) => currentStep > n;
   const stepActive = (n: number) => currentStep === n;
 
@@ -238,68 +299,87 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
     hasBillingApiBaseUrl() &&
     (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
 
- if (success) {
-   return (
-     <div className="page">
-       <section className="section">
-         <div className="signup-container">
-           <div className="success-message">
-             <h1 className="section-title">Check Your Email</h1>
-             <p>We&apos;ve sent you a confirmation link. Please check your email and click the link to verify your account.</p>
+  if (success) {
+    return (
+      <div className="page">
+        <section className="section">
+          <div className="signup-container">
+            <div className="success-message">
+              <h1 className="section-title">Check Your Email</h1>
+              <p>
+                We&apos;ve sent you a confirmation link. Please check your email and click the link to verify your
+                account.
+              </p>
 
-             {billingInfo && (
-               <div
-                 className="success-billing-notice"
-                 style={{
-                   marginTop: "1.5rem",
-                   padding: "1rem 1.25rem",
-                   borderRadius: "12px",
-                   background: "var(--surface-elevated, rgba(0,0,0,0.04))",
-                   textAlign: "left",
-                   maxWidth: "36rem",
-                   marginLeft: "auto",
-                   marginRight: "auto",
-                 }}
-               >
-                 {billingInfo.billingEnabled ? (
-                   <>
-                     <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
-                     <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                       After you verify your email, you can start a plan (includes a free trial) from{" "}
-                       <strong>Settings</strong> when you&apos;re ready.
-                     </p>
-                   </>
-                 ) : (
-                   <>
-                     <p style={{ margin: 0, fontWeight: 600 }}>You&apos;re in early</p>
-                     <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                       Paid plans unlock once we reach <strong>{billingInfo.userThreshold}</strong> members.
-                       We&apos;re at <strong>{billingInfo.userCount}</strong> so far — thanks for helping us grow.
-                     </p>
-                   </>
-                 )}
-               </div>
-             )}
+              {billingInfo && (
+                <div
+                  className="success-billing-notice"
+                  style={{
+                    marginTop: "1.5rem",
+                    padding: "1rem 1.25rem",
+                    borderRadius: "12px",
+                    background: "var(--surface-elevated, rgba(0,0,0,0.04))",
+                    textAlign: "left",
+                    maxWidth: "36rem",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
+                >
+                  {billingInfo.billingEnabled ? (
+                    completedSignupPayment ? (
+                      <>
+                        <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
+                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                          You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged
+                          until it ends. Manage your plan anytime in <strong>Settings</strong>.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
+                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                          After you verify your email, you can start a plan (includes a free trial) from{" "}
+                          <strong>Settings</strong> when you&apos;re ready.
+                        </p>
+                      </>
+                    )
+                  ) : (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>You&apos;re in early</p>
+                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                        Paid plans unlock once we reach <strong>{billingInfo.userThreshold}</strong> members. We&apos;re at{" "}
+                        <strong>{billingInfo.userCount}</strong> so far — thanks for helping us grow.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
 
-             {billingLoadError && (
-               <p style={{ marginTop: "1rem", color: "var(--text-medium, #666)", fontSize: "0.9375rem" }}>
-                 {billingLoadError}
-               </p>
-             )}
+              {billingLoadError && (
+                <p style={{ marginTop: "1rem", color: "var(--text-medium, #666)", fontSize: "0.9375rem" }}>
+                  {billingLoadError}
+                </p>
+              )}
 
-             {onNavigate && (
-               <p style={{ marginTop: "1.5rem" }}>
-                 <button type="button" className="btn btn-secondary" onClick={() => onNavigate("signin")}>
-                   Back to sign in
-                 </button>
-               </p>
-             )}
-           </div>
-         </div>
-       </section>
-     </div>
-   );
- }
+              {checkoutError && (
+                <p style={{ marginTop: "1rem", color: "var(--text-medium, #666)", fontSize: "0.9375rem" }}>
+                  {checkoutError}
+                </p>
+              )}
+
+              {onNavigate && (
+                <p style={{ marginTop: "1.5rem" }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => onNavigate("signin")}>
+                    Back to sign in
+                  </button>
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
  return (
    <div className="page">
@@ -635,97 +715,133 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
              </div>
            )}
 
-           <h2 className="step-title">Choose your plan</h2>
-           <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem" }}>
-             When you continue, we&apos;ll create your account (you may need to confirm your email) and send you to
-             secure checkout. Billing starts after your trial.
-           </p>
+           {embeddedCheckoutClientSecret && stripePromise ? (
+             <>
+               <h2 className="step-title">Add payment method</h2>
+               <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem" }}>
+                 Your account is created. Enter your card below to start your{" "}
+                 <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged until the trial ends;
+                 cancel anytime before then in Settings.
+               </p>
+               <div
+                 className="embedded-checkout-container"
+                 style={{
+                   marginBottom: "1.25rem",
+                   borderRadius: "12px",
+                   overflow: "hidden",
+                   border: "1px solid var(--border-subtle, rgba(0,0,0,0.08))",
+                   minHeight: "420px",
+                 }}
+               >
+                 <EmbeddedCheckoutProvider
+                   stripe={stripePromise}
+                   options={{ clientSecret: embeddedCheckoutClientSecret }}
+                 >
+                   <EmbeddedCheckout />
+                 </EmbeddedCheckoutProvider>
+               </div>
+               <div className="wizard-navigation" style={{ marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
+                 <button type="button" className="btn btn-ghost btn-large" onClick={handleBack} disabled={loading}>
+                   Back to plan
+                 </button>
+               </div>
+             </>
+           ) : (
+             <>
+               <h2 className="step-title">Choose your plan</h2>
+               <p style={{ color: "var(--text-medium, #555)", marginBottom: "1.25rem" }}>
+                 When you continue, we&apos;ll create your account (you may need to confirm your email), then you&apos;ll
+                 enter payment details on the next screen. Your <strong>{DISPLAY_TRIAL_DAYS}-day trial</strong> starts
+                 after that — billing begins when the trial ends.
+               </p>
 
-           {billingLoading && <p className="settings-hint">Loading plan options…</p>}
+               {billingLoading && <p className="settings-hint">Loading plan options…</p>}
 
-           {billingLoadError && (
-             <p style={{ color: "var(--text-medium, #666)", marginBottom: "1rem" }}>{billingLoadError}</p>
-           )}
+               {billingLoadError && (
+                 <p style={{ color: "var(--text-medium, #666)", marginBottom: "1rem" }}>{billingLoadError}</p>
+               )}
 
-           {billingInfo && !billingInfo.billingEnabled && (
-             <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
-               Paid plans unlock at <strong>{billingInfo.userThreshold}</strong> members (currently{" "}
-               <strong>{billingInfo.userCount}</strong>). You can subscribe later from Settings.
-             </p>
-           )}
+               {billingInfo && !billingInfo.billingEnabled && (
+                 <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
+                   Paid plans unlock at <strong>{billingInfo.userThreshold}</strong> members (currently{" "}
+                   <strong>{billingInfo.userCount}</strong>). You can subscribe later from Settings.
+                 </p>
+               )}
 
-           {billingInfo?.billingEnabled && !billingInfo.hasStripeConfig && (
-             <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
-               Subscription checkout isn&apos;t fully configured yet. You can finish setup later in{" "}
-               <strong>Settings</strong>.
-             </p>
-           )}
+               {billingInfo?.billingEnabled && !billingInfo.hasStripeConfig && (
+                 <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
+                   Subscription checkout isn&apos;t fully configured yet. You can finish setup later in{" "}
+                   <strong>Settings</strong>.
+                 </p>
+               )}
 
-           {checkoutAvailable && (
-             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "1.25rem" }}>
-               {billingInfo!.availablePlans.monthly && (
+               {checkoutAvailable && (
+                 <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "1.25rem" }}>
+                   {billingInfo!.availablePlans.monthly && (
+                     <button
+                       type="button"
+                       className={`btn btn-large ${selectedPlan === "monthly" ? "btn-primary" : "btn-secondary"}`}
+                       onClick={() => setSelectedPlan("monthly")}
+                       disabled={loading || billingLoading}
+                     >
+                       Monthly
+                     </button>
+                   )}
+                   {billingInfo!.availablePlans.yearly && (
+                     <button
+                       type="button"
+                       className={`btn btn-large ${selectedPlan === "yearly" ? "btn-primary" : "btn-secondary"}`}
+                       onClick={() => setSelectedPlan("yearly")}
+                       disabled={loading || billingLoading}
+                     >
+                       Yearly
+                     </button>
+                   )}
+                 </div>
+               )}
+
+               <div className="wizard-navigation" style={{ marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
                  <button
                    type="button"
-                   className={`btn btn-large ${selectedPlan === "monthly" ? "btn-primary" : "btn-secondary"}`}
-                   onClick={() => setSelectedPlan("monthly")}
-                   disabled={loading || billingLoading}
+                   className="btn btn-ghost btn-large"
+                   onClick={handleBack}
+                   disabled={loading}
                  >
-                   Monthly
+                   Back
                  </button>
-               )}
-               {billingInfo!.availablePlans.yearly && (
-                 <button
-                   type="button"
-                   className={`btn btn-large ${selectedPlan === "yearly" ? "btn-primary" : "btn-secondary"}`}
-                   onClick={() => setSelectedPlan("yearly")}
-                   disabled={loading || billingLoading}
-                 >
-                   Yearly
-                 </button>
-               )}
-             </div>
+                 {checkoutAvailable && (
+                   <button
+                     type="button"
+                     className="btn btn-primary btn-large"
+                     disabled={loading || billingLoading || !selectedPlan}
+                     onClick={() => void handleCompleteSignup({ skipCheckout: false })}
+                   >
+                     {loading ? "Creating account…" : "Create account & add payment"}
+                   </button>
+                 )}
+                 {(!checkoutAvailable || billingLoadError) && !billingLoading && (
+                   <button
+                     type="button"
+                     className="btn btn-primary btn-large"
+                     disabled={loading}
+                     onClick={() => void handleCompleteSignup({ skipCheckout: true })}
+                   >
+                     {loading ? "Creating account…" : "Create account"}
+                   </button>
+                 )}
+                 {checkoutAvailable && (
+                   <button
+                     type="button"
+                     className="btn btn-ghost btn-large"
+                     disabled={loading || billingLoading}
+                     onClick={() => void handleCompleteSignup({ skipCheckout: true })}
+                   >
+                     I&apos;ll subscribe later
+                   </button>
+                 )}
+               </div>
+             </>
            )}
-
-           <div className="wizard-navigation" style={{ marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
-             <button
-               type="button"
-               className="btn btn-ghost btn-large"
-               onClick={handleBack}
-               disabled={loading}
-             >
-               Back
-             </button>
-             {checkoutAvailable && (
-               <button
-                 type="button"
-                 className="btn btn-primary btn-large"
-                 disabled={loading || billingLoading || !selectedPlan}
-                 onClick={() => void handleCompleteSignup({ skipCheckout: false })}
-               >
-                 {loading ? "Creating account…" : "Create account & continue to checkout"}
-               </button>
-             )}
-             {(!checkoutAvailable || billingLoadError) && !billingLoading && (
-               <button
-                 type="button"
-                 className="btn btn-primary btn-large"
-                 disabled={loading}
-                 onClick={() => void handleCompleteSignup({ skipCheckout: true })}
-               >
-                 {loading ? "Creating account…" : "Create account"}
-               </button>
-             )}
-             {checkoutAvailable && (
-               <button
-                 type="button"
-                 className="btn btn-ghost btn-large"
-                 disabled={loading || billingLoading}
-                 onClick={() => void handleCompleteSignup({ skipCheckout: true })}
-               >
-                 I&apos;ll subscribe later
-               </button>
-             )}
-           </div>
 
            <p className="signup-login" style={{ marginTop: "1.5rem" }}>
              <button

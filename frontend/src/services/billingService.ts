@@ -31,36 +31,67 @@ export const getPublicBillingConfig = async (): Promise<PublicBillingConfig> => 
 
 export type CheckoutPlan = "monthly" | "yearly";
 
+export type CheckoutSessionResponse =
+  | { embedded: false; url: string }
+  | { embedded: true; clientSecret: string };
+
+export type CreateCheckoutSessionArgs = {
+  email: string;
+  plan: CheckoutPlan;
+  embedded?: boolean;
+} & (
+  | { accessToken: string }
+  | { supabaseUserId: string; accessToken?: never }
+);
+
 /**
- * Authenticated checkout (same as Settings). Requires Supabase access_token.
+ * Checkout session. Use `accessToken` when the user has a Supabase session, or `supabaseUserId`
+ * when the account exists but email isn’t confirmed yet (no JWT).
  */
 export const createCheckoutSession = async (
-  accessToken: string,
-  email: string,
-  plan: CheckoutPlan
-): Promise<string> => {
+  args: CreateCheckoutSessionArgs
+): Promise<CheckoutSessionResponse> => {
   if (!API_BASE_URL?.trim()) {
     throw new Error("Missing VITE_API_BASE_URL");
   }
 
+  const { email, plan, embedded: embeddedOpt } = args;
+  const embedded = Boolean(embeddedOpt);
   const base = API_BASE_URL.replace(/\/$/, "");
-  const response = await fetch(`${base}/api/stripe/create-checkout-session`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, plan }),
-  });
 
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error((body as { message?: string }).message || "Failed to start checkout");
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const requestBody: Record<string, unknown> = { email, plan, embedded };
+
+  if ("accessToken" in args && args.accessToken) {
+    headers.Authorization = `Bearer ${args.accessToken}`;
+  } else if ("supabaseUserId" in args && args.supabaseUserId) {
+    requestBody.supabaseUserId = args.supabaseUserId;
+  } else {
+    throw new Error("Missing accessToken or supabaseUserId");
   }
 
-  const url = (body as { url?: string }).url;
+  const response = await fetch(`${base}/api/stripe/create-checkout-session`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(requestBody),
+  });
+
+  const responseBody = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((responseBody as { message?: string }).message || "Failed to start checkout");
+  }
+
+  if (embedded) {
+    const clientSecret = (responseBody as { clientSecret?: string }).clientSecret;
+    if (!clientSecret) {
+      throw new Error("Embedded checkout could not be started");
+    }
+    return { embedded: true, clientSecret };
+  }
+
+  const url = (responseBody as { url?: string }).url;
   if (!url) {
     throw new Error("Checkout URL missing in response");
   }
-  return url;
+  return { embedded: false, url };
 };
