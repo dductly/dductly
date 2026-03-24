@@ -590,13 +590,13 @@ const AppContent: React.FC = () => {
               <h3>General Questions</h3>
 
               <h4>What is dductly?</h4>
-              <p>dductly is an expense and income tracking platform designed specifically for small business owners. We help you organize your finances, upload receipts, view statistics, and stay prepared for tax time.</p>
+              <p>dductly is your all-in-one financial tool built for small business owners and solo entrepreneurs. We handle the full picture — tracking your expenses, income, and business mileage, giving you real-time statistics, and generating tax insights so you're always prepared come tax season. No accountant degree required.</p>
 
               <h4>Who is dductly for?</h4>
-              <p>dductly is built for small business owners, independent contractors, freelancers, and entrepreneurs who need a simple way to track expenses and stay organized for tax season.</p>
+              <p>dductly is made for small business owners, solo entrepreneurs, freelancers, independent contractors, and anyone running their own operation who wants a smarter way to manage their money and stay on top of their deductions.</p>
 
               <h4>How much does dductly cost?</h4>
-              <p>We offer flexible pricing plans to fit your needs. Contact us for current pricing information and to find the plan that works best for your business.</p>
+              <p>dductly is $7/month or $60/year — that's two months free when you go annual. One plan, all features included.</p>
 
               <h3>Getting Started</h3>
 
@@ -604,37 +604,50 @@ const AppContent: React.FC = () => {
               <p>Click the "Sign Up" button in the navigation menu, fill out the registration form with your details, and verify your email address. Once verified, you can start using dductly right away!</p>
 
               <h4>What information do I need to provide?</h4>
-              <p>You'll need to provide your name, email address, and create a password. Additional business information can be added later in your account settings.</p>
+              <p>Just your name, email address, and a password. You can start logging expenses and income right after signup — no lengthy setup required.</p>
 
-              <h3>Using dductly</h3>
+              <h3>Tracking Your Finances</h3>
 
-              <h4>How do I import my expense data?</h4>
-              <p>You can import expense data through our Import Data feature. We support various file formats including CSV and Excel. Simply click "Import Data" from your dashboard and follow the prompts.</p>
+              <h4>What can I track with dductly?</h4>
+              <p>dductly covers all the essentials for your small business finances:</p>
+              <ul>
+                <li><strong>Expenses:</strong> Supplies, equipment, travel, marketing, utilities, insurance, and more — with receipt uploads and category tagging</li>
+                <li><strong>Income:</strong> Product sales, services, consulting, tips, grants, and other revenue streams</li>
+                <li><strong>Business Mileage:</strong> Log every trip and we automatically calculate your deductible using the IRS standard mileage rate ($0.70/mile for 2025)</li>
+              </ul>
 
-              <h4>Can I manually add expenses and income?</h4>
-              <p>Yes! Use the "Expenses" or "Income" buttons on your dashboard to add entries. You can also upload receipts and attachments to keep everything organized.</p>
-
-              <h4>What can I track?</h4>
-              <p>You can track expenses (supplies, materials, travel, equipment, marketing, etc.) and income (product sales, services, tips, and more).</p>
+              <h4>How does the Mileage Tracker work?</h4>
+              <p>Head to the Expenses page and tap the Mileage tab. Click "+ Log Trip," enter the date, miles driven, and a description of the trip. dductly does the math — your deductible is calculated instantly at the IRS standard rate. You can also attach photos or receipts to each trip for a complete record.</p>
 
               <h4>Can I upload receipts and attachments?</h4>
-              <p>Yes! You can upload photos, PDFs, or any file type to your expenses and income. Just drag and drop or click to browse when adding or editing an entry.</p>
+              <p>Yes! You can attach photos, PDFs, or any file to your expenses, income entries, and mileage trips. Drag and drop or click to browse when adding or editing any entry. Never lose a receipt again.</p>
 
-              <h4>Can I categorize my entries?</h4>
-              <p>Yes, dductly allows you to categorize both expenses and income to help you understand your finances and make tax time easier.</p>
+              <h4>Can I import existing data?</h4>
+              <p>Yes! Use the "Import Data" feature from your dashboard to upload bulk data from a CSV or Excel file. Great for moving data from another system or adding a large batch of entries at once.</p>
 
-              <h3>Statistics & Reports</h3>
+              <h3>Tax Insights</h3>
 
-              <h4>How do I view my statistics?</h4>
-              <p>Click "Statistics" from your dashboard to see charts and insights about your expenses, income, and profit over time. You can filter by date range and category.</p>
+              <h4>What is the Tax Insights page?</h4>
+              <p>Tax Insights is your built-in tax prep tool. It gives you a real-time snapshot of your estimated deductibles organized by Schedule C category, a write-off guide covering every common small business deduction, key tax deadlines to keep on your radar, and a CSV export you can hand straight to your accountant.</p>
 
-              <h4>What export formats are available?</h4>
-              <p>You can export your data in multiple formats including PDF, CSV, and Excel, making it easy to share with your accountant or use with other software.</p>
+              <h4>How does dductly calculate my deductibles?</h4>
+              <p>We add up your categorized expenses and mileage to estimate your Schedule C deductions. Mileage is calculated at the IRS standard rate ($0.70/mile for 2025). These are estimates to help you plan — always confirm the final numbers with a tax professional.</p>
+
+              <h4>What is the Write-off Guide?</h4>
+              <p>The Write-off Guide inside Tax Insights walks you through every major small business deduction category — home office, phone and internet, vehicle mileage, equipment, education, health insurance, retirement contributions, professional services, business meals, and more. Each category includes tips on what qualifies and which Schedule C line it maps to.</p>
+
+              <h3>Statistics</h3>
+
+              <h4>How do I view my financial statistics?</h4>
+              <p>Click "Statistics" from your dashboard to see a full picture of your business finances — total revenue, total expenses, net profit, breakdowns by category, and trends over time. Filter by date range to see exactly the period you care about.</p>
+
+              <h4>Can I export my data?</h4>
+              <p>Yes! Export your data as CSV from Tax Insights for your accountant, or use the Statistics and expenses/income pages to review and download your records.</p>
 
               <h3>Account & Security</h3>
 
               <h4>Is my data secure?</h4>
-              <p>Yes! We take data security seriously. All data is encrypted and stored securely. Your uploaded files are protected with secure access. You'll also be automatically logged out after 15 minutes of inactivity for added security.</p>
+              <p>Absolutely. All your data is encrypted and stored securely. Uploaded files are protected with secure cloud storage. For added security, you'll be automatically logged out after 15 minutes of inactivity.</p>
 
               <h4>How do I reset my password?</h4>
               <p>Click "Log in" and then "Forgot Password" to receive a password reset link via email.</p>
@@ -645,13 +658,10 @@ const AppContent: React.FC = () => {
               <h3>Support</h3>
 
               <h4>How do I contact support?</h4>
-              <p>You can reach our support team through the Contact page. We typically respond within 24 hours during business days.</p>
-
-              <h4>Do you offer tutorials or guides?</h4>
-              <p>Yes! Check out our User Guide and tutorial videos to learn how to make the most of dductly's features.</p>
+              <p>Reach our support team through the Contact page on your dashboard. We typically respond within 24 hours during business days.</p>
 
               <h4>What if I have a feature request?</h4>
-              <p>We love hearing from our users! Contact us with your feature requests and suggestions. We're constantly improving dductly based on user feedback.</p>
+              <p>We love hearing from our users — dductly is built on your feedback. Send us your ideas through the Contact page and we'll take a look.</p>
             </div>
           </div>
         </div>
@@ -664,12 +674,12 @@ const AppContent: React.FC = () => {
             <button className="modal-close" onClick={() => setLegalModal(null)} aria-label="Close">×</button>
             <h2 className="modal-title">User Guide</h2>
             <div className="modal-body">
-              <p>Welcome to dductly! This guide will help you make the most of our expense tracking platform.</p>
+              <p>Welcome to dductly — your financial tool built for small business owners and solo entrepreneurs. This guide walks you through every feature so you can get the most out of your account.</p>
 
               <h3>Getting Started</h3>
 
               <h4>1. Creating Your Account</h4>
-              <p>To get started, click the "Sign Up" button and fill in your information. Your password must include:</p>
+              <p>Click "Sign Up" and fill in your information. Your password must include:</p>
               <ul>
                 <li>At least 8 characters</li>
                 <li>One uppercase letter</li>
@@ -677,106 +687,116 @@ const AppContent: React.FC = () => {
                 <li>One number</li>
                 <li>One special character (!@#$%^&*)</li>
               </ul>
-              <p>After signing up, check your email to verify your account. Once verified, you can log in and access your dashboard.</p>
+              <p>Check your email to verify your account, then log in to access your dashboard.</p>
 
               <h4>2. Your Dashboard</h4>
-              <p>After signing in, you'll land on your personalized dashboard. Here you can:</p>
+              <p>Your dashboard is your financial home base. From here you can jump to any feature:</p>
               <ul>
-                <li><strong>View Expenses:</strong> See all your tracked expenses in one place</li>
-                <li><strong>View Income:</strong> See all your tracked income in one place</li>
-                <li><strong>Add Expense:</strong> Manually add individual expenses</li>
-                <li><strong>Add Income:</strong> Manually add individual income entries</li>
-                <li><strong>Statistics:</strong> View charts and insights about your finances</li>
-                <li><strong>Import Data:</strong> Upload bulk data from files</li>
+                <li><strong>Expenses:</strong> View, add, and manage all your business expenses — including the Mileage Tracker</li>
+                <li><strong>Income:</strong> View and manage all your revenue and income entries</li>
+                <li><strong>Import Data:</strong> Upload bulk data from a CSV or Excel file</li>
+                <li><strong>Tax Insights:</strong> See your estimated deductibles, write-off guide, and key tax deadlines</li>
+                <li><strong>Statistics:</strong> Visualize your revenue, expenses, and profit over time</li>
               </ul>
+              <p>The dashboard also shows a live snapshot of your revenue, expenses, and net profit at a glance.</p>
 
               <h3>Managing Expenses</h3>
 
               <h4>Adding an Expense</h4>
-              <p>Click "Add Expense" from your dashboard. You'll need to provide:</p>
+              <p>Go to the Expenses page and click "+ Add Expense." Fill in:</p>
               <ul>
                 <li><strong>Date:</strong> When the expense occurred (required)</li>
-                <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
-                <li><strong>Category:</strong> Choose from options like Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
+                <li><strong>Amount:</strong> Just type the number — formatting is automatic (required)</li>
+                <li><strong>Category:</strong> Supplies, Materials, Equipment, Travel, Marketing, Packaging, Utilities, Insurance, or Other (required)</li>
                 <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Check, Bank Transfer, or Other (optional)</li>
                 <li><strong>Vendor/Store Name:</strong> Where you made the purchase (optional)</li>
-                <li><strong>Title:</strong> A brief description of the expense (optional)</li>
-                <li><strong>Attachments:</strong> Upload receipts, photos, or documents (optional)</li>
+                <li><strong>Title:</strong> A short description (optional)</li>
+                <li><strong>Attachments:</strong> Receipts, photos, or documents (optional)</li>
               </ul>
-              <p>When entering amounts, just type the numbers - the $ symbol is automatically added, and the system will format it with commas and decimal places when you finish typing.</p>
-              <p>After adding an expense, you'll be taken directly to your expenses list to see your new entry.</p>
+              <p>After saving, you'll land back on your expenses list to see the new entry.</p>
 
-              <h4>Viewing Your Expenses</h4>
-              <p>Click "View Expenses" to see your complete expense list. You can:</p>
+              <h4>Viewing, Editing & Deleting Expenses</h4>
+              <p>Your expenses list lets you filter by category, sort by date or amount, and search by keyword. Click the three-line menu icon on any entry to:</p>
               <ul>
-                <li><strong>Filter by category:</strong> See expenses for specific categories only</li>
-                <li><strong>Sort:</strong> Organize by date or amount, newest or oldest first</li>
-                <li><strong>Edit expenses:</strong> Click the three-line menu icon next to any expense to edit or delete it</li>
+                <li><strong>View:</strong> See full details and attached files</li>
+                <li><strong>Edit:</strong> Update any field or manage attachments</li>
+                <li><strong>Delete:</strong> Permanently remove the entry</li>
               </ul>
-              <p>The expenses page shows a summary with total expenses, total entries, and number of categories being tracked.</p>
 
-              <h4>Editing and Deleting Expenses</h4>
-              <p>To modify an expense:</p>
+              <h3>Mileage Tracker</h3>
+              <p>Business mileage is one of the most overlooked deductions for small business owners and solo entrepreneurs. dductly makes it effortless to log and calculate.</p>
+
+              <h4>Logging a Trip</h4>
               <ol>
-                <li>Go to "View Expenses"</li>
-                <li>Find the expense in the table</li>
-                <li>Click the three-dot menu icon on the right</li>
-                <li>Select "View" to see details and attachments</li>
-                <li>Select "Edit" to modify or add/remove attachments</li>
-                <li>Select "Delete" to remove the expense</li>
+                <li>Go to the Expenses page and click the <strong>Mileage</strong> tab</li>
+                <li>Click <strong>+ Log Trip</strong></li>
+                <li>Enter the date, miles driven, and a trip description</li>
+                <li>Optionally attach a photo or document</li>
+                <li>Click Save — your deductible is calculated automatically at the IRS standard rate ($0.70/mile for 2025)</li>
               </ol>
+
+              <h4>Viewing & Managing Trips</h4>
+              <p>The Mileage tab shows your total miles and total deductible for the year, plus a full history of every logged trip. Use the three-line menu on any trip to View, Edit, or Delete it — just like regular expenses.</p>
 
               <h3>Managing Income</h3>
 
               <h4>Adding Income</h4>
-              <p>Click "Add Income" from your dashboard. You'll need to provide:</p>
+              <p>Go to the Income page and click "+ Add Income." Fill in:</p>
               <ul>
                 <li><strong>Date:</strong> When the income was received (required)</li>
                 <li><strong>Amount:</strong> Dollar amount with automatic formatting (required)</li>
                 <li><strong>Tip:</strong> Any tip amount received (optional)</li>
-                <li><strong>Category:</strong> Choose from options like Product Sales, Services, Consulting, Grants, and more (required)</li>
+                <li><strong>Category:</strong> Product Sales, Services, Consulting, Grants, and more (required)</li>
                 <li><strong>Payment Method:</strong> Cash, Credit Card, Debit Card, Venmo, Check, Bank Transfer, or Other (optional)</li>
                 <li><strong>Customer:</strong> Customer name if applicable (optional)</li>
-                <li><strong>Title:</strong> A brief description of the income (optional)</li>
-                <li><strong>Attachments:</strong> Upload invoices, receipts, or documents (optional)</li>
+                <li><strong>Title:</strong> A short description (optional)</li>
+                <li><strong>Attachments:</strong> Invoices, receipts, or documents (optional)</li>
               </ul>
-              <p>After adding income, you'll be taken directly to your income list to see your new entry.</p>
 
               <h4>Viewing and Editing Income</h4>
-              <p>Click "View Income" to see your complete income list. Just like expenses, you can filter, sort, view, edit, and delete entries using the three-dot menu.</p>
+              <p>Your income list works just like expenses — filter, sort, search, and use the three-line menu to View, Edit, or Delete any entry.</p>
 
               <h3>Uploading Attachments</h3>
-              <p>You can upload receipts, photos, PDFs, or any file to your expenses and income:</p>
+              <p>You can attach files to any expense, income entry, or mileage trip:</p>
               <ul>
-                <li><strong>When adding:</strong> Drag and drop files or click the upload area to browse</li>
-                <li><strong>When editing:</strong> Add new files or remove existing attachments</li>
-                <li><strong>When viewing:</strong> Click on any attachment to open it</li>
+                <li>Drag and drop files or click the upload area to browse</li>
+                <li>Add or remove attachments at any time by editing the entry</li>
+                <li>Click any attached file to open it</li>
               </ul>
-              <p>This works on both desktop and mobile - upload photos directly from your phone!</p>
+              <p>Works on desktop and mobile — snap a photo of a receipt on your phone and upload it instantly.</p>
+
+              <h3>Tax Insights</h3>
+              <p>Tax Insights is your built-in tax prep assistant. It pulls together everything you've logged to give you a clear picture of your deductions and tax situation.</p>
+
+              <h4>Tax Snapshot</h4>
+              <p>See your estimated Schedule C deductibles broken down by category — expenses, mileage, and more. Mileage is shown with a full breakdown (miles × IRS rate = deductible). The snapshot also flags any common deduction categories you haven't logged yet so nothing slips through the cracks.</p>
+
+              <h4>Write-off Guide</h4>
+              <p>Not sure what counts as a deduction? The Write-off Guide covers every major business expense category — home office, phone and internet, vehicle mileage, software, equipment, education, health insurance, retirement contributions, professional services, business meals, shipping, and more. Each entry explains what qualifies and which Schedule C line it belongs on.</p>
+
+              <h4>Key Tax Deadlines</h4>
+              <p>Tax Insights includes a deadlines section with important dates for quarterly estimated taxes and annual filing so you always know what's coming up.</p>
+
+              <h4>Export for Your Accountant</h4>
+              <p>Use the CSV export button on Tax Insights to download a clean summary of your deductibles by category — ready to hand to your accountant or tax preparer.</p>
 
               <h3>Statistics</h3>
-              <p>The Statistics page gives you insights into your finances:</p>
+              <p>The Statistics page gives you a visual overview of your business finances:</p>
               <ul>
-                <li>View your total expenses, income, and profit</li>
-                <li>See breakdowns by category</li>
-                <li>Filter by date range</li>
-                <li>Track your financial trends over time</li>
+                <li>Total revenue, total expenses, and net profit</li>
+                <li>Breakdowns by category</li>
+                <li>Trends over your chosen date range</li>
               </ul>
+              <p>Check Statistics regularly to keep a pulse on your business performance throughout the year.</p>
 
-              <h4>Importing Data</h4>
-              <p>If you have expenses in a spreadsheet or file, use the "Import Data" feature to upload them in bulk. This is great for:</p>
-              <ul>
-                <li>Moving data from another system</li>
-                <li>Uploading receipts you've been tracking elsewhere</li>
-                <li>Adding multiple expenses at once</li>
-              </ul>
+              <h3>Importing Data</h3>
+              <p>Already tracking finances somewhere else? Use "Import Data" from your dashboard to upload a CSV or Excel file and bring everything into dductly in bulk.</p>
 
               <h3>Account Management</h3>
 
               <h4>Editing Your Profile</h4>
-              <p>From your dashboard:</p>
               <ol>
-                <li>Find the "Your Account" card</li>
+                <li>Find the "Your Account" card on your dashboard</li>
                 <li>Click the pencil icon in the top right</li>
                 <li>Update your first name, last name, or email</li>
                 <li>Click "Save Changes"</li>
@@ -784,27 +804,26 @@ const AppContent: React.FC = () => {
               <p><strong>Note:</strong> If you change your email, you'll receive a confirmation email. After confirming, click the "Click here to refresh" link on your dashboard to see the updated email.</p>
 
               <h4>Signing Out</h4>
-              <p>Click on your name in the top right corner and select "Logout" from the dropdown menu. This will sign you out and return you to the home page.</p>
+              <p>Click your name in the top right corner and select "Logout" from the dropdown. For your security, dductly also automatically logs you out after 15 minutes of inactivity.</p>
 
               <h3>Settings & Preferences</h3>
               <ul>
-                <li><strong>Dark Mode:</strong> Toggle dark mode from the settings for comfortable viewing</li>
-                <li><strong>Auto-Logout:</strong> For your security, you'll be automatically logged out after 15 minutes of inactivity</li>
+                <li><strong>Dark Mode:</strong> Toggle dark mode from settings for comfortable viewing in any environment</li>
+                <li><strong>Auto-Logout:</strong> Automatically signs you out after 15 minutes of inactivity</li>
               </ul>
 
-              <h3>Tips for Success</h3>
+              <h3>Tips for Getting the Most Out of dductly</h3>
               <ul>
-                <li>Add expenses and income regularly - don't wait until tax time!</li>
-                <li>Upload receipts right when you make a purchase so you don't lose them</li>
-                <li>Use consistent categories to make tracking and reporting easier</li>
-                <li>Check your Statistics page regularly to track your profit</li>
-                <li>Include customer names and descriptions for better records</li>
+                <li>Log expenses, income, and mileage as they happen — don't let them pile up</li>
+                <li>Snap photos of receipts right away and attach them before you lose them</li>
+                <li>Use consistent categories so your Statistics and Tax Insights stay accurate</li>
+                <li>Review Tax Insights regularly — it'll flag deduction categories you might be missing</li>
+                <li>Export a CSV before meeting with your accountant to save time</li>
               </ul>
 
               <h3>Need More Help?</h3>
-              <p>If you have questions or need assistance:</p>
               <ul>
-                <li>Check the <a href="#" onClick={(e) => { e.preventDefault(); setLegalModal('faq'); }} className="link">FAQs</a> for common questions</li>
+                <li>Check the <a href="#" onClick={(e) => { e.preventDefault(); setLegalModal('faq'); }} className="link">FAQs</a> for quick answers</li>
                 <li>Use the Contact Support link in your dashboard</li>
                 <li>Email us at admin@dductly.com</li>
               </ul>
