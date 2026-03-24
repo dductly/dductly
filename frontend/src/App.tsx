@@ -429,6 +429,8 @@ const AppContent: React.FC = () => {
         return <AddData onNavigate={handleNavigate} />;
       case 'expenses':
         return <Expenses onNavigate={handleNavigate} />;
+      case 'mileage':
+        return <Expenses onNavigate={handleNavigate} initialTab="mileage" />;
       case 'add-income':
         return <AddIncome onNavigate={handleNavigate} />;
       case 'income':

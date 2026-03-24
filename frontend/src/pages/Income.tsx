@@ -11,6 +11,7 @@ import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
 import magnifyIcon from "../img/magnify.svg";
+import inboxIcon from "../img/inbox.svg";
 
 interface IncomeProps {
   onNavigate: (page: string) => void;
@@ -342,7 +343,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
 
           {showImportBanner && (
             <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 20px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px", marginBottom: "20px" }}>
-              <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>📥</span>
+              <img src={inboxIcon} alt="" style={{ width: 22, height: 22, flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: "0.88rem", color: "var(--text-dark)", lineHeight: 1.6 }}>
                 <strong>Your imported data is all here.</strong> Head to{" "}
                 <span onClick={() => onNavigate("stats")} style={{ cursor: "pointer", fontWeight: 700, textDecoration: "underline", color: "var(--deep-blue)" }}>Statistics</span>

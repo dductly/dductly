@@ -2,6 +2,18 @@ import React, { useState, useMemo } from "react";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
 import { useAuth } from "../hooks/useAuth";
+import pinMapIcon from "../img/pin-map.svg";
+import lightbulbIcon from "../img/lightbulb.svg";
+import bellIcon from "../img/bell.svg";
+import houseIcon from "../img/house.svg";
+import phoneIcon from "../img/phone.svg";
+import gradCapIcon from "../img/grad-cap.svg";
+import monitorIcon from "../img/monitor.svg";
+import medClipIcon from "../img/med-clip.svg";
+import moneyBagIcon from "../img/money-bag.svg";
+import handshakeIcon from "../img/handshake.svg";
+import servingIcon from "../img/serving.svg";
+import boxIcon from "../img/box.svg";
 
 interface TaxInsightsProps {
   onNavigate: (page: string) => void;
@@ -45,6 +57,10 @@ const SCHEDULE_C_MAP: Record<string, { line: string; tip: string }> = {
     line: "Insurance — Line 15",
     tip: "Business insurance premiums — liability, property, product — are fully deductible.",
   },
+  mileage: {
+    line: "Travel — Line 24a",
+    tip: "Mileage logged with dductly is calculated at the 2025 IRS standard rate of 70¢/mile. Keep your trip descriptions as documentation — date, destination, and business purpose are all you need.",
+  },
   other: {
     line: "Other Expenses — Line 27",
     tip: 'Keep clear notes on what "other" expenses were for. Well-documented expenses are much easier to defend if audited.',
@@ -54,70 +70,70 @@ const SCHEDULE_C_MAP: Record<string, { line: string; tip: string }> = {
 // ─── General write-off guide (not tied to logged data) ────────────────────────
 const WRITEOFF_GUIDE = [
   {
-    icon: "🚗",
+    icon: "pin-map",
     title: "Vehicle & Mileage",
     description:
       "Every mile you drive for business counts. Use the standard mileage rate (70¢/mile in 2025) or track actual vehicle expenses. This includes driving to markets, picking up supplies, and client visits.",
     note: "Keep a mileage log with date, destination, and business purpose for each trip. Note: commuting from home to a regular place of business is not deductible.",
   },
   {
-    icon: "🏠",
+    icon: "house",
     title: "Home Office",
     description:
       "If you use a dedicated space in your home exclusively and regularly for business, you can deduct a portion of rent/mortgage, utilities, and internet. The IRS simplified method allows $5 per square foot, up to 300 sq ft.",
     note: "The space must be used only for business — a shared guest room doesn't qualify.",
   },
   {
-    icon: "📱",
+    icon: "phone",
     title: "Phone & Internet",
     description:
       "If you use your personal phone or internet for business, you can deduct the business-use percentage. If business is 60% of your usage, you deduct 60% of the bill.",
     note: "A dedicated business phone line is 100% deductible.",
   },
   {
-    icon: "🎓",
+    icon: "grad-cap",
     title: "Education & Training",
     description:
       "Courses, books, workshops, and subscriptions that improve your skills in your current business are deductible. This includes online courses, craft workshops, and business coaching.",
     note: "Education for a new career or business field generally doesn't qualify.",
   },
   {
-    icon: "💻",
+    icon: "monitor",
     title: "Software & Subscriptions",
     description:
       "Business software, apps, cloud storage, and platform fees (like dductly!) used for your business are fully deductible.",
     note: "Keep receipts and note the business purpose for each subscription.",
   },
   {
-    icon: "🏥",
+    icon: "med-clip",
     title: "Self-Employed Health Insurance",
     description:
       "If you pay for your own health, dental, or vision insurance and aren't eligible for coverage through a spouse's employer, 100% of premiums are deductible — even if you don't itemize.",
     note: "This deduction goes on Schedule 1, not Schedule C.",
   },
   {
-    icon: "💰",
+    icon: "money-bag",
     title: "Retirement Contributions",
     description:
       "Contributing to a SEP-IRA, SIMPLE IRA, or Solo 401(k) as a self-employed person is deductible and lowers your taxable income significantly. SEP-IRA allows up to 25% of net self-employment income.",
     note: "Contributions for the prior tax year can often be made up to the filing deadline.",
   },
   {
-    icon: "🤝",
+    icon: "handshake",
     title: "Professional Services",
     description:
       "Fees paid to accountants, bookkeepers, lawyers, and consultants for your business are fully deductible. This includes tax prep fees specifically for your business return.",
     note: "Keep the invoice showing the service was for your business.",
   },
   {
-    icon: "🍽️",
+    icon: "serving",
     title: "Business Meals",
     description:
       "Meals with clients, customers, or business partners where business is discussed are 50% deductible. Keep a note of who attended and what was discussed.",
     note: "Entertainment expenses (concerts, sporting events) are no longer deductible post-2018.",
   },
   {
-    icon: "📦",
+    icon: "box",
     title: "Shipping & Postage",
     description:
       "Any shipping, postage, or freight costs directly related to your business — sending orders, returning supplier items — are fully deductible.",
@@ -232,9 +248,18 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
     [yearExpenses]
   );
 
-  const missingCategories = ["travel", "insurance", "equipment", "utilities"].filter(
+  const missingCategories = ["mileage", "travel", "insurance", "equipment", "utilities"].filter(
     (c) => !loggedCategories.has(c)
   );
+
+  const totalMilesMapped = useMemo(() => {
+    return yearExpenses
+      .filter((e) => e.category === "mileage")
+      .reduce((sum, e) => {
+        const match = e.description?.match(/^(\d+(?:\.\d+)?)\s*miles?/i);
+        return sum + (match ? parseFloat(match[1]) : 0);
+      }, 0);
+  }, [yearExpenses]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -358,7 +383,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
               {/* No data banner */}
               {yearExpenses.length === 0 && yearIncomes.length === 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px", marginBottom: "24px" }}>
-                  <span style={{ fontSize: "1.3rem" }}>📭</span>
+                  <img src={bellIcon} alt="" style={{ width: 22, height: 22, flexShrink: 0 }} />
                   <div>
                     <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-dark)", marginBottom: "2px" }}>No data for {selectedYear}</p>
                     <p style={{ fontSize: "0.83rem", color: "var(--text-medium)" }}>You haven't logged any expenses or income for this year yet. Select a different year or start adding records.</p>
@@ -402,7 +427,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                   color: "var(--text-medium)",
                   marginBottom: "28px",
                 }}>
-                  <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📭</div>
+                  <img src={bellIcon} alt="" style={{ width: 32, height: 32, marginBottom: "8px" }} />
                   <p>No expenses logged for {selectedYear} yet.</p>
                   <button
                     className="btn btn-primary"
@@ -447,6 +472,12 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                             transition: "width 0.3s ease",
                           }} />
                         </div>
+                        {category === "mileage" && totalMilesMapped > 0 && (
+                          <div style={{ fontSize: "0.83rem", color: "var(--text-medium)", marginBottom: "6px" }}>
+                            <img src={pinMapIcon} alt="" style={{ width: 14, height: 14, marginRight: 4, verticalAlign: "middle" }} />
+                            <strong style={{ color: "var(--text-dark)" }}>{totalMilesMapped.toLocaleString(undefined, { maximumFractionDigits: 1 })} miles</strong> × $0.70/mile = {formatCurrency(amount)}
+                          </div>
+                        )}
                         {info && (
                           <div style={{ fontSize: "0.83rem", color: "var(--text-medium)", lineHeight: 1.5 }}>
                             {info.tip}
@@ -476,7 +507,8 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {missingCategories.map((cat) => {
                       const nudges: Record<string, string> = {
-                        travel: "Driving to markets, supplier pickups, or customer deliveries? The 2025 IRS mileage rate is 70¢/mile and every trip adds up.",
+                        mileage: "Drove for business this year? Use the Mileage Tracker on your Expenses page — log trips and the 70¢/mile deduction is calculated automatically.",
+                        travel: "Flights, hotels, or other travel for business? The Travel category covers non-mileage travel expenses. Log them under Expenses.",
                         insurance: "Business insurance premiums — liability, product, general — are fully deductible. Log them if you have coverage.",
                         equipment: "Equipment purchases — from display tables to laptops — may qualify for full deduction under Section 179.",
                         utilities: "A dedicated business phone, internet, or workspace utility bill? The business-use portion is deductible.",
@@ -493,7 +525,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                           color: "var(--text-medium)",
                           lineHeight: 1.6,
                         }}>
-                          <span style={{ fontSize: "1rem", flexShrink: 0 }}>💡</span>
+                          <img src={lightbulbIcon} alt="" style={{ width: 18, height: 18, flexShrink: 0 }} />
                           <div>
                             <strong style={{ color: "var(--text-dark)" }}>{formatCategoryLabel(cat)}: </strong>
                             {nudges[cat]}
@@ -553,7 +585,23 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                     padding: "20px",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                      <span style={{ fontSize: "1.4rem" }}>{item.icon}</span>
+                      {(() => {
+                        const svgMap: Record<string, string> = {
+                          "pin-map": pinMapIcon,
+                          "house": houseIcon,
+                          "phone": phoneIcon,
+                          "grad-cap": gradCapIcon,
+                          "monitor": monitorIcon,
+                          "med-clip": medClipIcon,
+                          "money-bag": moneyBagIcon,
+                          "handshake": handshakeIcon,
+                          "serving": servingIcon,
+                          "box": boxIcon,
+                        };
+                        return svgMap[item.icon]
+                          ? <img src={svgMap[item.icon]} alt="" style={{ width: 22, height: 22, flexShrink: 0 }} />
+                          : <span style={{ fontSize: "1.4rem" }}>{item.icon}</span>;
+                      })()}
                       <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-dark)", margin: 0 }}>
                         {item.title}
                       </h3>
