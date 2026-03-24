@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { Attachment } from '../services/storageService';
+import folderIcon from '../img/folder.svg';
 
 interface FileUploadProps {
   attachments: Attachment[];
@@ -89,7 +90,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           disabled={disabled}
         />
         <div className="file-upload-content">
-          <span className="file-upload-icon">📁</span>
+          <img src={folderIcon} alt="" className="file-upload-icon" style={{ width: 32, height: 32 }} />
           <p className="file-upload-text">
             {isDragging ? 'Drop files here' : 'Click or drag files to upload'}
           </p>

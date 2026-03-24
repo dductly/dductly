@@ -11,13 +11,16 @@ import menuIcon from "../img/menu.svg";
 import editIcon from "../img/pencil-edit.svg";
 import viewIcon from "../img/open-eye.svg";
 import magnifyIcon from "../img/magnify.svg";
+import pinMapIcon from "../img/pin-map.svg";
+import inboxIcon from "../img/inbox.svg";
 
 interface ExpenseProps {
   onNavigate: (page: string) => void;
+  initialTab?: "expenses" | "mileage";
 }
 
-const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
-  const { expenses, updateExpense, deleteExpense } = useExpenses();
+const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
+  const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses();
   const { incomes } = useIncome();
   const { user } = useAuth();
   const vendorSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.vendor).filter(Boolean))), [expenses]);
@@ -51,6 +54,13 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
   const [editAttachments, setEditAttachments] = useState<Attachment[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Mileage tab state
+  const [activeTab, setActiveTab] = useState<"expenses" | "mileage">(initialTab ?? "expenses");
+  const [showLogTripModal, setShowLogTripModal] = useState(false);
+  const [mileageForm, setMileageForm] = useState({ date: "", miles: "", tripDescription: "", notes: "" });
+  const [mileageLoading, setMileageLoading] = useState(false);
+  const [pendingMileageFiles, setPendingMileageFiles] = useState<File[]>([]);
 
   // Filter expenses (category + month + search across non-date columns)
   const filteredExpenses = expenses.filter((e) => {
@@ -103,6 +113,39 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     const months = Array.from(new Set(expenses.map((e) => e.expense_date?.slice(0, 7)).filter(Boolean))) as string[];
     return months.sort((a, b) => b.localeCompare(a));
   }, [expenses]);
+
+  const IRS_RATE_2025 = 0.70;
+
+  const parseMilesFromDescription = (description: string): number | null => {
+    const match = description?.match(/^(\d+(?:\.\d+)?)\s*miles?/i);
+    return match ? parseFloat(match[1]) : null;
+  };
+
+  const mileageExpenses = useMemo(
+    () => expenses
+      .filter((e) => e.category === "mileage")
+      .sort((a, b) => b.expense_date.localeCompare(a.expense_date)),
+    [expenses]
+  );
+
+  const currentYear = new Date().getFullYear();
+
+  const yearlyMiles = useMemo(
+    () => mileageExpenses
+      .filter((e) => e.expense_date.startsWith(String(currentYear)))
+      .reduce((sum, e) => {
+        const miles = parseMilesFromDescription(e.description);
+        return sum + (miles ?? 0);
+      }, 0),
+    [mileageExpenses]
+  );
+
+  const yearlyMileageDeductible = useMemo(
+    () => mileageExpenses
+      .filter((e) => e.expense_date.startsWith(String(currentYear)))
+      .reduce((sum, e) => sum + e.amount, 0),
+    [mileageExpenses]
+  );
 
   const formatDate = (dateString: string) => {
     // Parse the date string manually to avoid timezone issues
@@ -242,6 +285,41 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
     }
   };
 
+  const handleLogTrip = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const milesValue = parseFloat(mileageForm.miles) || 0;
+    if (!mileageForm.date || milesValue <= 0) return;
+    setMileageLoading(true);
+
+    const tempId = `temp_${Date.now()}`;
+    let attachments: Attachment[] = [];
+    if (pendingMileageFiles.length > 0 && user) {
+      try {
+        attachments = await storageService.uploadFiles(pendingMileageFiles, user.id, 'expense', tempId);
+      } catch (error) {
+        console.error('File upload failed:', error);
+      }
+    }
+
+    const descParts = [`${mileageForm.miles} miles`];
+    if (mileageForm.notes.trim()) descParts.push(mileageForm.notes.trim());
+
+    await addExpense({
+      expense_date: mileageForm.date,
+      amount: parseFloat((milesValue * IRS_RATE_2025).toFixed(2)),
+      category: "mileage",
+      vendor: mileageForm.tripDescription.trim(),
+      description: descParts.join(" — "),
+      payment_method: "",
+      attachments,
+    });
+
+    setMileageForm({ date: "", miles: "", tripDescription: "", notes: "" });
+    setPendingMileageFiles([]);
+    setMileageLoading(false);
+    setShowLogTripModal(false);
+  };
+
   const toggleMenu = (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
     if (openMenuId === id) {
       setOpenMenuId(null);
@@ -313,9 +391,33 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
             </div>
           </div>
 
+          {/* Tab switcher */}
+          <div style={{ display: "flex", borderBottom: "1px solid var(--border-light, #e2e8f0)", marginBottom: "20px", gap: "4px" }}>
+            {(["expenses", "mileage"] as const).map((tab) => (
+              <button
+                key={tab}
+                style={{
+                  padding: "10px 20px",
+                  border: "none",
+                  borderBottom: activeTab === tab ? "2px solid var(--primary-purple)" : "2px solid transparent",
+                  background: "none",
+                  color: activeTab === tab ? "var(--primary-purple)" : "var(--text-medium)",
+                  fontWeight: activeTab === tab ? 700 : 500,
+                  fontSize: "0.95rem",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "expenses" ? "Expenses" : <><img src={pinMapIcon} alt="" style={{ width: 14, height: 14, marginRight: 6, verticalAlign: "middle" }} />Mileage</>}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "expenses" && (<>
           {showImportBanner && (
             <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 20px", background: "var(--pale-blue)", border: "1.5px solid var(--primary-blue)", borderRadius: "12px", marginBottom: "20px" }}>
-              <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>📥</span>
+              <img src={inboxIcon} alt="" style={{ width: 22, height: 22, flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: "0.88rem", color: "var(--text-dark)", lineHeight: 1.6 }}>
                 <strong>Your imported data is all here.</strong> Head to{" "}
                 <span onClick={() => onNavigate("stats")} style={{ cursor: "pointer", fontWeight: 700, textDecoration: "underline", color: "var(--deep-blue)" }}>Statistics</span>
@@ -551,6 +653,211 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate }) => {
                     Next
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+          </>)}
+
+          {/* ── Mileage Tab ── */}
+          {activeTab === "mileage" && (
+            <div>
+              <div className="expenses-summary" style={{ marginBottom: "24px" }}>
+                <div className="summary-card">
+                  <div className="summary-label">Miles Driven ({currentYear})</div>
+                  <div className="summary-value">{yearlyMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi</div>
+                </div>
+                <div className="summary-card">
+                  <div className="summary-label">Deductible ({currentYear})</div>
+                  <div className="summary-value">{formatCurrency(yearlyMileageDeductible)}</div>
+                </div>
+                <div className="summary-card">
+                  <div className="summary-label">IRS Rate (2025)</div>
+                  <div className="summary-value">70¢ / mile</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+                <button className="btn btn-primary" onClick={() => setShowLogTripModal(true)}>
+                  + Log Trip
+                </button>
+              </div>
+
+              {mileageExpenses.length === 0 ? (
+                <div className="no-expenses">
+                  <p>No trips logged yet.</p>
+                  <button className="btn btn-primary btn-large" onClick={() => setShowLogTripModal(true)}>
+                    Log Your First Trip
+                  </button>
+                </div>
+              ) : (
+                <div className="expenses-table-container">
+                  <table className="expenses-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Trip</th>
+                        <th>Miles</th>
+                        <th>Deductible</th>
+                        <th className="actions-column">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mileageExpenses.map((trip) => {
+                        const miles = parseMilesFromDescription(trip.description);
+                        const descWithoutMiles = trip.description
+                          .replace(/^\d+(?:\.\d+)?\s*miles?\s*—?\s*/i, "")
+                          .trim();
+                        return (
+                          <tr key={trip.id}>
+                            <td style={{ whiteSpace: "nowrap" }}>{formatDate(trip.expense_date)}</td>
+                            <td>
+                              {trip.vendor && <div style={{ fontWeight: 500, color: "var(--text-dark)" }}>{trip.vendor}</div>}
+                              {descWithoutMiles && <div style={{ fontSize: "0.8rem", color: "var(--text-medium)" }}>{descWithoutMiles}</div>}
+                              {!trip.vendor && !descWithoutMiles && <span style={{ color: "var(--text-light)" }}>—</span>}
+                            </td>
+                            <td style={{ whiteSpace: "nowrap" }}>{miles != null ? `${miles} mi` : "—"}</td>
+                            <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{formatCurrency(trip.amount)}</td>
+                            <td onClick={(e) => e.stopPropagation()}>
+                              <div className="menu-wrapper">
+                                <button className="menu-btn" onClick={(e) => toggleMenu(trip.id, e)}>
+                                  <img src={menuIcon} alt="Menu" className="menu-icon" />
+                                </button>
+                                {openMenuId === trip.id && (
+                                  <div className="dropdown-menu" style={{ position: "fixed", top: menuCoords.top, left: menuCoords.left }}>
+                                    <button className="dropdown-item" onClick={() => handleViewExpense(trip)}>
+                                      <img src={viewIcon} alt="View" className="dropdown-icon" />
+                                      View
+                                    </button>
+                                    <button className="dropdown-item" onClick={() => handleEditExpense(trip)}>
+                                      <img src={editIcon} alt="Edit" className="dropdown-icon" />
+                                      Edit
+                                    </button>
+                                    <button className="dropdown-item delete-item" onClick={() => handleDeleteExpense(trip.id)}>
+                                      <img src={recycleIcon} alt="Delete" className="dropdown-icon" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Log Trip Modal ── */}
+          {showLogTripModal && (
+            <div className="modal-overlay" onClick={() => { setShowLogTripModal(false); setPendingMileageFiles([]); }}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Log a Trip</h2>
+                  <button className="modal-close" onClick={() => setShowLogTripModal(false)}>×</button>
+                </div>
+                <form onSubmit={handleLogTrip}>
+                  <div className="modal-body">
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Date <span className="req">(required)</span></label>
+                        <input
+                          type="date"
+                          value={mileageForm.date}
+                          onChange={(e) => setMileageForm({ ...mileageForm, date: e.target.value })}
+                          required
+                          disabled={mileageLoading}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Miles Driven <span className="req">(required)</span></label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 12.5"
+                          value={mileageForm.miles}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.]/g, "");
+                            const parts = value.split(".");
+                            const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : value;
+                            setMileageForm({ ...mileageForm, miles: sanitized });
+                          }}
+                          required
+                          disabled={mileageLoading}
+                        />
+                      </div>
+                    </div>
+
+                    {parseFloat(mileageForm.miles) > 0 && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 14px",
+                        background: "var(--bg-secondary)",
+                        borderRadius: "8px",
+                        marginBottom: "16px",
+                        fontSize: "0.9rem",
+                        color: "var(--text-medium)",
+                      }}>
+                        <span>🧮</span>
+                        <span>
+                          {mileageForm.miles} miles × $0.70 ={" "}
+                          <strong style={{ color: "var(--primary-purple)" }}>
+                            {formatCurrency(parseFloat(mileageForm.miles) * IRS_RATE_2025)}
+                          </strong>{" "}
+                          deductible
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="form-group">
+                      <label>Trip Description</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Home → Farmer's Market, Supplier pickup"
+                        value={mileageForm.tripDescription}
+                        onChange={(e) => setMileageForm({ ...mileageForm, tripDescription: e.target.value })}
+                        disabled={mileageLoading}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Notes</label>
+                      <input
+                        type="text"
+                        placeholder="Optional additional details"
+                        value={mileageForm.notes}
+                        onChange={(e) => setMileageForm({ ...mileageForm, notes: e.target.value })}
+                        disabled={mileageLoading}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Receipts / Attachments</label>
+                      <FileUpload
+                        attachments={[]}
+                        pendingFiles={pendingMileageFiles}
+                        onFilesSelected={(files) => setPendingMileageFiles([...pendingMileageFiles, ...files])}
+                        onRemoveAttachment={() => {}}
+                        onRemovePendingFile={(file) => setPendingMileageFiles(pendingMileageFiles.filter(f => f !== file))}
+                        disabled={mileageLoading}
+                      />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => { setShowLogTripModal(false); setPendingMileageFiles([]); }} disabled={mileageLoading}>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={mileageLoading || !mileageForm.date || !(parseFloat(mileageForm.miles) > 0)}
+                    >
+                      {mileageLoading ? "Saving..." : "Log Trip"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
