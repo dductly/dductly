@@ -2,11 +2,6 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import {
-  getPublicBillingConfig,
-  hasBillingApiBaseUrl,
-  type PublicBillingConfig,
-} from "../services/billingService";
-import {
   STORAGE_POST_SIGNUP_EMAIL,
   STORAGE_SIGNUP_CHECKOUT_COMPLETE,
   STORAGE_SIGNUP_NOTICE,
@@ -15,8 +10,6 @@ import {
 interface EmailConfirmationProps {
   onNavigate: (page: string) => void;
 }
-
-const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
 
 const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => {
   const [isVerified, setIsVerified] = useState(false);
@@ -53,31 +46,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     }
     return null;
   });
-
-  const [billingInfo, setBillingInfo] = useState<PublicBillingConfig | null>(null);
-  const [billingLoadError, setBillingLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const awaiting =
-      pendingFromSignup || signupCheckoutComplete || (!!user && !user.email_confirmed_at);
-    if (!awaiting) return;
-    if (!hasBillingApiBaseUrl()) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const config = await getPublicBillingConfig();
-        if (!cancelled) setBillingInfo(config);
-      } catch {
-        if (!cancelled) {
-          setBillingLoadError("We couldn't load subscription details right now.");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [pendingFromSignup, signupCheckoutComplete, user]);
 
   useEffect(() => {
     const handleEmailConfirmation = async () => {
@@ -181,7 +149,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
         <section className="section">
           <div className="confirmation-container">
             <div className="confirmation-content success">
-              <div className="success-icon">✓</div>
               <h1 className="section-title">Email Verified!</h1>
               <p>Your email has been successfully verified. You can now access all features of dductly.</p>
               <button className="btn btn-primary" onClick={() => onNavigate("home")}>
@@ -200,7 +167,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
         <section className="section">
           <div className="confirmation-container">
             <div className="confirmation-content">
-              <div className="email-icon">📧</div>
               <h1 className="section-title">Verifying Your Email</h1>
               <p>Please wait while we verify your email address...</p>
             </div>
@@ -216,7 +182,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
         <section className="section">
           <div className="confirmation-container">
             <div className="confirmation-content">
-              <div className="email-icon">⚠️</div>
               <h1 className="section-title">Verification Error</h1>
               <p>{error}</p>
               <div className="confirmation-actions">
@@ -251,7 +216,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
         <section className="section">
           <div className="confirmation-container">
             <div className="confirmation-content" style={{ maxWidth: "36rem", margin: "0 auto" }}>
-              <div className="email-icon">📧</div>
               <h1 className="section-title">Check Your Email</h1>
               {signupNotice && (
                 <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>{signupNotice}</p>
@@ -260,50 +224,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
                 We&apos;ve sent you a confirmation link. Please check your email and click the link to verify your
                 account.
               </p>
-
-              {billingInfo && (
-                <div
-                  style={{
-                    marginTop: "1.5rem",
-                    padding: "1rem 1.25rem",
-                    borderRadius: "12px",
-                    background: "var(--surface-elevated, rgba(0,0,0,0.04))",
-                    textAlign: "left",
-                  }}
-                >
-                  {signupCheckoutComplete ? (
-                    <>
-                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
-                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                        You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged until it
-                        ends. Manage your plan anytime in <strong>Settings</strong>.
-                      </p>
-                    </>
-                  ) : billingInfo.hasStripeConfig ? (
-                    <>
-                      <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
-                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                        After you verify your email, you can start or manage a plan (includes a free trial) from{" "}
-                        <strong>Settings</strong> when you&apos;re ready.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription setup</p>
-                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                        After you verify your email, subscription checkout isn&apos;t fully configured yet. You can finish setup
-                        later in <strong>Settings</strong>.
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {billingLoadError && (
-                <p style={{ marginTop: "1rem", color: "var(--text-medium, #666)", fontSize: "0.9375rem" }}>
-                  {billingLoadError}
-                </p>
-              )}
 
               <p style={{ marginTop: "1.5rem" }}>
                 <button type="button" className="btn btn-secondary" onClick={() => onNavigate("signin")}>

@@ -14,6 +14,9 @@ import {
 } from "../services/billingService";
 import { STANDARD_SUBSCRIPTION_CARD } from "../constants/subscriptionMarketing";
 import { SIGNUP_PLAN_STEP_SECTION } from "../constants/signupPlanStep";
+import {
+  STORAGE_POST_SIGNUP_EMAIL,
+} from "../lib/signupEmailFlow";
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
 const stripePromise = stripePublishableKey?.trim() ? loadStripe(stripePublishableKey.trim()) : null;
@@ -62,6 +65,11 @@ const SignUp: React.FC<SignUpProps> = ({
 
   /** Steps 1–3 = profile/account fields; step 4 = plan + single submit (signUp → Stripe when possible). */
   const LAST_FORM_STEP = 3;
+
+  const markPostSignupEmail = () => {
+    if (typeof sessionStorage === "undefined") return;
+    sessionStorage.setItem(STORAGE_POST_SIGNUP_EMAIL, "1");
+  };
 
   // Password validation checks
   const passwordChecks = {
@@ -129,26 +137,38 @@ const SignUp: React.FC<SignUpProps> = ({
       return;
     }
 
+    // Embedded checkout is required for this flow.
+    if (opts.skipCheckout) {
+      setCheckoutError("Embedded checkout is required to finish sign up.");
+      setLoading(false);
+      return;
+    }
+
     const checkoutAvailable =
       !!billingInfo &&
       billingInfo.hasStripeConfig &&
       hasBillingApiBaseUrl() &&
       (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
 
-    if (!opts.skipCheckout && checkoutAvailable) {
-      if (!selectedPlan) {
-        setError("Please select monthly or yearly to continue to checkout.");
-        setLoading(false);
-        return;
-      }
-      const planOk =
-        (selectedPlan === "monthly" && billingInfo.availablePlans.monthly) ||
-        (selectedPlan === "yearly" && billingInfo.availablePlans.yearly);
-      if (!planOk) {
-        setError("That plan isn't available right now.");
-        setLoading(false);
-        return;
-      }
+    if (!checkoutAvailable) {
+      setCheckoutError("Payment is not configured yet. Please try again shortly.");
+      setLoading(false);
+      return;
+    }
+
+    if (!selectedPlan) {
+      setError("Please select monthly or yearly to continue to checkout.");
+      setLoading(false);
+      return;
+    }
+
+    const planOk =
+      (selectedPlan === "monthly" && billingInfo.availablePlans.monthly) ||
+      (selectedPlan === "yearly" && billingInfo.availablePlans.yearly);
+    if (!planOk) {
+      setError("That plan isn't available right now.");
+      setLoading(false);
+      return;
     }
 
     const chosenCurrency =
@@ -176,6 +196,9 @@ const SignUp: React.FC<SignUpProps> = ({
       return;
     }
 
+    // Persist a flag so `/confirm-email` doesn't immediately bounce back to Home.
+    markPostSignupEmail();
+
     posthog?.capture("user_signed_up", {
       email,
       first_name: firstName,
@@ -189,11 +212,7 @@ const SignUp: React.FC<SignUpProps> = ({
 
     const canStartCheckout = !!session?.access_token || !!signedUpUser?.id;
 
-    const wantStripeRedirect =
-      !opts.skipCheckout &&
-      checkoutAvailable &&
-      selectedPlan &&
-      canStartCheckout;
+    const wantStripeRedirect = checkoutAvailable && selectedPlan && canStartCheckout;
 
     if (wantStripeRedirect && selectedPlan) {
       try {
@@ -844,14 +863,9 @@ const SignUp: React.FC<SignUpProps> = ({
                    </button>
                  )}
                  {!checkoutAvailable && !billingLoading && (
-                   <button
-                     type="button"
-                     className="btn btn-primary btn-large"
-                     disabled={loading}
-                     onClick={() => void handleCompleteSignup({ skipCheckout: true })}
-                   >
-                     {loading ? "Creating account…" : "Create account"}
-                   </button>
+                  <p style={{ color: "var(--text-medium, #666)", margin: 0, lineHeight: 1.4 }}>
+                    Embedded checkout isn&apos;t available yet. Please try again shortly.
+                  </p>
                  )}
                </div>
              </>
