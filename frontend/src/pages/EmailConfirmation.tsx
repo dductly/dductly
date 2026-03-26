@@ -225,11 +225,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
                 account.
               </p>
 
-              <p style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="btn btn-secondary" onClick={() => onNavigate("signin")}>
-                  Back to sign in
-                </button>
-              </p>
             </div>
           </div>
         </section>
