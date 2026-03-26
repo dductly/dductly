@@ -116,6 +116,15 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     handleEmailConfirmation();
   }, [user, refreshSession]);
 
+  // If the user is already verified (or verification just completed), go straight
+  // to the dashboard. This keeps email confirmation UX consistent with "old" behavior
+  // (no dedicated "Email Verified!" page).
+  useEffect(() => {
+    if (isVerified || user?.email_confirmed_at) {
+      onNavigate("home");
+    }
+  }, [isVerified, user?.email_confirmed_at, onNavigate]);
+
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const queryParams = new URLSearchParams(window.location.search);
@@ -142,24 +151,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
     pendingFromSignup,
     signupCheckoutComplete,
   ]);
-
-  if (isVerified || user?.email_confirmed_at) {
-    return (
-      <div className="page">
-        <section className="section">
-          <div className="confirmation-container">
-            <div className="confirmation-content success">
-              <h1 className="section-title">Email Verified!</h1>
-              <p>Your email has been successfully verified. You can now access all features of dductly.</p>
-              <button className="btn btn-primary" onClick={() => onNavigate("home")}>
-                Get Started
-              </button>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  }
 
   if (isVerifying) {
     return (
