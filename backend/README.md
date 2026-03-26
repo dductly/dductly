@@ -165,11 +165,9 @@ VITE_API_BASE_URL=http://localhost:3001
 
 ### Billing rollout threshold
 
-- Env: **`BILLING_USER_THRESHOLD`** (optional).
-- If **unset**: **development** defaults to **1** (easy testing); **production** defaults to **50**.
-- Set explicitly in any environment to override, e.g. `BILLING_USER_THRESHOLD=3`.
+Legacy rollout env: **`BILLING_USER_THRESHOLD`** (optional).
 
-`POST /api/stripe/create-checkout-session` uses the same threshold as `/api/billing/config`.
+Checkout is no longer gated on profile count, but this env var is kept for backward compatibility.
 
 **Checkout body:** `{ "email": "user@example.com", "plan": "monthly" | "yearly" }` (`plan` defaults to `monthly` if omitted).
 
@@ -178,7 +176,7 @@ VITE_API_BASE_URL=http://localhost:3001
 ### Billing
 
 #### GET `/api/billing/config`
-Public. Returns rollout status and profile count used for signup messaging and gating.
+Public. Returns rollout status used for signup messaging plus Stripe availability.
 
 **Response (example):**
 ```json

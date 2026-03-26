@@ -271,30 +271,28 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
                     textAlign: "left",
                   }}
                 >
-                  {billingInfo.billingEnabled ? (
-                    signupCheckoutComplete ? (
-                      <>
-                        <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
-                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                          You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged
-                          until it ends. Manage your plan anytime in <strong>Settings</strong>.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
-                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                          After you verify your email, you can start or manage a plan (includes a free trial) from{" "}
-                          <strong>Settings</strong> when you&apos;re ready.
-                        </p>
-                      </>
-                    )
+                  {signupCheckoutComplete ? (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
+                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                        You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged until it
+                        ends. Manage your plan anytime in <strong>Settings</strong>.
+                      </p>
+                    </>
+                  ) : billingInfo.hasStripeConfig ? (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
+                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                        After you verify your email, you can start or manage a plan (includes a free trial) from{" "}
+                        <strong>Settings</strong> when you&apos;re ready.
+                      </p>
+                    </>
                   ) : (
                     <>
-                      <p style={{ margin: 0, fontWeight: 600 }}>You&apos;re in early</p>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription setup</p>
                       <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                        Paid plans unlock once we reach <strong>{billingInfo.userThreshold}</strong> members. We&apos;re
-                        at <strong>{billingInfo.userCount}</strong> so far — thanks for helping us grow.
+                        After you verify your email, subscription checkout isn&apos;t fully configured yet. You can finish setup
+                        later in <strong>Settings</strong>.
                       </p>
                     </>
                   )}

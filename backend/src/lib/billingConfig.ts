@@ -1,9 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
- * User count required before paid checkout is allowed.
- * - Set BILLING_USER_THRESHOLD explicitly to override.
- * - If unset: production defaults to 50; non-production defaults to 1 (easier local/staging tests).
+ * Legacy billing rollout threshold.
+ * Checkout is no longer gated on profile count, but this helper remains for backward compatibility.
  */
 export const getBillingUserThreshold = (): number => {
   const raw = process.env.BILLING_USER_THRESHOLD;
@@ -13,7 +12,7 @@ export const getBillingUserThreshold = (): number => {
       return n;
     }
   }
-  return process.env.NODE_ENV === 'production' ? 50 : 1;
+  return 0;
 };
 
 export const getStripePriceAvailability = (): { monthly: boolean; yearly: boolean } => ({

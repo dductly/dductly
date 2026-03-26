@@ -2,7 +2,6 @@ import express, { Response } from "express";
 import Stripe from "stripe";
 import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "../middleware/auth";
 import supabase from "../lib/supabaseClient";
-import { getBillingUserThreshold, getProfileUserCount } from "../lib/billingConfig";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
@@ -47,22 +46,18 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
       });
     }
 
-    const userThreshold = getBillingUserThreshold();
-    const userCount = await getProfileUserCount(supabase);
-    if (userCount < userThreshold) {
-      return res.status(403).json({
-        error: "Billing Not Enabled",
-        message: `Paid checkout unlocks after ${userThreshold} members`,
-        userCount,
-        userThreshold,
-      });
-    }
+    // Base URL for Stripe redirects (embedded return_url + success/cancel).
+    // In development, always prefer FRONTEND_URL so local testing doesn't bounce to production.
+    const clientBase = (
+      process.env.NODE_ENV !== "production" ? process.env.FRONTEND_URL : process.env.CLIENT_URL
+    )?.replace(/\/$/, "");
 
-    const clientBase = (process.env.CLIENT_URL || "").replace(/\/$/, "");
-    if (!clientBase) {
+    const clientBaseFallback = (process.env.CLIENT_URL || process.env.FRONTEND_URL || "").replace(/\/$/, "");
+    const resolvedClientBase = clientBase || clientBaseFallback;
+    if (!resolvedClientBase) {
       return res.status(500).json({
         error: "Configuration Error",
-        message: "CLIENT_URL is required for checkout",
+        message: "CLIENT_URL or FRONTEND_URL is required for checkout",
       });
     }
 
@@ -100,10 +95,11 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
 
     if (embedded) {
       sessionParams.ui_mode = "embedded";
-      sessionParams.return_url = `${clientBase}/signup?stripe_session_id={CHECKOUT_SESSION_ID}`;
+      // Land directly on email verification after embedded checkout finishes.
+      sessionParams.return_url = `${resolvedClientBase}/confirm-email`;
     } else {
-      sessionParams.success_url = `${clientBase}/success`;
-      sessionParams.cancel_url = `${clientBase}/cancel`;
+      sessionParams.success_url = `${resolvedClientBase}/confirm-email`;
+      sessionParams.cancel_url = `${resolvedClientBase}/confirm-email`;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

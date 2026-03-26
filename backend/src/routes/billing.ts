@@ -1,8 +1,5 @@
 import express from 'express';
-import supabase from '../lib/supabaseClient';
 import {
-  getBillingUserThreshold,
-  getProfileUserCount,
   getStripePriceAvailability,
 } from '../lib/billingConfig';
 import { getStripe } from '../services/stripeService';
@@ -15,9 +12,6 @@ const router = express.Router();
  */
 router.get('/config', async (_req, res) => {
   try {
-    const userThreshold = getBillingUserThreshold();
-    const userCount = await getProfileUserCount(supabase);
-    const billingEnabled = userCount >= userThreshold;
     const stripe = getStripe();
     const availablePlans = getStripePriceAvailability();
     const hasStripeConfig = Boolean(
@@ -25,9 +19,10 @@ router.get('/config', async (_req, res) => {
     );
 
     res.json({
-      billingEnabled,
-      userCount,
-      userThreshold,
+      // Paid checkout availability should depend on Stripe configuration, not profile count.
+      billingEnabled: true,
+      userCount: 0,
+      userThreshold: 0,
       hasStripeConfig,
       availablePlans,
     });

@@ -131,7 +131,6 @@ const SignUp: React.FC<SignUpProps> = ({
 
     const checkoutAvailable =
       !!billingInfo &&
-      billingInfo.billingEnabled &&
       billingInfo.hasStripeConfig &&
       hasBillingApiBaseUrl() &&
       (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
@@ -257,8 +256,6 @@ const SignUp: React.FC<SignUpProps> = ({
           setBillingInfo(config);
           posthog?.capture("signup_billing_rollout_loaded", {
             billing_enabled: config.billingEnabled,
-            user_count: config.userCount,
-            user_threshold: config.userThreshold,
             has_stripe_config: config.hasStripeConfig,
           });
         }
@@ -275,7 +272,7 @@ const SignUp: React.FC<SignUpProps> = ({
   }, [success, currentStep, posthog]);
 
   useEffect(() => {
-    if (!billingInfo?.billingEnabled) return;
+    if (!billingInfo) return;
     const { monthly, yearly } = billingInfo.availablePlans;
     if (monthly && !yearly) setSelectedPlan("monthly");
     else if (!monthly && yearly) setSelectedPlan("yearly");
@@ -305,7 +302,6 @@ const SignUp: React.FC<SignUpProps> = ({
     !billingLoadError;
   const checkoutAvailable =
     !!billingInfo &&
-    billingInfo.billingEnabled &&
     billingInfo.hasStripeConfig &&
     hasBillingApiBaseUrl() &&
     (billingInfo.availablePlans.monthly || billingInfo.availablePlans.yearly);
@@ -336,30 +332,28 @@ const SignUp: React.FC<SignUpProps> = ({
                     marginRight: "auto",
                   }}
                 >
-                  {billingInfo.billingEnabled ? (
-                    completedSignupPayment ? (
-                      <>
-                        <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
-                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                          You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged
-                          until it ends. Manage your plan anytime in <strong>Settings</strong>.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
-                        <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                          After you verify your email, you can start a plan (includes a free trial) from{" "}
-                          <strong>Settings</strong> when you&apos;re ready.
-                        </p>
-                      </>
-                    )
+                  {completedSignupPayment ? (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription</p>
+                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                        You&apos;re on a <strong>{DISPLAY_TRIAL_DAYS}-day free trial</strong>. You won&apos;t be charged until it
+                        ends. Manage your plan anytime in <strong>Settings</strong>.
+                      </p>
+                    </>
+                  ) : billingInfo.hasStripeConfig ? (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscriptions</p>
+                      <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
+                        After you verify your email, you can start a plan (includes a free trial) from <strong>Settings</strong>{" "}
+                        when you&apos;re ready.
+                      </p>
+                    </>
                   ) : (
                     <>
-                      <p style={{ margin: 0, fontWeight: 600 }}>You&apos;re in early</p>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Subscription setup</p>
                       <p style={{ margin: "0.5rem 0 0", color: "var(--text-medium, #555)" }}>
-                        Paid plans unlock once we reach <strong>{billingInfo.userThreshold}</strong> members. We&apos;re at{" "}
-                        <strong>{billingInfo.userCount}</strong> so far — thanks for helping us grow.
+                        After you verify your email, subscription checkout isn&apos;t fully configured yet. You can finish setup
+                        later in <strong>Settings</strong>.
                       </p>
                     </>
                   )}
@@ -774,14 +768,7 @@ const SignUp: React.FC<SignUpProps> = ({
                  <p style={{ color: "var(--text-medium, #666)", marginBottom: "1rem" }}>{billingLoadError}</p>
                )}
 
-               {billingInfo && !billingInfo.billingEnabled && (
-                 <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
-                   Paid plans unlock at <strong>{billingInfo.userThreshold}</strong> members (currently{" "}
-                   <strong>{billingInfo.userCount}</strong>). You can subscribe later from Settings.
-                 </p>
-               )}
-
-               {billingInfo?.billingEnabled && !billingInfo.hasStripeConfig && (
+               {billingInfo && !billingInfo.hasStripeConfig && (
                  <p style={{ color: "var(--text-medium, #555)", marginBottom: "1rem" }}>
                    Subscription checkout isn&apos;t fully configured yet. You can finish setup later in{" "}
                    <strong>Settings</strong>.
