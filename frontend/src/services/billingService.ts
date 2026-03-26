@@ -95,3 +95,49 @@ export const createCheckoutSession = async (
   }
   return { embedded: false, url };
 };
+
+export const cancelSubscription = async (accessToken: string): Promise<void> => {
+  if (!API_BASE_URL?.trim()) {
+    throw new Error("Missing VITE_API_BASE_URL");
+  }
+  if (!accessToken) {
+    throw new Error("Missing access token");
+  }
+  const base = API_BASE_URL.replace(/\/$/, "");
+  const response = await fetch(`${base}/api/stripe/cancel-subscription`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((body as { message?: string }).message || "Failed to cancel subscription");
+  }
+};
+
+export const cleanupBilling = async (accessToken: string): Promise<void> => {
+  if (!API_BASE_URL?.trim()) {
+    throw new Error("Missing VITE_API_BASE_URL");
+  }
+  if (!accessToken) {
+    throw new Error("Missing access token");
+  }
+  const base = API_BASE_URL.replace(/\/$/, "");
+  const response = await fetch(`${base}/api/stripe/cleanup-billing`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((body as { message?: string }).message || "Failed to clean up billing");
+  }
+};
+
+// (Removed) requestAccountDeletion: immediate export + delete flow now.

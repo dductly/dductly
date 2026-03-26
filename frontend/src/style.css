@@ -4651,6 +4651,22 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+.settings-soft-btn {
+  background: var(--pale-blue);
+  color: var(--deep-blue);
+  border: 1px solid var(--blue-gray);
+}
+
+.settings-soft-btn:hover:not(:disabled) {
+  background: var(--light-blue);
+  border-color: var(--deep-blue);
+}
+
+.settings-soft-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .edit-icon {
   width: 18px;
   height: 18px;
