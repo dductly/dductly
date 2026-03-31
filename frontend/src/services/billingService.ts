@@ -1,9 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
 export interface PublicBillingConfig {
-  billingEnabled: boolean;
-  userCount: number;
-  userThreshold: number;
   hasStripeConfig: boolean;
   availablePlans: {
     monthly: boolean;

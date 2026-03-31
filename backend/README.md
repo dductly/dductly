@@ -163,12 +163,6 @@ After sign-up, the app calls **`GET /api/billing/config`** if `VITE_API_BASE_URL
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-### Billing rollout threshold
-
-Legacy rollout env: **`BILLING_USER_THRESHOLD`** (optional).
-
-Checkout is no longer gated on profile count, but this env var is kept for backward compatibility.
-
 **Checkout body:** `{ "email": "user@example.com", "plan": "monthly" | "yearly" }` (`plan` defaults to `monthly` if omitted).
 
 ## API Endpoints
@@ -176,14 +170,11 @@ Checkout is no longer gated on profile count, but this env var is kept for backw
 ### Billing
 
 #### GET `/api/billing/config`
-Public. Returns rollout status used for signup messaging plus Stripe availability.
+Public. Returns Stripe checkout availability for signup (price IDs + Stripe client).
 
 **Response (example):**
 ```json
 {
-  "billingEnabled": true,
-  "userCount": 12,
-  "userThreshold": 1,
   "hasStripeConfig": true,
   "availablePlans": { "monthly": true, "yearly": true }
 }

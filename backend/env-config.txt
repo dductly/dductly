@@ -21,10 +21,6 @@ STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id_here
 STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id_here
 STRIPE_TRIAL_DAYS=14
 
-# Legacy: Paid checkout unlocks after this many profiles exist.
-# Checkout is no longer gated on this value, but the env var is kept for backward compatibility.
-# BILLING_USER_THRESHOLD=0
-
 # To create the .env file, run this command from the dductly directory:
 # cat backend/env-config.txt | grep -v '^#' | grep -v '^$' | grep -v '^To create' > backend/.env
 

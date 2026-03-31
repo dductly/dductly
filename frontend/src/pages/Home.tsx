@@ -1,85 +1,11 @@
 import React from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabaseClient";
-import { useEffect, useState, useRef } from "react";
 import { STANDARD_SUBSCRIPTION_CARD, SUBSCRIPTION_PLANS_SECTION } from "../constants/subscriptionMarketing";
 
 interface HomeProps {
   onNavigate?: (page: string) => void;
 }
 
-const UserCountRealtime: React.FC = () => {
-  const [count, setCount] = useState<number | null>(null);
-  const [error, setError] = useState(false);
-  const channelRef = useRef<RealtimeChannel | null>(null);
-
-  const fetchCount = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_user_count');
-
-      if (error) {
-        console.error('Failed to fetch user count:', error);
-        setError(true);
-        setCount(0);
-        return;
-      }
-
-      const countValue = typeof data === 'number' ? data : 0;
-      setCount(countValue);
-      setError(false);
-    } catch (err: unknown) {
-      console.error('UserCount fetch error', err);
-      setError(true);
-      setCount(0);
-    }
-  };
-
-  useEffect(() => {
-    fetchCount();
-
-    try {
-      const channel = supabase.channel('public:user-events', {
-        config: { broadcast: { self: true } }
-      });
-      channelRef.current = channel;
-
-      channel.on('broadcast', { event: 'user_signed_in' }, () => {
-        fetchCount();
-      });
-
-      channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to user-events channel');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Channel subscription error');
-        }
-      });
-    } catch (err) {
-      console.error('Failed to set up realtime channel:', err);
-    }
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, []);
-
-  if (count === null && !error) {
-    return <span className="counter-text" style={{ color: 'var(--deep-blue)', fontSize: '2.5rem', fontWeight: 'bold' }}>Loading…</span>;
-  }
-
-  return (
-    <span className="counter-text" style={{ color: 'var(--deep-blue)', fontSize: '2.5rem', fontWeight: 'bold' }}>
-      {count ?? 0} / 50
-    </span>
-  );
-};
-
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-  const FREE_TIER_LIMIT = 50;
-
   return (
     <section id="home" className="hero">
       <div className="hero-left">

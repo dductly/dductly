@@ -274,7 +274,6 @@ const SignUp: React.FC<SignUpProps> = ({
         if (!cancelled) {
           setBillingInfo(config);
           posthog?.capture("signup_billing_rollout_loaded", {
-            billing_enabled: config.billingEnabled,
             has_stripe_config: config.hasStripeConfig,
           });
         }

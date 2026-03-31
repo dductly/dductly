@@ -19,10 +19,6 @@ router.get('/config', async (_req, res) => {
     );
 
     res.json({
-      // Paid checkout availability should depend on Stripe configuration, not profile count.
-      billingEnabled: true,
-      userCount: 0,
-      userThreshold: 0,
       hasStripeConfig,
       availablePlans,
     });
