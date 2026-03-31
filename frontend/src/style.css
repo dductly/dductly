@@ -694,7 +694,7 @@
     border-radius: 20px;
     overflow:hidden;
     box-shadow: 0 12px 40px rgba(168, 197, 232, 0.2);
-    background: var(--peach-blossom);
+    background: var(--white);
     display:grid; 
     place-items:center;
     padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 40px) clamp(12px, 1.5vw, 20px) clamp(24px, 3vw, 40px); 
@@ -930,35 +930,32 @@
   }
 
   .subscription-plan.disabled {
-    opacity: 0.75;
-    background: rgba(245, 245, 245, 0.9);
-    border-color: rgba(200, 200, 200, 0.7);
-    cursor: not-allowed;
+    /* Keep layout/semantics, but match normal card styling */
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid var(--sunflower-yellow);
+    cursor: default;
     position: relative;
   }
 
   .subscription-plan.disabled::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    z-index: 1;
-    pointer-events: all;
+    /* Remove the greyed-out overlay tint */
+    content: none;
   }
 
   .subscription-plan.disabled:hover {
-    transform: none;
-    box-shadow: 0 4px 15px rgba(168, 197, 232, 0.2);
-    border-color: rgba(200, 200, 200, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(168, 197, 232, 0.4);
+    border-color: var(--primary-purple);
   }
 
   .subscription-plan.disabled h3 {
-    color: var(--text-dark);
-    opacity: 0.9;
+    color: var(--market-brown);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-shadow: 1px 1px 2px rgba(168, 197, 232, 0.2);
+    opacity: 1;
     position: relative;
     z-index: 0;
   }
@@ -1027,7 +1024,7 @@
   }
 
   .subscription-pricing {
-    margin: 12px 0 8px 0;
+    margin: 12px 0 20px 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1181,7 +1178,8 @@
       max-width: 190px;
     }
 
-    .subscription-plan h3 {
+    .subscription-plan h3,
+    .subscription-plan.disabled h3 {
       font-size: 1rem;
     }
 
