@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT NOT NULL,
   first_name TEXT,
   last_name TEXT,
+  subscription TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

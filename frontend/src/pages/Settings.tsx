@@ -9,7 +9,16 @@ import editIcon from "../img/pencil-edit.svg";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
 import { supabase } from "../lib/supabaseClient";
-import { STANDARD_SUBSCRIPTION_CARD } from "../constants/subscriptionMarketing";
+import {
+  FREE_FOR_LIFE_DISPLAY_NAME,
+  PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE,
+  STANDARD_SUBSCRIPTION_CARD,
+} from "../constants/subscriptionMarketing";
+
+function isProfileFreeForLifeTier(tier: string | null | undefined): boolean {
+  if (tier == null || tier === "") return false;
+  return tier.trim().toLowerCase() === PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE;
+}
 import { cleanupBilling } from "../services/billingService";
 
 const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
@@ -147,6 +156,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const [subscription, setSubscription] = useState<any | null>(null);
   const [, setSubscriptionLoading] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  /** Value from `profiles.subscription` (e.g. `free_for_life`). */
+  const [profileSubscription, setProfileSubscription] = useState<string | null>(null);
   const [cancelingSubscription, setCancelingSubscription] = useState(false);
   const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(null);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
@@ -158,20 +169,31 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       setSubscriptionLoading(true);
       setSubscriptionError(null);
       setSubscription(null);
+      setProfileSubscription(null);
 
-      const { data, error } = await supabase
-        .from("billing_subscriptions")
-        .select(
-          "user_id,stripe_customer_id,stripe_subscription_id,status,plan,price_id,current_period_end,trial_end,cancel_at_period_end,canceled_at,updated_at"
-        )
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [subResult, profileResult] = await Promise.all([
+        supabase
+          .from("billing_subscriptions")
+          .select(
+            "user_id,stripe_customer_id,stripe_subscription_id,status,plan,price_id,current_period_end,trial_end,cancel_at_period_end,canceled_at,updated_at"
+          )
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase.from("profiles").select("subscription").eq("id", user.id).maybeSingle(),
+      ]);
 
-      if (error) {
-        setSubscriptionError(error.message);
+      if (subResult.error) {
+        setSubscriptionError(subResult.error.message);
         setSubscription(null);
       } else {
-        setSubscription(data);
+        setSubscription(subResult.data);
+      }
+
+      if (profileResult.error) {
+        console.warn("profiles.subscription:", profileResult.error.message);
+        setProfileSubscription(null);
+      } else {
+        setProfileSubscription(profileResult.data?.subscription ?? null);
       }
 
       setSubscriptionLoading(false);
@@ -202,6 +224,16 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       : billingCadence === "monthly"
         ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price} ${STANDARD_SUBSCRIPTION_CARD.monthly.period} ${STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}`
         : "-";
+
+  const isFreeForLifeFromProfile = isProfileFreeForLifeTier(profileSubscription);
+  const subscriptionDisplayTitle = isFreeForLifeFromProfile
+    ? FREE_FOR_LIFE_DISPLAY_NAME
+    : billingCadence
+      ? `${standardTitle} — billed ${billingCadence}`
+      : standardTitle;
+  const priceDisplay = isFreeForLifeFromProfile ? "Free" : priceLabel;
+  const billingStatusRowLabel = isFreeForLifeFromProfile ? "Billing" : cadenceLabel;
+  const billingStatusRowValue = isFreeForLifeFromProfile ? "—" : billingLabel;
 
   const estimatedTrialEnd =
     subscription?.trial_end ??
@@ -592,19 +624,17 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
               <div className="settings-card-content">
                 <div className="settings-row">
                   <span className="settings-label">Subscription</span>
-                  <span className="settings-value">
-                    {billingCadence ? `${standardTitle} — billed ${billingCadence}` : standardTitle}
-                  </span>
+                  <span className="settings-value">{subscriptionDisplayTitle}</span>
                 </div>
                 <div className="settings-row">
                   <span className="settings-label">Price</span>
-                  <span className="settings-value">{priceLabel}</span>
+                  <span className="settings-value">{priceDisplay}</span>
                 </div>
                 <div className="settings-row">
-                  <span className="settings-label">{cadenceLabel}</span>
-                  <span className="settings-value">{billingLabel}</span>
+                  <span className="settings-label">{billingStatusRowLabel}</span>
+                  <span className="settings-value">{billingStatusRowValue}</span>
                 </div>
-                {activeTrialEnd && (
+                {activeTrialEnd && !isFreeForLifeFromProfile && (
                   <div className="settings-row" style={{ alignItems: "center" }}>
                     <span className="settings-label">Free trial ends on</span>
                     <span
