@@ -8,13 +8,27 @@ import { TIMEOUT_OPTIONS } from "../contexts/InactivityContext";
 import editIcon from "../img/pencil-edit.svg";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
+import { supabase } from "../lib/supabaseClient";
+import {
+  FREE_FOR_LIFE_DISPLAY_NAME,
+  PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE,
+  STANDARD_SUBSCRIPTION_CARD,
+} from "../constants/subscriptionMarketing";
+
+function isProfileFreeForLifeTier(tier: string | null | undefined): boolean {
+  if (tier == null || tier === "") return false;
+  return tier.trim().toLowerCase() === PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE;
+}
+import { cleanupBilling } from "../services/billingService";
+
+const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
 
 interface SettingsProps {
   onNavigate: (page: string) => void;
 }
 
 const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
-  const { user, updateProfile, updateAutoLogoutTimeout, updatePassword, refreshSession, signOut } = useAuth();
+  const { user, session, updateProfile, updateAutoLogoutTimeout, updatePassword, refreshSession, signOut } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { currentTimeoutMinutes } = useInactivity();
   const { expenses } = useExpenses();
@@ -38,6 +52,19 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     setDeleteError(null);
 
     try {
+      // If this deletion was initiated from the "cancel free trial" flow,
+      // remove billing info from Stripe first (best-effort).
+      if (cancelFlowExportThenDelete) {
+        const token = session?.access_token;
+        if (token) {
+          try {
+            await cleanupBilling(token);
+          } catch (e) {
+            console.warn("Stripe cleanup failed:", e);
+          }
+        }
+      }
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_PUBLIC_KEY as string;
 
@@ -72,11 +99,23 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     }
   };
 
+  const openDeleteModalForCancelFlow = () => {
+    setIsExporting(false);
+    setCancelConfirmOpen(false);
+    setCancelSubscriptionError(null);
+    setDeleteError(null);
+    // Prefill a reason but still require the user to type DELETE.
+    setDeleteReason("Canceled free trial and exported data");
+    setDeleteConfirmText("");
+    setIsDeleting(true);
+  };
+
   const handleCloseDelete = () => {
     setIsDeleting(false);
     setDeleteConfirmText("");
     setDeleteReason("");
     setDeleteError(null);
+    setCancelFlowExportThenDelete(false);
   };
 
   // Export modal state
@@ -98,16 +137,118 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     setExportSelections({ expenses: false, income: false, statistics: false });
   };
 
-  const downloadSelected = () => {
+  const downloadSelected = async () => {
     if (exportSelections.expenses) exportExpenses();
     if (exportSelections.income) exportIncome();
     if (exportSelections.statistics) exportStatistics();
     handleCloseExport();
+
+    // If the user initiated "cancel during trial", show the standard delete modal next.
+    if (cancelFlowExportThenDelete) {
+      openDeleteModalForCancelFlow();
+    }
   };
 
   // Get business name for filenames
   const businessName = user?.user_metadata?.business_name || "MyBusiness";
   const sanitizedBusinessName = businessName.replace(/[^a-zA-Z0-9]/g, "_");
+
+  const [subscription, setSubscription] = useState<any | null>(null);
+  const [, setSubscriptionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  /** Value from `profiles.subscription` (e.g. `free_for_life`). */
+  const [profileSubscription, setProfileSubscription] = useState<string | null>(null);
+  const [cancelingSubscription, setCancelingSubscription] = useState(false);
+  const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(null);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelFlowExportThenDelete, setCancelFlowExportThenDelete] = useState(false);
+
+  React.useEffect(() => {
+    const run = async () => {
+      if (!user?.id) return;
+      setSubscriptionLoading(true);
+      setSubscriptionError(null);
+      setSubscription(null);
+      setProfileSubscription(null);
+
+      const [subResult, profileResult] = await Promise.all([
+        supabase
+          .from("billing_subscriptions")
+          .select(
+            "user_id,stripe_customer_id,stripe_subscription_id,status,plan,price_id,current_period_end,trial_end,cancel_at_period_end,canceled_at,updated_at"
+          )
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase.from("profiles").select("subscription").eq("id", user.id).maybeSingle(),
+      ]);
+
+      if (subResult.error) {
+        setSubscriptionError(subResult.error.message);
+        setSubscription(null);
+      } else {
+        setSubscription(subResult.data);
+      }
+
+      if (profileResult.error) {
+        console.warn("profiles.subscription:", profileResult.error.message);
+        setProfileSubscription(null);
+      } else {
+        setProfileSubscription(profileResult.data?.subscription ?? null);
+      }
+
+      setSubscriptionLoading(false);
+    };
+
+    void run();
+  }, [user?.id]);
+
+  const formatDate = (value: string | null | undefined) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString();
+  };
+
+  const billingLabel = subscription?.status
+    ? `Stripe (${subscription.status})`
+    : subscriptionError
+      ? "Stripe (unavailable)"
+      : "Stripe";
+
+  const billingCadence = subscription?.plan === "yearly" ? "yearly" : subscription?.plan === "monthly" ? "monthly" : null;
+  const cadenceLabel = billingCadence ? `Billed ${billingCadence}` : "Billing";
+  const standardTitle = STANDARD_SUBSCRIPTION_CARD.title;
+  const priceLabel =
+    billingCadence === "yearly"
+      ? `${STANDARD_SUBSCRIPTION_CARD.yearly.price} ${STANDARD_SUBSCRIPTION_CARD.yearly.period} ${STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}`
+      : billingCadence === "monthly"
+        ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price} ${STANDARD_SUBSCRIPTION_CARD.monthly.period} ${STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}`
+        : "-";
+
+  const isFreeForLifeFromProfile = isProfileFreeForLifeTier(profileSubscription);
+  const subscriptionDisplayTitle = isFreeForLifeFromProfile
+    ? FREE_FOR_LIFE_DISPLAY_NAME
+    : billingCadence
+      ? `${standardTitle} — billed ${billingCadence}`
+      : standardTitle;
+  const priceDisplay = isFreeForLifeFromProfile ? "Free" : priceLabel;
+  const billingStatusRowLabel = isFreeForLifeFromProfile ? "Billing" : cadenceLabel;
+  const billingStatusRowValue = isFreeForLifeFromProfile ? "—" : billingLabel;
+
+  const estimatedTrialEnd =
+    subscription?.trial_end ??
+    (subscription?.status === "pending" && subscription?.updated_at
+      ? new Date(new Date(subscription.updated_at).getTime() + DISPLAY_TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
+      : null);
+
+  const activeTrialEnd = (() => {
+    if (!estimatedTrialEnd) return null;
+    const d = new Date(estimatedTrialEnd);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.getTime() > Date.now() ? d.toISOString() : null;
+  })();
+
+  const canCancelNow = !Boolean(subscription?.cancel_at_period_end);
 
   // Format date for filenames
   const getDateString = () => {
@@ -472,6 +613,100 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   <span className="settings-label">Platforms & Locations</span>
                   <span className="settings-value">{user?.user_metadata?.farmers_markets || '-'}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Subscription (visual-only) */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <h2 className="settings-card-title">Subscription</h2>
+              </div>
+              <div className="settings-card-content">
+                <div className="settings-row">
+                  <span className="settings-label">Subscription</span>
+                  <span className="settings-value">{subscriptionDisplayTitle}</span>
+                </div>
+                <div className="settings-row">
+                  <span className="settings-label">Price</span>
+                  <span className="settings-value">{priceDisplay}</span>
+                </div>
+                <div className="settings-row">
+                  <span className="settings-label">{billingStatusRowLabel}</span>
+                  <span className="settings-value">{billingStatusRowValue}</span>
+                </div>
+                {activeTrialEnd && !isFreeForLifeFromProfile && (
+                  <div className="settings-row" style={{ alignItems: "center" }}>
+                    <span className="settings-label">Free trial ends on</span>
+                    <span
+                      className="settings-value"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "0.75rem",
+                        width: "100%",
+                      }}
+                    >
+                      <span>{formatDate(activeTrialEnd)}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto" }}>
+                        {!cancelConfirmOpen ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-small settings-danger-btn"
+                            onClick={() => setCancelConfirmOpen(true)}
+                          disabled={!canCancelNow || cancelingSubscription}
+                          >
+                            Cancel free trial
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-small settings-danger-btn"
+                            disabled={!canCancelNow || cancelingSubscription}
+                              onClick={async () => {
+                                try {
+                                  setCancelSubscriptionError(null);
+                                  setCancelingSubscription(true);
+                                  const token = session?.access_token;
+                                  if (!token) throw new Error("Missing session");
+
+                                // Start export->delete flow. Stripe cleanup happens right before deletion.
+                                  setCancelFlowExportThenDelete(true);
+                                  setIsExporting(true);
+
+                                  setCancelConfirmOpen(false);
+                                } catch (e) {
+                                  setCancelSubscriptionError(
+                                    e instanceof Error ? e.message : "Failed to cancel free trial"
+                                  );
+                                } finally {
+                                  setCancelingSubscription(false);
+                                }
+                              }}
+                            >
+                              {cancelingSubscription ? "Canceling…" : "Are you sure?"}
+                            </button>
+                            <button
+                              type="button"
+                            className="btn btn-small settings-soft-btn"
+                              onClick={() => setCancelConfirmOpen(false)}
+                              disabled={cancelingSubscription}
+                            >
+                              Keep trial
+                            </button>
+                          </>
+                        )}
+                      </span>
+                    </span>
+                  </div>
+                )}
+
+                {cancelSubscriptionError && (
+                  <div className="settings-hint" style={{ color: "var(--text-medium, #666)" }}>
+                    {cancelSubscriptionError}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -922,13 +1157,19 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
               <button className="btn btn-secondary" onClick={handleCloseExport}>
                 Cancel
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={downloadSelected}
-                disabled={!hasExportSelection}
-              >
-                Download Selected
-              </button>
+              {cancelFlowExportThenDelete && !hasExportSelection ? (
+                <button className="btn btn-primary" onClick={openDeleteModalForCancelFlow}>
+                  Continue to delete
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  onClick={downloadSelected}
+                  disabled={!hasExportSelection}
+                >
+                  Download Selected
+                </button>
+              )}
             </div>
           </div>
         </div>

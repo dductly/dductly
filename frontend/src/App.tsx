@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Home from "./pages/Home";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
@@ -298,15 +298,26 @@ const getInitialPage = () => {
   ) {
     return 'confirm-email';
   }
+  if (queryParams.get('stripe_session_id')) {
+    return 'signup';
+  }
   return page;
 };
 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(getInitialPage);
+  const [stripeSignupReturnSessionId, setStripeSignupReturnSessionId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("stripe_session_id");
+  });
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<'tos' | 'privacy' | 'faq' | 'guide' | null>(null);
   const { loading, user } = useAuth();
   const { showWarning, remainingSeconds, resetActivity } = useInactivity();
+
+  const clearStripeSignupReturn = useCallback(() => {
+    setStripeSignupReturnSessionId(null);
+  }, []);
 
   useEffect(() => {
     console.log('[AppContent] showWarning changed to:', showWarning, 'user:', !!user);
@@ -355,6 +366,7 @@ const AppContent: React.FC = () => {
     const hasRecoveryToken =
       (hashParams.get('access_token') && hashParams.get('type') === 'recovery') ||
       (queryParams.get('token') && queryParams.get('type') === 'recovery');
+    const stripeCheckoutReturnId = queryParams.get("stripe_session_id");
 
     // Set initial state from URL on page load/refresh
     const currentPath = window.location.pathname;
@@ -367,6 +379,8 @@ const AppContent: React.FC = () => {
     // If we have confirmation tokens, route to confirm-email page (even if path is /)
     else if (hasConfirmationToken) {
       initialPage = 'confirm-email';
+    } else if (stripeCheckoutReturnId) {
+      initialPage = 'signup';
     }
     
     console.log('[History] Initial setup, path:', currentPath, 'page:', initialPage);
@@ -377,7 +391,13 @@ const AppContent: React.FC = () => {
     }
 
     // Use appropriate URL when we have tokens so the path is valid and refresh works
-    const pathForHistory = hasRecoveryToken ? '/reset-password' : hasConfirmationToken ? '/confirm-email' : currentPath;
+    const pathForHistory = hasRecoveryToken
+      ? '/reset-password'
+      : hasConfirmationToken
+        ? '/confirm-email'
+        : stripeCheckoutReturnId
+          ? '/signup'
+          : currentPath;
     if (!window.history.state) {
       window.history.replaceState({ page: initialPage }, '', pathForHistory);
     }
@@ -389,6 +409,9 @@ const AppContent: React.FC = () => {
 
   const handleNavigate = (page: string) => {
     console.log('[History] Navigating from', currentPage, 'to', page);
+    if (page !== "signup") {
+      setStripeSignupReturnSessionId(null);
+    }
     setCurrentPage(page);
     // Add to browser history
     const url = page === 'home' ? '/' : `/${page}`;
@@ -412,11 +435,16 @@ const AppContent: React.FC = () => {
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
       case 'signup':
-        // Redirect to dashboard if already signed in
-        if (user) {
+        if (user && !stripeSignupReturnSessionId) {
           return <Dashboard onNavigate={handleNavigate} onFaqClick={() => setLegalModal('faq')} onUserGuideClick={() => setLegalModal('guide')} />;
         }
-        return <SignUp onNavigate={handleNavigate} />;
+        return (
+          <SignUp
+            onNavigate={handleNavigate}
+            stripeCheckoutReturnSessionId={stripeSignupReturnSessionId}
+            onStripeCheckoutReturnHandled={clearStripeSignupReturn}
+          />
+        );
       case 'confirm-email':
         return <EmailConfirmation onNavigate={handleNavigate} />;
       case 'forgot-password':

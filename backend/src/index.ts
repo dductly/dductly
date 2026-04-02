@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
+import stripeRoutes from "./routes/stripeRoutes";
+import webhookRoutes from "./routes/webhookRoutes";
+import billingRoutes from "./routes/billing";
 
 dotenv.config();
 
@@ -18,6 +21,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(morgan('dev'));
+app.use('/api/stripe', webhookRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +33,8 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/stripe', stripeRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

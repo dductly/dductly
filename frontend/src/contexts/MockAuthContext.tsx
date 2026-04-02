@@ -21,7 +21,7 @@ interface AuthContextType {
   user: User | null;
   session: { user: User } | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null; session: null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
@@ -67,7 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           message: 'User already registered',
           name: 'AuthError',
           status: 400
-        }
+        },
+        session: null,
       };
     }
 
@@ -89,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
     setSession({ user: newUser });
 
-    return { error: null };
+    return { error: null, session: null };
   };
 
   const signIn = async (email: string, password: string) => {

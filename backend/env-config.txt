@@ -14,6 +14,13 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 # IMPORTANT: Never commit this key to git! Keep it secret!
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
+# Stripe Billing
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_signing_secret_here
+STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id_here
+STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id_here
+STRIPE_TRIAL_DAYS=14
+
 # To create the .env file, run this command from the dductly directory:
 # cat backend/env-config.txt | grep -v '^#' | grep -v '^$' | grep -v '^To create' > backend/.env
 

@@ -18,7 +18,7 @@ interface AuthContextType {
     farmersMarkets?: string,
     country?: string,
     currency?: string
-  ) => Promise<{ error: AuthError | null }>;
+  ) => Promise<{ error: AuthError | null; session: Session | null; user: User | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   updateProfile: (
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currency?: string
   ) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
         },
       });
-      return { error };
+      return { error, session: data.session ?? null, user: data.user ?? null };
     } catch (err) {
       console.error('Sign up error:', err);
       return { 
@@ -138,7 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           message: 'Unable to connect to authentication service. Please check your network connection or try again later.',
           name: 'ConnectionError',
           status: 500
-        } as AuthError 
+        } as AuthError,
+        session: null,
+        user: null,
       };
     }
   };
