@@ -5,7 +5,7 @@ services:
     name: dductly-backend
     runtime: node
     rootDir: backend
-    # Render sets NODE_ENV=production; plain npm install skips devDependencies (@types, typescript).
-    buildCommand: npm install --include=dev && npm run build
+    # typescript + @types are in dependencies so production npm install still runs tsc.
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
