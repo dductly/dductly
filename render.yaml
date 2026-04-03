@@ -1,0 +1,11 @@
+# Render Blueprint: deploy only the Express API from backend/
+# https://render.com/docs/blueprint-specification
+services:
+  - type: web
+    name: dductly-backend
+    runtime: node
+    rootDir: backend
+    # Render sets NODE_ENV=production; plain npm install skips devDependencies (@types, typescript).
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
