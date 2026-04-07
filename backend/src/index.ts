@@ -16,10 +16,25 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '');
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Non-browser requests (curl, server-to-server) won't send an Origin header.
+      if (!origin) return callback(null, true);
+
+      const normalized = normalizeOrigin(origin);
+      const allowed = allowedOrigins.includes(normalized);
+      return callback(allowed ? null : new Error(`CORS: Origin not allowed (${origin})`), allowed);
+    },
+    credentials: true,
+  }),
+);
 app.use(morgan('dev'));
 app.use('/api/stripe', webhookRoutes);
 app.use(express.json());
