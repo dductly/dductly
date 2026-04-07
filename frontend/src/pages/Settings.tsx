@@ -11,6 +11,9 @@ import closedEyeIcon from "../img/closed-eye.svg";
 import { supabase } from "../lib/supabaseClient";
 import {
   FREE_FOR_LIFE_DISPLAY_NAME,
+  PROFILE_SUBSCRIPTION_FREE_TRIAL,
+  PROFILE_SUBSCRIPTION_STANDARD_MONTHLY,
+  PROFILE_SUBSCRIPTION_STANDARD_YEARLY,
   PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE,
   STANDARD_SUBSCRIPTION_CARD,
 } from "../constants/subscriptionMarketing";
@@ -18,6 +21,11 @@ import {
 function isProfileFreeForLifeTier(tier: string | null | undefined): boolean {
   if (tier == null || tier === "") return false;
   return tier.trim().toLowerCase() === PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE;
+}
+
+function normalizeProfileTier(tier: string | null | undefined): string | null {
+  if (tier == null || tier === "") return null;
+  return tier.trim().toLowerCase();
 }
 import { cleanupBilling } from "../services/billingService";
 
@@ -226,11 +234,22 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
         : "-";
 
   const isFreeForLifeFromProfile = isProfileFreeForLifeTier(profileSubscription);
+  const profileTier = normalizeProfileTier(profileSubscription);
+  const isFreeTrialFromProfile = profileTier === PROFILE_SUBSCRIPTION_FREE_TRIAL;
+  const isStandardMonthlyFromProfile = profileTier === PROFILE_SUBSCRIPTION_STANDARD_MONTHLY;
+  const isStandardYearlyFromProfile = profileTier === PROFILE_SUBSCRIPTION_STANDARD_YEARLY;
+
   const subscriptionDisplayTitle = isFreeForLifeFromProfile
     ? FREE_FOR_LIFE_DISPLAY_NAME
-    : billingCadence
-      ? `${standardTitle} — billed ${billingCadence}`
-      : standardTitle;
+    : isFreeTrialFromProfile
+      ? `${standardTitle} — free trial`
+      : isStandardYearlyFromProfile
+        ? `${standardTitle} — billed yearly`
+        : isStandardMonthlyFromProfile
+          ? `${standardTitle} — billed monthly`
+          : billingCadence
+            ? `${standardTitle} — billed ${billingCadence}`
+            : standardTitle;
   const priceDisplay = isFreeForLifeFromProfile ? "Free" : priceLabel;
   const billingStatusRowLabel = isFreeForLifeFromProfile ? "Billing" : cadenceLabel;
   const billingStatusRowValue = isFreeForLifeFromProfile ? "—" : billingLabel;

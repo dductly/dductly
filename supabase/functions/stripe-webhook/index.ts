@@ -19,6 +19,50 @@ const toIsoFromUnix = (value?: number | null): string | null => {
   return new Date(value * 1000).toISOString();
 };
 
+const PROFILE_FREE_TRIAL = "free_trial";
+const PROFILE_STANDARD_MONTHLY = "standard_monthly";
+const PROFILE_STANDARD_YEARLY = "standard_yearly";
+
+const resolvePlanCadence = (
+  plan: string | null | undefined,
+  subscription: Stripe.Subscription
+): "monthly" | "yearly" => {
+  if (plan === "yearly") return "yearly";
+  if (plan === "monthly") return "monthly";
+  const priceId = subscription.items.data[0]?.price?.id;
+  const yearly = Deno.env.get("STRIPE_PRICE_ID_YEARLY");
+  const monthly = Deno.env.get("STRIPE_PRICE_ID_MONTHLY");
+  if (priceId && yearly && priceId === yearly) return "yearly";
+  if (priceId && monthly && priceId === monthly) return "monthly";
+  return "monthly";
+};
+
+const profileLabelFromStripe = (subscription: Stripe.Subscription, plan: string | null | undefined): string | null => {
+  if (subscription.status === "trialing") return PROFILE_FREE_TRIAL;
+  if (subscription.status === "active") {
+    return resolvePlanCadence(plan, subscription) === "yearly"
+      ? PROFILE_STANDARD_YEARLY
+      : PROFILE_STANDARD_MONTHLY;
+  }
+  return null;
+};
+
+const syncProfileSubscription = async (
+  userId: string,
+  subscription: Stripe.Subscription,
+  plan: string | null | undefined
+) => {
+  if (!supabaseAdmin) return;
+  const label = profileLabelFromStripe(subscription, plan);
+  if (!label) return;
+
+  const { data: existing } = await supabaseAdmin.from("profiles").select("subscription").eq("id", userId).maybeSingle();
+  if (existing?.subscription?.trim().toLowerCase() === "free_for_life") return;
+
+  const { error } = await supabaseAdmin.from("profiles").update({ subscription: label }).eq("id", userId);
+  if (error) console.warn("Failed to sync profiles.subscription:", error.message);
+};
+
 const upsertSubscriptionRecord = async (params: {
   userId: string;
   plan: string | null;
@@ -55,6 +99,8 @@ const upsertSubscriptionRecord = async (params: {
   if (error) {
     throw new Error(`Failed to upsert billing subscription: ${error.message}`);
   }
+
+  await syncProfileSubscription(userId, subscription, plan);
 };
 
 Deno.serve(async (req: Request) => {

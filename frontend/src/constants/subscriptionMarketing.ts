@@ -8,6 +8,13 @@ export const SUBSCRIPTION_PLANS_SECTION = {
 /** Stored in `profiles.subscription` for users with lifetime free access. */
 export const PROFILE_SUBSCRIPTION_TIER_FREE_FOR_LIFE = "free_for_life" as const;
 
+/** During Stripe trial (`trialing`); switches to standard_* after first paid period. */
+export const PROFILE_SUBSCRIPTION_FREE_TRIAL = "free_trial" as const;
+
+/** After trial ends and subscription is `active` (paid). */
+export const PROFILE_SUBSCRIPTION_STANDARD_MONTHLY = "standard_monthly" as const;
+export const PROFILE_SUBSCRIPTION_STANDARD_YEARLY = "standard_yearly" as const;
+
 /** Display label for that tier (matches home hero plan card). */
 export const FREE_FOR_LIFE_DISPLAY_NAME = "Free for Life";
 

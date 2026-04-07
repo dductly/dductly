@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import supabase from "../lib/supabaseClient";
+import { syncProfileSubscriptionLabel } from "../lib/subscriptionProfileLabels";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
@@ -41,6 +42,8 @@ const upsertSubscriptionRecord = async (params: {
   if (error) {
     throw new Error(`Failed to upsert billing subscription: ${error.message}`);
   }
+
+  await syncProfileSubscriptionLabel(supabase, userId, subscription, plan);
 };
 
 router.post(
