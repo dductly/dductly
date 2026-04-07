@@ -1,7 +1,5 @@
 import React from "react";
-
-const FEATURE_REQUEST_FORM_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLScOYlWOBMu0o1gCc6GWutx24KVRdYntrBPdJ0xpYSK73U5Jjg/viewform?usp=header";
+import { FEATURE_REQUEST_FORM_URL } from "../constants/featureRequestForm";
 
 interface SupportProps {
   onNavigate?: (page: string) => void;
