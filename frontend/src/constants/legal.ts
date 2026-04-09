@@ -3,7 +3,7 @@
  * Update this file when practices change; public URLs are /privacy, /terms, and /support.
  */
 
-export const LEGAL_LAST_UPDATED = "April 7, 2026";
+export const LEGAL_LAST_UPDATED = "April 9, 2026";
 
 export type LegalSection = {
   title: string;
@@ -70,9 +70,11 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
       "We collect information you provide directly to us, including your name, email address, phone number, and business financial data you choose to track (for example expenses, income, mileage, categories, and notes).",
       "If you upload receipts, attachments, or other files, we store that content so you can access it in your account.",
       "We use Supabase for authentication, application data (hosted PostgreSQL), and file storage. Supabase processes personal data as a service provider under their terms and privacy policy.",
-      "If you use our website, we and our analytics provider may collect usage data (for example page views and product interactions) as described in the Analytics and cookies section below.",
+      "If you use our website, we and our analytics provider may collect usage data (like page views and product interactions) as described in the Analytics and cookies section below.",
       "If you use our mobile app (including the iOS app), we may send push notifications when you opt in, for example for account, security, or product messages. You can turn off notifications in your device settings.",
-      "If you use our mobile app to attach receipts or documents, we may access photos only when you choose them through the system photo picker or camera (for example via expo-image-picker). We do not access your full photo library beyond the images you explicitly select.",
+      "If you use our mobile app to attach receipts or documents, we may access photos only when you choose them through the system photo picker or camera. We do not access your full photo library beyond the images you explicitly select.",
+      "dductly is designed to give you a single view of your business finances, and connecting your banks and other financial institutions is a central part of that experience. When you link an account, we work with Stripe (and, where applicable, Stripe's partners that facilitate financial institution connections) to verify the connection and retrieve transaction-related information. That typically includes transaction descriptions, amounts, dates, merchant or counterparty names, account or routing identifiers, institution name, and similar details we need to display, categorize, and reconcile your activity in one dashboard. You authorize each connection through Stripe's secure linking flow; we only receive data for accounts you explicitly connect.",
+      "We store linked transaction and institution data in your account alongside information you enter manually. You can disconnect a linked institution at any time; we then stop receiving new data from it. We may retain historical linked data until you request deletion or as required by law and legitimate business needs.",
     ],
   },
   {
@@ -81,6 +83,7 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
     listItems: [
       "Provide, maintain, and improve our services",
       "Process and complete transactions and subscriptions (including through Stripe)",
+      "Pull in, display, and organize linked bank and financial institution transactions in your dashboard together with records you add manually",
       "Authenticate your account and keep it secure",
       "Send you technical notices, support messages, and (where you allow) notifications",
       "Respond to your comments and questions",
@@ -94,7 +97,7 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
     ],
     listItems: [
       "Supabase — authentication, database, and file storage",
-      "Stripe — subscription billing and payment processing",
+      "Stripe — subscription billing and payment processing; and financial institution connections (including verifying linked accounts, retrieving transaction data, and maintaining those connections) through Stripe and its partners as applicable",
       "PostHog — product analytics and event data (we configure our integration to reduce sensitive data)",
       "Email and notification delivery providers when we send transactional or support email",
     ],
@@ -153,6 +156,7 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
 export const APP_PRIVACY_DATA_TYPES_SUMMARY = [
   "Contact info: name, email address, phone number (account and support)",
   "User content: business financial entries, notes, mileage logs, uploaded files and receipts (including photos you choose in the mobile app)",
+  "Financial info: linked bank and institution transaction data via Stripe (e.g. amounts, dates, descriptions, institution identifiers) for the unified dashboard",
   "Identifiers: user/account IDs used with Supabase authentication",
   "Usage data and diagnostics: product analytics (PostHog), and similar events on web/app as configured",
   "Payments: subscription status processed by Stripe (we do not store full card numbers on our servers)",
