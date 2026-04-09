@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { sendContactEmail, type ContactFormData } from "../services/contactService";
 import { useAuth } from "../hooks/useAuth";
+import { FEATURE_REQUEST_FORM_URL } from "../constants/featureRequestForm";
 
 interface ContactProps {
   onNavigate?: (page: string) => void;
@@ -69,7 +70,23 @@ const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
     <section id="contact" className="section contact">
       <div className="contact-left">
         <h2 className="section-title">Contact Us</h2>
-        <p>Interested in using our service? Fill out some info and we will be in touch shortly. We can't wait to hear from you!</p>
+        <p>
+          <strong>Questions or need help?</strong> Use the form below for account, billing, or how-to questions—we
+          typically respond within 24 hours on business days.
+        </p>
+        <p>
+          <strong>Feature ideas?</strong> Please use our{" "}
+          <a
+            href={FEATURE_REQUEST_FORM_URL}
+            className="link"
+            style={{ color: "var(--primary-purple)", fontWeight: 700, textDecoration: "none" }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            feature request form
+          </a>{" "}
+          so we can track and review suggestions. We may follow up with more questions about your idea.
+        </p>
       </div>
 
       <form className="contact-form" onSubmit={handleSubmit}>

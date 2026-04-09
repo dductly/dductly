@@ -2726,6 +2726,23 @@
   overflow-y: auto;
 }
 
+/* Public legal pages: /privacy, /terms, /support */
+.legal-page .legal-page-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.legal-page .legal-page-body {
+  text-align: left;
+}
+.legal-page .section-title {
+  text-align: left;
+}
+.legal-page-support-link {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
 .modal-body {
   color: var(--text-dark);
   line-height: 1.7;
