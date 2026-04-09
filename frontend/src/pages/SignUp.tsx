@@ -833,7 +833,6 @@ const SignUp: React.FC<SignUpProps> = ({
                          <div className="pricing-option">
                            <span className="price">{STANDARD_SUBSCRIPTION_CARD.monthly.price}</span>
                            <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.monthly.period}</span>
-                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}</span>
                          </div>
                        </button>
                      )}
@@ -849,7 +848,6 @@ const SignUp: React.FC<SignUpProps> = ({
                          <div className="pricing-option yearly">
                            <span className="price">{STANDARD_SUBSCRIPTION_CARD.yearly.price}</span>
                            <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.yearly.period}</span>
-                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}</span>
                          </div>
                        </button>
                      )}

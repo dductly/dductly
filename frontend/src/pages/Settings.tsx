@@ -228,9 +228,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const standardTitle = STANDARD_SUBSCRIPTION_CARD.title;
   const priceLabel =
     billingCadence === "yearly"
-      ? `${STANDARD_SUBSCRIPTION_CARD.yearly.price} ${STANDARD_SUBSCRIPTION_CARD.yearly.period} ${STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}`
+      ? `${STANDARD_SUBSCRIPTION_CARD.yearly.price}${STANDARD_SUBSCRIPTION_CARD.yearly.period}`
       : billingCadence === "monthly"
-        ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price} ${STANDARD_SUBSCRIPTION_CARD.monthly.period} ${STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}`
+        ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price}${STANDARD_SUBSCRIPTION_CARD.monthly.period}`
         : "-";
 
   const isFreeForLifeFromProfile = isProfileFreeForLifeTier(profileSubscription);

@@ -22,14 +22,12 @@ export const STANDARD_SUBSCRIPTION_CARD = {
   title: "Standard Subscription",
   monthly: {
     cardTitle: "Billed monthly",
-    price: "$7",
+    price: "$8.50",
     period: "/ month",
-    billingLabel: "($84 per year)",
   },
   yearly: {
     cardTitle: "Billed yearly",
-    price: "$60",
+    price: "$78",
     period: "/ year",
-    billingLabel: "($5 per month)",
   },
 } as const;
