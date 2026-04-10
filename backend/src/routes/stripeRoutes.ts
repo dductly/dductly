@@ -2,6 +2,8 @@ import express, { Response } from "express";
 import Stripe from "stripe";
 import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "../middleware/auth";
 import supabase from "../lib/supabaseClient";
+import { resolveClientBaseUrl } from "../lib/resolveClientBaseUrl";
+import { getOrCreateStripeCustomerId } from "../lib/stripeCustomer";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
@@ -46,14 +48,7 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
       });
     }
 
-    // Base URL for Stripe redirects (embedded return_url + success/cancel).
-    // In development, always prefer FRONTEND_URL so local testing doesn't bounce to production.
-    const clientBase = (
-      process.env.NODE_ENV !== "production" ? process.env.FRONTEND_URL : process.env.CLIENT_URL
-    )?.replace(/\/$/, "");
-
-    const clientBaseFallback = (process.env.CLIENT_URL || process.env.FRONTEND_URL || "").replace(/\/$/, "");
-    const resolvedClientBase = clientBase || clientBaseFallback;
+    const resolvedClientBase = resolveClientBaseUrl();
     if (!resolvedClientBase) {
       return res.status(500).json({
         error: "Configuration Error",
@@ -61,12 +56,8 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
       });
     }
 
-    const customer = await stripe.customers.create({
-      email: email || userEmail,
-      metadata: {
-        supabase_user_id: userId,
-        billing_plan: selectedPlan,
-      },
+    const customerId = await getOrCreateStripeCustomerId(stripe, userId, email || userEmail, {
+      billing_plan: selectedPlan,
     });
 
     // Ensure we store the user's selected plan immediately, even if webhooks
@@ -77,7 +68,7 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
     const { error: upsertError } = await supabase.from("billing_subscriptions").upsert(
       {
         user_id: userId,
-        stripe_customer_id: customer.id,
+        stripe_customer_id: customerId,
         status: "pending",
         plan: selectedPlan,
         price_id: priceId,
@@ -92,7 +83,7 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
-      customer: customer.id,
+      customer: customerId,
       client_reference_id: userId,
       payment_method_collection: "always",
       metadata: {
@@ -148,6 +139,169 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
     res.status(500).send("Stripe error");
   }
 });
+
+/**
+ * Starts Stripe Financial Connections (link bank for transactions / balances).
+ * Requires the same Stripe customer used for billing (created or reused per user).
+ */
+router.post("/financial-connections-session", authenticateUser, async (req: AuthRequest, res: Response) => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) {
+      return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
+    }
+
+    const userId = req.user?.id;
+    const email = req.user?.email;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
+    }
+
+    const customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+
+    // `return_url` is optional (Stripe: webview / OAuth return only). Omitting it avoids
+    // url_invalid for local http://localhost — embedded `collectFinancialConnectionsAccounts` does not need it.
+    const sessionParams: Parameters<typeof stripe.financialConnections.sessions.create>[0] = {
+      account_holder: {
+        type: "customer",
+        customer: customerId,
+      },
+      permissions: ["transactions", "balances"],
+    };
+
+    const httpsReturn = process.env.STRIPE_FINANCIAL_CONNECTIONS_RETURN_URL?.trim();
+    if (httpsReturn?.startsWith("https://")) {
+      sessionParams.return_url = httpsReturn.replace(/\/$/, "") + "/";
+    }
+
+    const session = await stripe.financialConnections.sessions.create(sessionParams);
+
+    if (!session.client_secret) {
+      return res.status(500).json({
+        error: "Financial Connections",
+        message: "Session did not return a client secret",
+      });
+    }
+
+    return res.json({ clientSecret: session.client_secret });
+  } catch (err: unknown) {
+    console.error(err);
+    const message = err instanceof Error ? err.message : "Financial Connections error";
+    res.status(500).json({ error: "Financial Connections Failed", message });
+  }
+});
+
+/** Linked Financial Connections accounts for the authenticated user's Stripe customer. */
+router.get("/financial-connections-accounts", authenticateUser, async (req: AuthRequest, res: Response) => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) {
+      return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
+    }
+
+    const { data: row, error: lookupError } = await supabase
+      .from("billing_subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (lookupError) {
+      return res.status(500).json({ error: "Lookup Failed", message: lookupError.message });
+    }
+
+    const customerId = row?.stripe_customer_id as string | undefined;
+    if (!customerId) {
+      return res.json({ accounts: [] as unknown[] });
+    }
+
+    const list = await stripe.financialConnections.accounts.list({
+      account_holder: {
+        customer: customerId,
+      },
+      limit: 100,
+    });
+
+    const accounts = list.data
+      .filter((a) => a.status !== "disconnected")
+      .map((a) => ({
+        id: a.id,
+        displayName: a.display_name ?? null,
+        institutionName: a.institution_name ?? null,
+        last4: a.last4 ?? null,
+        subcategory: a.subcategory ?? null,
+        category: a.category ?? null,
+        status: a.status ?? null,
+      }));
+
+    return res.json({ accounts });
+  } catch (err: unknown) {
+    console.error(err);
+    const message = err instanceof Error ? err.message : "Failed to list linked accounts";
+    res.status(500).json({ error: "Financial Connections List Failed", message });
+  }
+});
+
+/** Disconnect a linked Financial Connections account (must belong to the user's Stripe customer). */
+router.post(
+  "/financial-connections-accounts/:accountId/disconnect",
+  authenticateUser,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
+      }
+
+      const userId = req.user?.id;
+      const { accountId } = req.params;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
+      }
+      if (!accountId?.trim()) {
+        return res.status(400).json({ error: "Bad Request", message: "Missing account id" });
+      }
+
+      const { data: row, error: lookupError } = await supabase
+        .from("billing_subscriptions")
+        .select("stripe_customer_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (lookupError) {
+        return res.status(500).json({ error: "Lookup Failed", message: lookupError.message });
+      }
+
+      const customerId = row?.stripe_customer_id as string | undefined;
+      if (!customerId) {
+        return res.status(400).json({ error: "No Customer", message: "No Stripe customer for this user yet." });
+      }
+
+      const account = await stripe.financialConnections.accounts.retrieve(accountId.trim());
+      const holder = account.account_holder as { type?: string; customer?: string | { id?: string } } | null;
+      const holderCustomer =
+        typeof holder?.customer === "string" ? holder.customer : holder?.customer?.id ?? null;
+      if (holderCustomer !== customerId) {
+        return res.status(403).json({
+          error: "Forbidden",
+          message: "This bank account is not linked to your profile.",
+        });
+      }
+
+      await stripe.financialConnections.accounts.disconnect(accountId.trim());
+
+      return res.json({ ok: true });
+    } catch (err: unknown) {
+      console.error(err);
+      const message = err instanceof Error ? err.message : "Failed to disconnect account";
+      res.status(500).json({ error: "Disconnect Failed", message });
+    }
+  }
+);
 
 router.get("/subscription-status", authenticateUser, async (req: AuthRequest, res: Response) => {
   try {

@@ -4691,6 +4691,16 @@
   padding: 8px 0;
 }
 
+/* Bank connections: no white gap between title bar and first hint paragraph */
+.settings-card--bank-connect .settings-card-content {
+  padding-top: 0;
+}
+
+.settings-card--bank-connect .settings-card-content > .settings-hint:first-child {
+  border-top: none;
+  padding-top: 14px;
+}
+
 .settings-row {
   display: flex;
   justify-content: space-between;
@@ -4760,6 +4770,40 @@
 .settings-danger-btn:hover:not(:disabled) {
   background: var(--error-red) !important;
   color: white !important;
+}
+
+/* Linked bank rows (Settings → Bank connections) */
+.settings-bank-link-row {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .settings-bank-link-row {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-medium);
+}
+
+/* Icon-only remove (matches Income/Expenses dropdown delete affordance) */
+.settings-bank-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.settings-bank-remove-btn:hover:not(:disabled) {
+  background: rgba(229, 62, 62, 0.1);
+}
+.settings-bank-remove-btn:disabled {
+  cursor: not-allowed;
+}
+[data-theme="dark"] .settings-bank-remove-btn:hover:not(:disabled) {
+  background: rgba(252, 129, 129, 0.12);
 }
 
 /* Settings Select Dropdown */
