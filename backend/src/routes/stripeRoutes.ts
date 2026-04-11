@@ -4,6 +4,7 @@ import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "
 import supabase from "../lib/supabaseClient";
 import { resolveClientBaseUrl } from "../lib/resolveClientBaseUrl";
 import { getOrCreateStripeCustomerId } from "../lib/stripeCustomer";
+import { syncFinancialConnectionTransactions } from "../lib/financialConnectionsSync";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
@@ -302,6 +303,137 @@ router.post(
     }
   }
 );
+
+/**
+ * Subscribe each linked Financial Connections account to daily transaction updates and trigger
+ * an initial refresh. Call after the user finishes linking (see Stripe:
+ * https://docs.stripe.com/financial-connections/transactions#subscribe-to-transaction-data ).
+ */
+router.post(
+  "/financial-connections-subscribe-transactions",
+  authenticateUser,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
+      }
+
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
+      }
+
+      const email = req.user?.email;
+      let customerId: string;
+      try {
+        customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "Could not resolve Stripe customer";
+        return res.status(500).json({ error: "Stripe Customer", message });
+      }
+
+      const list = await stripe.financialConnections.accounts.list({
+        account_holder: { customer: customerId },
+        limit: 100,
+      });
+
+      let subscribed = 0;
+      for (const account of list.data) {
+        if (account.status === "disconnected") continue;
+        const perms = account.permissions ?? [];
+        if (!perms.includes("transactions")) continue;
+
+        try {
+          await stripe.financialConnections.accounts.subscribe(account.id, {
+            features: ["transactions"],
+          });
+          subscribed += 1;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          // Common when already subscribed — still counts as OK
+          if (!/already|subscri/i.test(msg)) {
+            console.warn(`FC subscribe ${account.id}:`, msg);
+          }
+        }
+      }
+
+      return res.json({ ok: true, subscribed });
+    } catch (err: unknown) {
+      console.error(err);
+      const message = err instanceof Error ? err.message : "Subscribe failed";
+      res.status(500).json({ error: "Financial Connections Subscribe Failed", message });
+    }
+  }
+);
+
+/**
+ * Pull transaction rows from Stripe into Supabase for the current user's linked FC accounts.
+ * Use when webhooks are not configured (e.g. local dev) or to backfill after linking.
+ */
+router.post("/financial-connections-sync-from-stripe", authenticateUser, async (req: AuthRequest, res: Response) => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) {
+      return res.status(500).json({ error: "Billing Not Configured", message: "Missing STRIPE_SECRET_KEY" });
+    }
+
+    const userId = req.user?.id;
+    const email = req.user?.email;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
+    }
+
+    let customerId: string;
+    try {
+      customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Could not resolve Stripe customer";
+      return res.status(500).json({ error: "Stripe Customer", message });
+    }
+
+    const list = await stripe.financialConnections.accounts.list({
+      account_holder: { customer: customerId },
+      limit: 100,
+    });
+
+    let insertedOrUpdated = 0;
+    let accountsWithTransactions = 0;
+
+    for (const account of list.data) {
+      if (account.status === "disconnected") continue;
+      if (!account.permissions?.includes("transactions")) continue;
+      accountsWithTransactions += 1;
+
+      const refreshId =
+        account.transaction_refresh &&
+        typeof account.transaction_refresh === "object" &&
+        "id" in account.transaction_refresh
+          ? (account.transaction_refresh as { id: string }).id
+          : null;
+
+      const result = await syncFinancialConnectionTransactions({
+        stripe,
+        supabase,
+        fcAccountId: account.id,
+        userId,
+        currentTransactionRefreshId: refreshId,
+      });
+      insertedOrUpdated += result.insertedOrUpdated;
+    }
+
+    return res.json({
+      ok: true,
+      accountsChecked: list.data.length,
+      accountsWithTransactionsPermission: accountsWithTransactions,
+      insertedOrUpdated,
+    });
+  } catch (err: unknown) {
+    console.error(err);
+    const message = err instanceof Error ? err.message : "Sync failed";
+    res.status(500).json({ error: "Financial Connections Sync Failed", message });
+  }
+});
 
 router.get("/subscription-status", authenticateUser, async (req: AuthRequest, res: Response) => {
   try {

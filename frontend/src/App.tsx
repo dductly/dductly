@@ -143,16 +143,15 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
                   >
                     Settings
                   </a>
-                  <a
-                    href="#logout"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleLogout();
                       setIsMenuOpen(false);
                     }}
                   >
                     Logout
-                  </a>
+                  </button>
                 </div>
               )}
             </div>

@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { collectFinancialConnectionsAccounts } from "../services/financialConnectionsService";
+import {
+  collectFinancialConnectionsAccounts,
+  subscribeFinancialConnectionsTransactions,
+  syncFinancialConnectionsFromStripe,
+} from "../services/financialConnectionsService";
+import { FC_TRANSACTIONS_SYNCED_EVENT } from "../lib/bankLedgerMapping";
 import {
   clearBankPromptShowOnce,
   markBankPromptDismissed,
@@ -57,6 +62,9 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
         setError(fcError.message);
         return;
       }
+      await subscribeFinancialConnectionsTransactions(accessToken);
+      await syncFinancialConnectionsFromStripe(accessToken);
+      window.dispatchEvent(new CustomEvent(FC_TRANSACTIONS_SYNCED_EVENT));
       finishFirstVisitPrompt();
       onLinked?.();
       onOpenChange(false);

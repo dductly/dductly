@@ -63,6 +63,53 @@ export async function fetchLinkedFinancialAccounts(
   return Array.isArray(accounts) ? accounts : [];
 }
 
+/**
+ * Subscribe linked accounts to Stripe’s transaction subscription (daily refresh + initial pull).
+ * Safe to call after each successful link; ignores benign errors.
+ * @see https://docs.stripe.com/financial-connections/transactions#subscribe-to-transaction-data
+ */
+export async function subscribeFinancialConnectionsTransactions(accessToken: string): Promise<void> {
+  if (!hasBillingApiBaseUrl() || !API_BASE) {
+    return;
+  }
+  const response = await fetch(`${API_BASE}/api/stripe/financial-connections-subscribe-transactions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    console.warn(
+      "Financial Connections transaction subscribe:",
+      (body as { message?: string }).message || response.statusText
+    );
+  }
+}
+
+/**
+ * Pulls FC transactions from Stripe into Supabase (same data webhooks would write).
+ * Call after subscribe; helps when webhooks are not reachable (e.g. localhost).
+ */
+export async function syncFinancialConnectionsFromStripe(accessToken: string): Promise<void> {
+  if (!hasBillingApiBaseUrl() || !API_BASE) {
+    return;
+  }
+  const response = await fetch(`${API_BASE}/api/stripe/financial-connections-sync-from-stripe`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    console.warn(
+      "Financial Connections sync from Stripe:",
+      (body as { message?: string }).message || response.statusText
+    );
+  }
+}
+
 export async function disconnectFinancialAccount(
   accessToken: string,
   accountId: string

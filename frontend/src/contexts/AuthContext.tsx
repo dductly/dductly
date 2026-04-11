@@ -282,9 +282,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /** Clear Supabase auth tokens from browser storage (fallback if signOut hangs or fails). */
+  const clearSupabaseAuthStorage = () => {
+    try {
+      for (const storage of [localStorage, sessionStorage]) {
+        for (const key of Object.keys(storage)) {
+          if (key.startsWith("sb-") && key.includes("auth")) {
+            storage.removeItem(key);
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
   const signOut = async () => {
-    posthog?.reset();
-    await supabase.auth.signOut();
+    try {
+      posthog?.reset();
+    } catch {
+      /* PostHog must not block logout */
+    }
+
+    const signOutMs = 10000;
+    const outcome = await Promise.race([
+      supabase.auth
+        .signOut()
+        .then(() => "ok" as const)
+        .catch((e: unknown) => {
+          console.warn("signOut request failed:", e);
+          return "failed" as const;
+        }),
+      new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), signOutMs)),
+    ]);
+
+    if (outcome === "timeout" || outcome === "failed") {
+      if (outcome === "timeout") {
+        console.warn(
+          "signOut: no response from Supabase in time — clearing local session (check network / ad blockers)."
+        );
+      }
+      clearSupabaseAuthStorage();
+    }
+
+    setSession(null);
+    setUser(null);
   };
 
   const value = {

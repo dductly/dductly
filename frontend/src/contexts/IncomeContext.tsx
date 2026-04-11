@@ -4,11 +4,18 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import type { Attachment } from "../services/storageService";
+import {
+  FC_TRANSACTIONS_SYNCED_EVENT,
+  fcTransactionToIncome,
+  isBankLedgerId,
+  type FinancialConnectionTransactionRow,
+} from "../lib/bankLedgerMapping";
 
 export interface Income {
   id: string;
@@ -22,6 +29,14 @@ export interface Income {
   amount: number;
   tip: number;
   attachments?: Attachment[];
+  /** Merged from `financial_connection_transactions`; not stored in `income` table */
+  source?: "manual" | "bank";
+  bankMeta?: {
+    stripeFcAccountId: string;
+    stripeTransactionId: string;
+    currency: string;
+    status: string | null;
+  };
 }
 
 // Default options that come with the app
@@ -48,43 +63,79 @@ const IncomeContext = createContext<IncomeContextType | undefined>(undefined);
 
 export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [incomes, setIncomes] = useState<Income[]>([]);
+  const [manualIncomes, setManualIncomes] = useState<Income[]>([]);
+  const [bankIncomeRows, setBankIncomeRows] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const incomes = React.useMemo(() => {
+    const merged = [...manualIncomes, ...bankIncomeRows];
+    merged.sort((a, b) => b.income_date.localeCompare(a.income_date));
+    return merged;
+  }, [manualIncomes, bankIncomeRows]);
 
   // Extract custom categories and payment methods from existing income
   const customCategories = React.useMemo(() => {
-    const usedCategories = new Set(incomes.map(i => i.category).filter(Boolean));
-    return Array.from(usedCategories).filter(cat => !DEFAULT_INCOME_CATEGORIES.includes(cat));
-  }, [incomes]);
+    const usedCategories = new Set(
+      manualIncomes.filter((i) => i.source !== "bank").map((i) => i.category).filter(Boolean)
+    );
+    return Array.from(usedCategories).filter((cat) => !DEFAULT_INCOME_CATEGORIES.includes(cat));
+  }, [manualIncomes]);
 
   const customPaymentMethods = React.useMemo(() => {
-    const usedMethods = new Set(incomes.map(i => i.payment_method).filter(Boolean));
-    return Array.from(usedMethods).filter(method => !DEFAULT_PAYMENT_METHODS.includes(method));
-  }, [incomes]);
+    const usedMethods = new Set(
+      manualIncomes.filter((i) => i.source !== "bank").map((i) => i.payment_method).filter(Boolean)
+    );
+    return Array.from(usedMethods).filter((method) => !DEFAULT_PAYMENT_METHODS.includes(method));
+  }, [manualIncomes]);
 
-  // Fetch incomes when user changes
-  useEffect(() => {
-    const fetchIncomes = async () => {
-      if (!user) {
-        setIncomes([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("income")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("income_date", { ascending: false });
-
-      if (error) console.error("Error loading income:", error);
-      else setIncomes(data || []);
-
+  const reloadLedger = useCallback(async () => {
+    if (!user) {
+      setManualIncomes([]);
+      setBankIncomeRows([]);
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchIncomes();
+    setLoading(true);
+    const [incRes, fcRes] = await Promise.all([
+      supabase.from("income").select("*").eq("user_id", user.id).order("income_date", { ascending: false }),
+      supabase
+        .from("financial_connection_transactions")
+        .select(
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+        )
+        .eq("user_id", user.id)
+        .order("transacted_at", { ascending: false }),
+    ]);
+
+    if (incRes.error) console.error("Error loading income:", incRes.error);
+    else setManualIncomes((incRes.data as Income[]) || []);
+
+    if (fcRes.error) {
+      console.error("Error loading bank transactions:", fcRes.error);
+      setBankIncomeRows([]);
+    } else {
+      const rows = (fcRes.data as FinancialConnectionTransactionRow[]) || [];
+      const out: Income[] = [];
+      for (const row of rows) {
+        const inc = fcTransactionToIncome(row);
+        if (inc) out.push(inc);
+      }
+      setBankIncomeRows(out);
+    }
+
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    void reloadLedger();
+  }, [reloadLedger]);
+
+  useEffect(() => {
+    const onSynced = () => void reloadLedger();
+    window.addEventListener(FC_TRANSACTIONS_SYNCED_EVENT, onSynced);
+    return () => window.removeEventListener(FC_TRANSACTIONS_SYNCED_EVENT, onSynced);
+  }, [reloadLedger]);
 
   const addIncome = async (newIncome: Omit<Income, "id" | "user_id">): Promise<Income | null> => {
     if (!user) return null;
@@ -102,21 +153,24 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       user_id: user.id,
     };
 
-    console.log("inserting: ", incomeToInsert)
+    console.log("inserting: ", incomeToInsert);
 
-    const { data, error } = await supabase
-      .from("income")
-      .insert([incomeToInsert])
-      .select()
-      .single();
+    const { data, error } = await supabase.from("income").insert([incomeToInsert]).select().single();
 
-    if (error) { console.error("Error adding income:", error); return null; }
-    setIncomes((prev) => [data, ...prev]);
-    return data;
+    if (error) {
+      console.error("Error adding income:", error);
+      return null;
+    }
+    setManualIncomes((prev) => [data as Income, ...prev]);
+    return data as Income;
   };
 
   const updateIncome = async (id: string, updatedIncome: Omit<Income, "id" | "user_id">) => {
     if (!user) return;
+    if (isBankLedgerId(id)) {
+      console.warn("Cannot edit bank-synced transactions from the ledger.");
+      return;
+    }
 
     const { data, error } = await supabase
       .from("income")
@@ -136,13 +190,17 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       .single();
 
     if (error) console.error("Error updating income:", error);
-    else setIncomes((prev) => prev.map((i) => (i.id === id ? data : i)));
+    else setManualIncomes((prev) => prev.map((i) => (i.id === id ? (data as Income) : i)));
   };
 
   const deleteIncome = async (id: string) => {
+    if (isBankLedgerId(id)) {
+      console.warn("Cannot delete bank-synced transactions from the ledger.");
+      return;
+    }
     const { error } = await supabase.from("income").delete().eq("id", id);
     if (error) console.error("Error deleting income:", error);
-    else setIncomes((prev) => prev.filter((i) => i.id !== id));
+    else setManualIncomes((prev) => prev.filter((i) => i.id !== id));
   };
 
   return (

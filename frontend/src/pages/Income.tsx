@@ -21,8 +21,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   const { incomes, updateIncome, deleteIncome } = useIncome();
   const { expenses } = useExpenses();
   const { user } = useAuth();
-  const customerSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.customer).filter(Boolean))), [incomes]);
-  const descriptionSuggestions = useMemo(() => Array.from(new Set(incomes.map(i => i.description).filter(Boolean))), [incomes]);
+  const customerSuggestions = useMemo(
+    () => Array.from(new Set(incomes.filter((i) => i.source !== "bank").map((i) => i.customer).filter(Boolean))),
+    [incomes]
+  );
+  const descriptionSuggestions = useMemo(
+    () => Array.from(new Set(incomes.filter((i) => i.source !== "bank").map((i) => i.description).filter(Boolean))),
+    [incomes]
+  );
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
       ? user.user_metadata.business_name
@@ -181,6 +187,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
   };
 
   const handleEditIncome = async (income: Income) => {
+    if (income.source === "bank") return;
     setEditingIncome(income);
     setEditForm({
       income_date: income.income_date,
@@ -368,7 +375,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                 <option value="">All Categories</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>
-                    {category}
+                    {category === "bank-sync" ? "Bank (synced)" : category}
                   </option>
                 ))}
               </select>
@@ -477,12 +484,14 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                     <tr key={income.id} onClick={() => handleViewIncome(income)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(income.income_date)}</td>
                       <td>
-                        <span className="category-badge">{income.category}</span>
+                        <span className="category-badge">
+                          {income.source === "bank" ? "Bank (synced)" : income.category}
+                        </span>
                       </td>
                       <td>{income.customer}</td>
                       {/* <td>{income.market}</td> */}
                       <td><span className="description-cell">{income.description}</span></td>
-                      <td>{income.payment_method}</td>
+                      <td>{income.source === "bank" ? "Bank (synced)" : income.payment_method}</td>
                       <td>{formatCurrency(income.amount + (income.tip || 0))}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="menu-wrapper">
@@ -512,28 +521,32 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                                 />
                                 View
                               </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => handleEditIncome(income)}
-                              >
-                                <img
-                                  src={editIcon}
-                                  alt="Edit"
-                                  className="dropdown-icon"
-                                />
-                                Edit
-                              </button>
-                              <button
-                                className="dropdown-item delete-item"
-                                onClick={() => handleDeleteIncome(income.id)}
-                              >
-                                <img
-                                  src={recycleIcon}
-                                  alt="Delete"
-                                  className="dropdown-icon"
-                                />
-                                Delete
-                              </button>
+                              {income.source !== "bank" && (
+                                <>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() => void handleEditIncome(income)}
+                                  >
+                                    <img
+                                      src={editIcon}
+                                      alt="Edit"
+                                      className="dropdown-icon"
+                                    />
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="dropdown-item delete-item"
+                                    onClick={() => handleDeleteIncome(income.id)}
+                                  >
+                                    <img
+                                      src={recycleIcon}
+                                      alt="Delete"
+                                      className="dropdown-icon"
+                                    />
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
@@ -595,6 +608,20 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   </button>
                 </div>
                 <div className="modal-body">
+                  {viewingIncome.source === "bank" && (
+                    <p
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "var(--text-medium)",
+                        marginBottom: "1rem",
+                        padding: "0.75rem",
+                        background: "var(--pale-blue, #F0F6FF)",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      This income entry comes from a linked bank account (synced via Stripe). It cannot be edited or deleted here; updates follow your bank feed.
+                    </p>
+                  )}
                   <div className="form-group">
                     <label>Date</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
@@ -604,7 +631,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   <div className="form-group">
                     <label>Category</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
-                      {viewingIncome.category}
+                      {viewingIncome.source === "bank" ? "Bank (synced)" : viewingIncome.category}
                     </div>
                   </div>
                   <div className="form-group">

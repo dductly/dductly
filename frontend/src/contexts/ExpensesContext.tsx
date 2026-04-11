@@ -4,11 +4,18 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import type { Attachment } from "../services/storageService";
+import {
+  FC_TRANSACTIONS_SYNCED_EVENT,
+  fcTransactionToExpense,
+  isBankLedgerId,
+  type FinancialConnectionTransactionRow,
+} from "../lib/bankLedgerMapping";
 
 export interface Expense {
   id: string;
@@ -20,6 +27,14 @@ export interface Expense {
   payment_method: string;
   amount: number;
   attachments?: Attachment[];
+  /** Merged from `financial_connection_transactions`; not stored in `expenses` table */
+  source?: "manual" | "bank";
+  bankMeta?: {
+    stripeFcAccountId: string;
+    stripeTransactionId: string;
+    currency: string;
+    status: string | null;
+  };
 }
 
 // Default options that come with the app
@@ -46,43 +61,79 @@ const ExpensesContext = createContext<ExpensesContextType | undefined>(undefined
 
 export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [manualExpenses, setManualExpenses] = useState<Expense[]>([]);
+  const [bankExpenseRows, setBankExpenseRows] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const expenses = React.useMemo(() => {
+    const merged = [...manualExpenses, ...bankExpenseRows];
+    merged.sort((a, b) => b.expense_date.localeCompare(a.expense_date));
+    return merged;
+  }, [manualExpenses, bankExpenseRows]);
 
   // Extract custom categories and payment methods from existing expenses
   const customCategories = React.useMemo(() => {
-    const usedCategories = new Set(expenses.map(e => e.category).filter(Boolean));
-    return Array.from(usedCategories).filter(cat => !DEFAULT_EXPENSE_CATEGORIES.includes(cat));
-  }, [expenses]);
+    const usedCategories = new Set(
+      manualExpenses.filter((e) => e.source !== "bank").map((e) => e.category).filter(Boolean)
+    );
+    return Array.from(usedCategories).filter((cat) => !DEFAULT_EXPENSE_CATEGORIES.includes(cat));
+  }, [manualExpenses]);
 
   const customPaymentMethods = React.useMemo(() => {
-    const usedMethods = new Set(expenses.map(e => e.payment_method).filter(Boolean));
-    return Array.from(usedMethods).filter(method => !DEFAULT_PAYMENT_METHODS.includes(method));
-  }, [expenses]);
+    const usedMethods = new Set(
+      manualExpenses.filter((e) => e.source !== "bank").map((e) => e.payment_method).filter(Boolean)
+    );
+    return Array.from(usedMethods).filter((method) => !DEFAULT_PAYMENT_METHODS.includes(method));
+  }, [manualExpenses]);
 
-  // Fetch expenses when user changes
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      if (!user) {
-        setExpenses([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("expense_date", { ascending: false });
-
-      if (error) console.error("Error loading expenses:", error);
-      else setExpenses(data || []);
-
+  const reloadLedger = useCallback(async () => {
+    if (!user) {
+      setManualExpenses([]);
+      setBankExpenseRows([]);
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchExpenses();
+    setLoading(true);
+    const [expRes, fcRes] = await Promise.all([
+      supabase.from("expenses").select("*").eq("user_id", user.id).order("expense_date", { ascending: false }),
+      supabase
+        .from("financial_connection_transactions")
+        .select(
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+        )
+        .eq("user_id", user.id)
+        .order("transacted_at", { ascending: false }),
+    ]);
+
+    if (expRes.error) console.error("Error loading expenses:", expRes.error);
+    else setManualExpenses((expRes.data as Expense[]) || []);
+
+    if (fcRes.error) {
+      console.error("Error loading bank transactions:", fcRes.error);
+      setBankExpenseRows([]);
+    } else {
+      const rows = (fcRes.data as FinancialConnectionTransactionRow[]) || [];
+      const out: Expense[] = [];
+      for (const row of rows) {
+        const e = fcTransactionToExpense(row);
+        if (e) out.push(e);
+      }
+      setBankExpenseRows(out);
+    }
+
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    void reloadLedger();
+  }, [reloadLedger]);
+
+  useEffect(() => {
+    const onSynced = () => void reloadLedger();
+    window.addEventListener(FC_TRANSACTIONS_SYNCED_EVENT, onSynced);
+    return () => window.removeEventListener(FC_TRANSACTIONS_SYNCED_EVENT, onSynced);
+  }, [reloadLedger]);
 
   const addExpense = async (newExpense: Omit<Expense, "id" | "user_id">): Promise<Expense | null> => {
     if (!user) return null;
@@ -98,21 +149,24 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       user_id: user.id,
     };
 
-    console.log("inserting: ", expenseToInsert)
+    console.log("inserting: ", expenseToInsert);
 
-    const { data, error } = await supabase
-      .from("expenses")
-      .insert([expenseToInsert])
-      .select()
-      .single();
+    const { data, error } = await supabase.from("expenses").insert([expenseToInsert]).select().single();
 
-    if (error) { console.error("Error adding expense:", error); return null; }
-    setExpenses((prev) => [data, ...prev]);
-    return data;
+    if (error) {
+      console.error("Error adding expense:", error);
+      return null;
+    }
+    setManualExpenses((prev) => [data as Expense, ...prev]);
+    return data as Expense;
   };
 
   const updateExpense = async (id: string, updatedExpense: Omit<Expense, "id" | "user_id">) => {
     if (!user) return;
+    if (isBankLedgerId(id)) {
+      console.warn("Cannot edit bank-synced transactions from the ledger.");
+      return;
+    }
 
     const { data, error } = await supabase
       .from("expenses")
@@ -130,13 +184,17 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       .single();
 
     if (error) console.error("Error updating expense:", error);
-    else setExpenses((prev) => prev.map((e) => (e.id === id ? data : e)));
+    else setManualExpenses((prev) => prev.map((e) => (e.id === id ? (data as Expense) : e)));
   };
 
   const deleteExpense = async (id: string) => {
+    if (isBankLedgerId(id)) {
+      console.warn("Cannot delete bank-synced transactions from the ledger.");
+      return;
+    }
     const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) console.error("Error deleting expense:", error);
-    else setExpenses((prev) => prev.filter((e) => e.id !== id));
+    else setManualExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
   return (

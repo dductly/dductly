@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
@@ -24,10 +24,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
 
-  // Calculate stats for preview
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
-  const netProfit = totalIncome - totalExpenses;
+  // Manual + merged bank-sync rows from contexts
+  const { totalExpenses, totalIncome, netProfit } = useMemo(() => {
+    const te = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const ti = incomes.reduce((sum, inc) => sum + inc.amount + (inc.tip || 0), 0);
+    return { totalExpenses: te, totalIncome: ti, netProfit: ti - te };
+  }, [expenses, incomes]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
