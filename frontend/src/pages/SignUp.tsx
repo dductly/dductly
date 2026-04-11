@@ -14,9 +14,8 @@ import {
 } from "../services/billingService";
 import { STANDARD_SUBSCRIPTION_CARD } from "../constants/subscriptionMarketing";
 import { SIGNUP_PLAN_STEP_SECTION } from "../constants/signupPlanStep";
-import {
-  STORAGE_POST_SIGNUP_EMAIL,
-} from "../lib/signupEmailFlow";
+import { markBankPromptEligibleAfterSignup } from "../lib/bankConnectionPrompt";
+import { STORAGE_POST_SIGNUP_EMAIL } from "../lib/signupEmailFlow";
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
 const stripePromise = stripePublishableKey?.trim() ? loadStripe(stripePublishableKey.trim()) : null;
@@ -197,6 +196,9 @@ const SignUp: React.FC<SignUpProps> = ({
 
     // Persist a flag so `/confirm-email` doesn't immediately bounce back to Home.
     markPostSignupEmail();
+    if (signedUpUser?.id) {
+      markBankPromptEligibleAfterSignup(signedUpUser.id);
+    }
 
     posthog?.capture("user_signed_up", {
       email,
@@ -833,7 +835,6 @@ const SignUp: React.FC<SignUpProps> = ({
                          <div className="pricing-option">
                            <span className="price">{STANDARD_SUBSCRIPTION_CARD.monthly.price}</span>
                            <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.monthly.period}</span>
-                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}</span>
                          </div>
                        </button>
                      )}
@@ -849,7 +850,6 @@ const SignUp: React.FC<SignUpProps> = ({
                          <div className="pricing-option yearly">
                            <span className="price">{STANDARD_SUBSCRIPTION_CARD.yearly.price}</span>
                            <span className="price-period">{STANDARD_SUBSCRIPTION_CARD.yearly.period}</span>
-                           <span className="yearly-label">{STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}</span>
                          </div>
                        </button>
                      )}

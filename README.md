@@ -37,5 +37,8 @@ If your backend is primarily Supabase-hosted, use an Edge Function as the Stripe
    - `customer.subscription.created`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
+   - `financial_connections.account.refreshed_transactions` (syncs bank transactions into `financial_connection_transactions`; see [Stripe: Financial Connections transactions](https://docs.stripe.com/financial-connections/transactions))
 
-This function upserts subscription state into `billing_subscriptions` using `supabase_user_id` metadata.
+This function upserts subscription state into `billing_subscriptions` using `supabase_user_id` metadata. Run `database-financial-connection-transactions.sql` in the Supabase SQL editor (once) so those tables exist.
+
+If you use the Express webhook (`/api/stripe/webhook`) instead, add the same event there and ensure the backend can reach Stripe with your secret key.

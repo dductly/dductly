@@ -74,8 +74,13 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   }, [incomes, timeRange]);
 
   const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
+  const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount + (inc.tip || 0), 0);
   const netProfit = totalIncome - totalExpenses;
+
+  const manualIncomeCount = filteredIncomes.filter((i) => i.source !== "bank").length;
+  const bankIncomeLineCount = filteredIncomes.filter((i) => i.source === "bank").length;
+  const manualExpenseCount = filteredExpenses.filter((e) => e.source !== "bank").length;
+  const bankExpenseLineCount = filteredExpenses.filter((e) => e.source === "bank").length;
 
   // Previous period comparison
   const prevPeriod = useMemo(() => {
@@ -91,7 +96,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
 
     const prevIncome = incomes
       .filter(i => { const d = parseLocalDate(i.income_date); return d >= prevStart && d < prevEnd; })
-      .reduce((sum, i) => sum + i.amount, 0);
+      .reduce((sum, i) => sum + i.amount + (i.tip || 0), 0);
     const prevExpense = expenses
       .filter(e => { const d = parseLocalDate(e.expense_date); return d >= prevStart && d < prevEnd; })
       .reduce((sum, e) => sum + e.amount, 0);
@@ -122,15 +127,15 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
       incomesByCategory[inc.category] = inc.amount;
     }
   });
-
   const incomeByMonth: Record<string, number> = {};
   filteredIncomes.forEach(inc => {
     const date = parseLocalDate(inc.income_date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const add = inc.amount + (inc.tip || 0);
     if (incomeByMonth[monthKey]) {
-      incomeByMonth[monthKey] += inc.amount;
+      incomeByMonth[monthKey] += add;
     } else {
-      incomeByMonth[monthKey] = inc.amount;
+      incomeByMonth[monthKey] = add;
     }
   });
 
@@ -150,7 +155,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
       const date = parseLocalDate(inc.income_date);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (!monthMap[key]) monthMap[key] = { income: 0, expenses: 0 };
-      monthMap[key].income += inc.amount;
+      monthMap[key].income += inc.amount + (inc.tip || 0);
     });
 
     filteredExpenses.forEach(exp => {
@@ -230,7 +235,8 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   };
 
   const hasData = expenses.length > 0 || incomes.length > 0;
-  const hasFilteredData = filteredExpenses.length > 0 || filteredIncomes.length > 0;
+  const hasFilteredData =
+    filteredExpenses.length > 0 || filteredIncomes.length > 0;
 
   return (
     <div className="page">
@@ -267,7 +273,8 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                   <h3 className="stat-card-label">Revenue</h3>
                   <p className="stat-card-value" style={{ color: 'var(--primary-purple)' }}>{formatCurrency(totalIncome)}</p>
                   <p className="stat-card-subtitle">
-                    {filteredIncomes.length} entries
+                    {manualIncomeCount} manual
+                    {bankIncomeLineCount > 0 ? ` · ${bankIncomeLineCount} bank` : ""}
                     {(() => {
                       const ind = getChangeIndicator(totalIncome, prevPeriod?.income ?? null);
                       if (!ind) return null;
@@ -293,7 +300,8 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
                   <h3 className="stat-card-label">Total Expenses</h3>
                   <p className="stat-card-value" style={{ color: '#EF9A9A' }}>{formatCurrency(totalExpenses)}</p>
                   <p className="stat-card-subtitle">
-                    {filteredExpenses.length} entries
+                    {manualExpenseCount} manual
+                    {bankExpenseLineCount > 0 ? ` · ${bankExpenseLineCount} bank` : ""}
                     {(() => {
                       const ind = getChangeIndicator(totalExpenses, prevPeriod?.expenses ?? null);
                       if (!ind) return null;
@@ -499,7 +507,9 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
           {!hasData && (
             <div style={{ textAlign: 'center', marginTop: 'clamp(40px, 8vw, 60px)', color: 'var(--text-medium)', padding: '0 16px' }}>
               <p style={{ fontSize: 'clamp(1rem, 2.5vw, 1.125rem)', marginBottom: '16px' }}>No data yet</p>
-              <p style={{ fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>Start adding expenses and income to see your statistics.</p>
+              <p style={{ fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
+                Add expenses and income manually, or connect a bank in Settings and wait for transactions to sync.
+              </p>
             </div>
           )}
         </div>

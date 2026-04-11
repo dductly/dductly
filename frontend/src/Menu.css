@@ -9,8 +9,9 @@
     top: 36px;
     background: white;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 0;
 
     display: flex !important;       /* force flex layout */
     flex-direction: column !important; /* stack items vertically */
@@ -34,25 +35,56 @@
   width: 100% !important;     /* fill the dropdown width */
   text-align: left;
   padding: 10px 14px;
-  background: none;
+  margin: 0;
+  background-color: transparent;
   border: none;
+  border-radius: 0;
   cursor: pointer;
+  box-sizing: border-box;
+  color: var(--text-dark) !important;
+  text-decoration: none !important;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: normal;
+  /* Only animate colors — avoids layout “bounce” from transition: all */
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .user-menu .dropdown-menu a:hover,
 .user-menu .dropdown-menu button:hover {
-  background-color: #f2f2f2;
+  background-color: var(--pale-blue) !important;
+  color: var(--primary-blue) !important;
+}
+
+.user-menu .dropdown-menu a:focus-visible,
+.user-menu .dropdown-menu button:focus-visible {
+  background-color: var(--pale-blue) !important;
+  color: var(--primary-blue) !important;
+  outline: 2px solid var(--primary-blue);
+  outline-offset: -2px;
 }
 
 [data-theme="dark"] .user-menu .dropdown-menu a,
 [data-theme="dark"] .user-menu .dropdown-menu button {
-  color: #90CDF4;
+  color: #90CDF4 !important;
 }
 
 [data-theme="dark"] .user-menu .dropdown-menu a:hover,
 [data-theme="dark"] .user-menu .dropdown-menu button:hover {
-  background-color: #2D3748;
-  color: #BEE3F8;
+  background-color: #2D3748 !important;
+  color: #BEE3F8 !important;
+}
+
+[data-theme="dark"] .user-menu .dropdown-menu a:focus-visible,
+[data-theme="dark"] .user-menu .dropdown-menu button:focus-visible {
+  background-color: #2D3748 !important;
+  color: #BEE3F8 !important;
+  outline-color: #BEE3F8;
 }
 
 .user-button {

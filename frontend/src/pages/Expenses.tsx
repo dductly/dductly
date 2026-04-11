@@ -23,8 +23,14 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
   const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses();
   const { incomes } = useIncome();
   const { user } = useAuth();
-  const vendorSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.vendor).filter(Boolean))), [expenses]);
-  const descriptionSuggestions = useMemo(() => Array.from(new Set(expenses.map(e => e.description).filter(Boolean))), [expenses]);
+  const vendorSuggestions = useMemo(
+    () => Array.from(new Set(expenses.filter((e) => e.source !== "bank").map((e) => e.vendor).filter(Boolean))),
+    [expenses]
+  );
+  const descriptionSuggestions = useMemo(
+    () => Array.from(new Set(expenses.filter((e) => e.source !== "bank").map((e) => e.description).filter(Boolean))),
+    [expenses]
+  );
   const businessName = user?.user_metadata?.business_name
     ? (user.user_metadata.business_name.endsWith('s')
       ? user.user_metadata.business_name
@@ -73,6 +79,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
         (e.description || "").toLowerCase().includes(q) ||
         (e.category || "").toLowerCase().includes(q) ||
         (e.payment_method || "").toLowerCase().includes(q) ||
+        (e.bankMeta?.linkedAccountLabel || "").toLowerCase().includes(q) ||
         e.amount.toString().toLowerCase().includes(q);
       if (!matchesText) return false;
     }
@@ -204,6 +211,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
   };
 
   const handleEditExpense = async (expense: Expense) => {
+    if (expense.source === "bank") return;
     setEditingExpense(expense);
     setEditForm({
       expense_date: expense.expense_date,
@@ -442,7 +450,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                 <option value="">All Categories</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>
-                    {category}
+                    {category === "bank-sync" ? "Bank (synced)" : category}
                   </option>
                 ))}
               </select>
@@ -550,11 +558,26 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                     <tr key={expense.id} onClick={() => handleViewExpense(expense)} style={{ cursor: 'pointer' }}>
                       <td>{formatDate(expense.expense_date)}</td>
                       <td>
-                        <span className="category-badge">{expense.category}</span>
+                        <span className="category-badge">
+                          {expense.source === "bank" ? "Bank (synced)" : expense.category}
+                        </span>
                       </td>
                       <td>{expense.vendor}</td>
                       <td><span className="description-cell">{expense.description}</span></td>
-                      <td>{expense.payment_method}</td>
+                      <td>
+                        <span
+                          className="description-cell"
+                          title={
+                            expense.source === "bank"
+                              ? expense.bankMeta?.linkedAccountLabel || "Bank (synced)"
+                              : expense.payment_method
+                          }
+                        >
+                          {expense.source === "bank"
+                            ? expense.bankMeta?.linkedAccountLabel ?? "Bank (synced)"
+                            : expense.payment_method}
+                        </span>
+                      </td>
                       <td>{formatCurrency(expense.amount)}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="menu-wrapper">
@@ -584,28 +607,32 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                                 />
                                 View
                               </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => handleEditExpense(expense)}
-                              >
-                                <img
-                                  src={editIcon}
-                                  alt="Edit"
-                                  className="dropdown-icon"
-                                />
-                                Edit
-                              </button>
-                              <button
-                                className="dropdown-item delete-item"
-                                onClick={() => handleDeleteExpense(expense.id)}
-                              >
-                                <img
-                                  src={recycleIcon}
-                                  alt="Delete"
-                                  className="dropdown-icon"
-                                />
-                                Delete
-                              </button>
+                              {expense.source !== "bank" && (
+                                <>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={() => void handleEditExpense(expense)}
+                                  >
+                                    <img
+                                      src={editIcon}
+                                      alt="Edit"
+                                      className="dropdown-icon"
+                                    />
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="dropdown-item delete-item"
+                                    onClick={() => handleDeleteExpense(expense.id)}
+                                  >
+                                    <img
+                                      src={recycleIcon}
+                                      alt="Delete"
+                                      className="dropdown-icon"
+                                    />
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
@@ -872,6 +899,20 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                   </button>
                 </div>
                 <div className="modal-body">
+                  {viewingExpense.source === "bank" && (
+                    <p
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "var(--text-medium)",
+                        marginBottom: "1rem",
+                        padding: "0.75rem",
+                        background: "var(--pale-blue, #F0F6FF)",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      This expense comes from a linked bank account (synced via Stripe). It cannot be edited or deleted here; updates follow your bank feed.
+                    </p>
+                  )}
                   <div className="form-group">
                     <label>Date</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
@@ -881,7 +922,7 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                   <div className="form-group">
                     <label>Category</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
-                      {viewingExpense.category}
+                      {viewingExpense.source === "bank" ? "Bank (synced)" : viewingExpense.category}
                     </div>
                   </div>
                   <div className="form-group">
@@ -899,7 +940,9 @@ const Expenses: React.FC<ExpenseProps> = ({ onNavigate, initialTab }) => {
                   <div className="form-group">
                     <label>Payment Method</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
-                      {viewingExpense.payment_method}
+                      {viewingExpense.source === "bank"
+                        ? viewingExpense.bankMeta?.linkedAccountLabel ?? "Bank (synced)"
+                        : viewingExpense.payment_method}
                     </div>
                   </div>
                   <div className="form-group">

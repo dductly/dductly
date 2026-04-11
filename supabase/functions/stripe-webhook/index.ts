@@ -63,6 +63,115 @@ const syncProfileSubscription = async (
   if (error) console.warn("Failed to sync profiles.subscription:", error.message);
 };
 
+const resolveUserIdForStripeCustomer = async (customerId: string): Promise<string | null> => {
+  if (!supabaseAdmin) return null;
+  const { data, error } = await supabaseAdmin
+    .from("billing_subscriptions")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  if (error) {
+    console.warn("resolveUserIdForStripeCustomer:", error.message);
+    return null;
+  }
+  return (data?.user_id as string | undefined) ?? null;
+};
+
+const syncFinancialConnectionTransactions = async (params: {
+  fcAccountId: string;
+  userId: string;
+  currentTransactionRefreshId: string | null | undefined;
+}): Promise<void> => {
+  if (!stripe || !supabaseAdmin) return;
+
+  const { fcAccountId, userId, currentTransactionRefreshId } = params;
+
+  try {
+    const fcAccount = await stripe.financialConnections.accounts.retrieve(fcAccountId);
+    if (fcAccount.status === "disconnected") return;
+  } catch (e) {
+    console.warn(
+      "syncFinancialConnectionTransactions: skip (account missing or inaccessible)",
+      fcAccountId,
+      e instanceof Error ? e.message : e
+    );
+    return;
+  }
+
+  const { data: syncRow } = await supabaseAdmin
+    .from("financial_connections_account_sync")
+    .select("last_transaction_refresh_id")
+    .eq("user_id", userId)
+    .eq("stripe_fc_account_id", fcAccountId)
+    .maybeSingle();
+
+  const lastRefreshId = (syncRow?.last_transaction_refresh_id as string | undefined) ?? null;
+
+  let startingAfter: string | undefined;
+
+  for (;;) {
+    const page = await stripe.financialConnections.transactions.list({
+      account: fcAccountId,
+      limit: 100,
+      ...(lastRefreshId ? { transaction_refresh: { after: lastRefreshId } } : {}),
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+
+    for (const tx of page.data) {
+      const postedAt =
+        toIsoFromUnix(tx.status_transitions?.posted_at) ??
+        toIsoFromUnix(tx.transacted_at) ??
+        null;
+      const transactedAt = toIsoFromUnix(tx.transacted_at);
+      const txRefresh =
+        typeof tx.transaction_refresh === "string"
+          ? tx.transaction_refresh
+          : (tx.transaction_refresh as { id?: string } | null)?.id ?? null;
+
+      const { error } = await supabaseAdmin.from("financial_connection_transactions").upsert(
+        {
+          stripe_transaction_id: tx.id,
+          user_id: userId,
+          stripe_fc_account_id: fcAccountId,
+          amount: tx.amount,
+          currency: tx.currency,
+          description: tx.description ?? null,
+          status: tx.status ?? null,
+          transacted_at: transactedAt,
+          posted_at: postedAt,
+          stripe_transaction_refresh_id: txRefresh,
+          raw: tx as unknown as Record<string, unknown>,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "stripe_transaction_id" }
+      );
+
+      if (error) {
+        throw new Error(`Upsert financial_connection_transactions failed: ${error.message}`);
+      }
+    }
+
+    if (!page.has_more || page.data.length === 0) break;
+    startingAfter = page.data[page.data.length - 1]?.id;
+    if (!startingAfter) break;
+  }
+
+  if (currentTransactionRefreshId) {
+    const { error: syncErr } = await supabaseAdmin.from("financial_connections_account_sync").upsert(
+      {
+        user_id: userId,
+        stripe_fc_account_id: fcAccountId,
+        last_transaction_refresh_id: currentTransactionRefreshId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,stripe_fc_account_id" }
+    );
+    if (syncErr) {
+      throw new Error(`Upsert financial_connections_account_sync failed: ${syncErr.message}`);
+    }
+  }
+};
+
 const upsertSubscriptionRecord = async (params: {
   userId: string;
   plan: string | null;
@@ -181,6 +290,32 @@ Deno.serve(async (req: Request) => {
           plan,
           subscription,
         });
+        break;
+      }
+
+      case "financial_connections.account.refreshed_transactions": {
+        const account = event.data.object as {
+          id?: string;
+          account_holder?: { type?: string; customer?: string | { id?: string } };
+          transaction_refresh?: { id?: string } | null;
+        };
+        const holder = account.account_holder;
+        const customerRaw = holder?.type === "customer" ? holder.customer : undefined;
+        const customerId =
+          typeof customerRaw === "string" ? customerRaw : customerRaw?.id ?? null;
+        const refreshId = account.transaction_refresh?.id ?? null;
+        const fcAccountId = account.id;
+
+        if (customerId && fcAccountId) {
+          const userId = await resolveUserIdForStripeCustomer(customerId);
+          if (userId) {
+            await syncFinancialConnectionTransactions({
+              fcAccountId,
+              userId,
+              currentTransactionRefreshId: refreshId,
+            });
+          }
+        }
         break;
       }
 

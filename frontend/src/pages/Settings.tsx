@@ -6,6 +6,7 @@ import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
 import { TIMEOUT_OPTIONS } from "../contexts/InactivityContext";
 import editIcon from "../img/pencil-edit.svg";
+import recycleIcon from "../img/recycle.svg";
 import openEyeIcon from "../img/open-eye.svg";
 import closedEyeIcon from "../img/closed-eye.svg";
 import { supabase } from "../lib/supabaseClient";
@@ -27,7 +28,21 @@ function normalizeProfileTier(tier: string | null | undefined): string | null {
   if (tier == null || tier === "") return null;
   return tier.trim().toLowerCase();
 }
-import { cleanupBilling } from "../services/billingService";
+import { cleanupBilling, hasBillingApiBaseUrl } from "../services/billingService";
+import {
+  disconnectFinancialAccount,
+  fetchLinkedFinancialAccounts,
+  type LinkedFinancialAccount,
+} from "../services/financialConnectionsService";
+import BankConnectionModal from "../components/BankConnectionModal";
+
+function formatBankSubcategory(sub: string | null): string {
+  if (!sub) return "";
+  return sub
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 
 const DISPLAY_TRIAL_DAYS = Number(import.meta.env.VITE_STRIPE_TRIAL_DAYS || 14);
 
@@ -170,6 +185,68 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const [cancelSubscriptionError, setCancelSubscriptionError] = useState<string | null>(null);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const [cancelFlowExportThenDelete, setCancelFlowExportThenDelete] = useState(false);
+  const [bankConnectionModalOpen, setBankConnectionModalOpen] = useState(false);
+  const [linkedBankAccounts, setLinkedBankAccounts] = useState<LinkedFinancialAccount[]>([]);
+  const [linkedBanksLoading, setLinkedBanksLoading] = useState(false);
+  const [linkedBanksError, setLinkedBanksError] = useState<string | null>(null);
+  const [disconnectingAccountId, setDisconnectingAccountId] = useState<string | null>(null);
+  const [bankDisconnectConfirm, setBankDisconnectConfirm] = useState<{
+    accountId: string;
+    label: string;
+  } | null>(null);
+  const [bankDisconnectError, setBankDisconnectError] = useState<string | null>(null);
+  const [bankConnectionsListExpanded, setBankConnectionsListExpanded] = useState(false);
+
+  const refreshLinkedBankAccounts = React.useCallback(async () => {
+    const token = session?.access_token;
+    if (!user?.id || !token || !hasBillingApiBaseUrl()) {
+      setLinkedBankAccounts([]);
+      setLinkedBanksError(null);
+      setLinkedBanksLoading(false);
+      return;
+    }
+    setLinkedBanksLoading(true);
+    setLinkedBanksError(null);
+    try {
+      const accounts = await fetchLinkedFinancialAccounts(token);
+      setLinkedBankAccounts(accounts);
+    } catch (e) {
+      setLinkedBanksError(e instanceof Error ? e.message : "Could not load linked banks");
+      setLinkedBankAccounts([]);
+    } finally {
+      setLinkedBanksLoading(false);
+    }
+  }, [user?.id, session?.access_token]);
+
+  React.useEffect(() => {
+    void refreshLinkedBankAccounts();
+  }, [refreshLinkedBankAccounts]);
+
+  const requestDisconnectBank = (accountId: string, label: string) => {
+    setBankDisconnectError(null);
+    setBankDisconnectConfirm({ accountId, label });
+  };
+
+  const cancelBankDisconnectConfirm = () => {
+    setBankDisconnectConfirm(null);
+    setBankDisconnectError(null);
+  };
+
+  const confirmDisconnectBank = async () => {
+    if (!session?.access_token || !bankDisconnectConfirm) return;
+    const { accountId } = bankDisconnectConfirm;
+    setDisconnectingAccountId(accountId);
+    setBankDisconnectError(null);
+    try {
+      await disconnectFinancialAccount(session.access_token, accountId);
+      setBankDisconnectConfirm(null);
+      await refreshLinkedBankAccounts();
+    } catch (e) {
+      setBankDisconnectError(e instanceof Error ? e.message : "Could not remove account");
+    } finally {
+      setDisconnectingAccountId(null);
+    }
+  };
 
   React.useEffect(() => {
     const run = async () => {
@@ -228,9 +305,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const standardTitle = STANDARD_SUBSCRIPTION_CARD.title;
   const priceLabel =
     billingCadence === "yearly"
-      ? `${STANDARD_SUBSCRIPTION_CARD.yearly.price} ${STANDARD_SUBSCRIPTION_CARD.yearly.period} ${STANDARD_SUBSCRIPTION_CARD.yearly.billingLabel}`
+      ? `${STANDARD_SUBSCRIPTION_CARD.yearly.price}${STANDARD_SUBSCRIPTION_CARD.yearly.period}`
       : billingCadence === "monthly"
-        ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price} ${STANDARD_SUBSCRIPTION_CARD.monthly.period} ${STANDARD_SUBSCRIPTION_CARD.monthly.billingLabel}`
+        ? `${STANDARD_SUBSCRIPTION_CARD.monthly.price}${STANDARD_SUBSCRIPTION_CARD.monthly.period}`
         : "-";
 
   const isFreeForLifeFromProfile = isProfileFreeForLifeTier(profileSubscription);
@@ -729,6 +806,242 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
               </div>
             </div>
 
+            {/* Bank connections (Stripe Financial Connections) */}
+            <div className="settings-card settings-card--bank-connect">
+              <div className="settings-card-header">
+                <h2 className="settings-card-title">Bank connections</h2>
+              </div>
+              <div className="settings-card-content">
+                <p
+                  className="settings-hint"
+                  style={{ marginBottom: "12px", lineHeight: 1.5, paddingLeft: 24, paddingRight: 24 }}
+                >
+                  Link your business bank accounts securely through Stripe to sync transactions and balances. Automatic
+                  entry import into dductly is coming soon; linked accounts are stored with your Stripe customer.
+                </p>
+                {linkedBanksLoading && (
+                  <p className="settings-hint" style={{ marginBottom: "12px", paddingLeft: 24, paddingRight: 24 }}>
+                    Loading linked accounts…
+                  </p>
+                )}
+                {linkedBanksError && (
+                  <p
+                    className="settings-hint"
+                    style={{ marginBottom: "12px", color: "#c33", paddingLeft: 24, paddingRight: 24 }}
+                  >
+                    {linkedBanksError}
+                  </p>
+                )}
+                {!linkedBanksLoading && linkedBankAccounts.length > 0 && (
+                  <>
+                    {!bankConnectionsListExpanded ? (
+                      <div style={{ margin: "0 24px 12px" }}>
+                        <button
+                          type="button"
+                          className="settings-bank-connections-toggle"
+                          onClick={() => setBankConnectionsListExpanded(true)}
+                          aria-expanded={false}
+                          aria-controls="settings-bank-connections-list"
+                        >
+                          {linkedBankAccounts.length}{" "}
+                          {linkedBankAccounts.length === 1 ? "bank" : "banks"} connected — expand to view
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            margin: "0 24px 8px",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="settings-link"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              font: "inherit",
+                              padding: 0,
+                            }}
+                            onClick={() => setBankConnectionsListExpanded(false)}
+                            aria-expanded={true}
+                            aria-controls="settings-bank-connections-list"
+                          >
+                            Collapse list
+                          </button>
+                        </div>
+                        <ul
+                          id="settings-bank-connections-list"
+                          style={{
+                            listStyle: "none",
+                            padding: 0,
+                            margin: "0 24px 12px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                          }}
+                        >
+                          {linkedBankAccounts.map((a) => {
+                            const typeLabel = a.subcategory ? formatBankSubcategory(a.subcategory) : "Account";
+                            const institution = a.institutionName || "Linked institution";
+                            const segments = [
+                              institution,
+                              a.displayName || null,
+                              a.last4 ? `····${a.last4}` : null,
+                              typeLabel,
+                              a.status && a.status !== "active" ? a.status : null,
+                            ].filter((s): s is string => Boolean(s));
+                            const titleFull = segments.join(" · ");
+                            const ellipsize: React.CSSProperties = {
+                              minWidth: 0,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            };
+                            const canRemove = a.status !== "disconnected";
+                            return (
+                              <li
+                                key={a.id}
+                                className="settings-bank-link-row"
+                                style={{
+                                  padding: "6px 8px 6px 10px",
+                                  borderRadius: "8px",
+                                  minWidth: 0,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "10px",
+                                    minWidth: 0,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      flexWrap: "nowrap",
+                                      gap: "1.125rem",
+                                      minWidth: 0,
+                                      flex: "1 1 0%",
+                                      fontSize: "0.9rem",
+                                      lineHeight: 1.35,
+                                      color: "var(--text-dark)",
+                                    }}
+                                    title={titleFull}
+                                  >
+                                    <span
+                                      style={{
+                                        ...ellipsize,
+                                        flex: "0 1 auto",
+                                        maxWidth: "38%",
+                                        fontWeight: 600,
+                                        color: "var(--text-dark)",
+                                      }}
+                                    >
+                                      {institution}
+                                    </span>
+                                    {a.displayName ? (
+                                      <span
+                                        style={{
+                                          ...ellipsize,
+                                          flex: "1 1 0%",
+                                          color: "var(--text-medium)",
+                                        }}
+                                      >
+                                        {a.displayName}
+                                      </span>
+                                    ) : null}
+                                    {a.last4 ? (
+                                      <span
+                                        style={{
+                                          flexShrink: 0,
+                                          color: "var(--text-medium)",
+                                          fontVariantNumeric: "tabular-nums",
+                                        }}
+                                      >
+                                        ····{a.last4}
+                                      </span>
+                                    ) : null}
+                                    <span
+                                      style={{
+                                        flexShrink: 0,
+                                        color: "var(--text-medium)",
+                                      }}
+                                    >
+                                      {typeLabel}
+                                    </span>
+                                    {a.status && a.status !== "active" ? (
+                                      <span
+                                        style={{
+                                          flexShrink: 0,
+                                          color: "var(--text-medium)",
+                                          fontSize: "0.85rem",
+                                        }}
+                                      >
+                                        {a.status}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  {canRemove ? (
+                                    <button
+                                      type="button"
+                                      className="settings-bank-remove-btn"
+                                      disabled={disconnectingAccountId === a.id}
+                                      onClick={() => requestDisconnectBank(a.id, institution)}
+                                      aria-label={`Remove ${institution}`}
+                                      aria-busy={disconnectingAccountId === a.id}
+                                      title="Remove linked account"
+                                      style={
+                                        disconnectingAccountId === a.id ? { opacity: 0.55 } : undefined
+                                      }
+                                    >
+                                      <img
+                                        src={recycleIcon}
+                                        alt=""
+                                        className="dropdown-icon"
+                                        aria-hidden
+                                      />
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    )}
+                  </>
+                )}
+                {!linkedBanksLoading && !linkedBanksError && linkedBankAccounts.length === 0 && hasBillingApiBaseUrl() && (
+                  <p className="settings-hint" style={{ marginBottom: "12px", paddingLeft: 24, paddingRight: 24 }}>
+                    No banks linked yet.
+                  </p>
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    paddingLeft: 24,
+                    paddingRight: 24,
+                    paddingBottom: 8,
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-small"
+                    onClick={() => setBankConnectionModalOpen(true)}
+                  >
+                    {linkedBankAccounts.length > 0 ? "Link another account" : "Connect bank account"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Preferences */}
             <div className="settings-card">
               <div className="settings-card-header">
@@ -828,6 +1141,63 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
           </div>
         </div>
       </section>
+
+      <BankConnectionModal
+        open={bankConnectionModalOpen}
+        onOpenChange={setBankConnectionModalOpen}
+        accessToken={session?.access_token}
+        userId={user?.id}
+        purpose="settings"
+        onLinked={() => {
+          setBankConnectionsListExpanded(true);
+          void refreshLinkedBankAccounts();
+        }}
+        connectActionLabel={
+          linkedBankAccounts.length > 0 ? "Link another account" : "Connect bank account"
+        }
+      />
+
+      {bankDisconnectConfirm && (
+        <div className="modal-overlay" onClick={cancelBankDisconnectConfirm}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "26rem" }}>
+            <button type="button" className="modal-close" onClick={cancelBankDisconnectConfirm} aria-label="Close">
+              ×
+            </button>
+            <div className="modal-header">
+              <h2>Remove bank connection?</h2>
+            </div>
+            <div className="modal-body">
+              <p style={{ color: "var(--text-medium)", lineHeight: 1.55, marginBottom: bankDisconnectError ? 12 : 0 }}>
+                Remove <strong style={{ color: "var(--text-dark)" }}>{bankDisconnectConfirm.label}</strong>? You can
+                link this bank again later from this page.
+              </p>
+              {bankDisconnectError && (
+                <p style={{ color: "#c33", fontSize: "0.9rem", margin: 0 }} role="alert">
+                  {bankDisconnectError}
+                </p>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={cancelBankDisconnectConfirm}
+                disabled={disconnectingAccountId === bankDisconnectConfirm.accountId}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => void confirmDisconnectBank()}
+                disabled={disconnectingAccountId === bankDisconnectConfirm.accountId}
+              >
+                {disconnectingAccountId === bankDisconnectConfirm.accountId ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Profile Modal */}
       {isEditing && (
@@ -1252,6 +1622,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   <ul style={{ color: 'var(--text-medium)', fontSize: '0.9375rem', marginTop: '12px', paddingLeft: '20px' }}>
                     <li>All expenses ({expenses.length} entries)</li>
                     <li>All income records ({incomes.length} entries)</li>
+                    <li>Linked bank connections at Stripe and synced bank transactions stored for your account</li>
                     <li>Your account information</li>
                   </ul>
                 </div>

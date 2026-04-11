@@ -1,31 +1,34 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import userRoutes from './routes/user';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/user";
 import stripeRoutes from "./routes/stripeRoutes";
-import webhookRoutes from "./routes/webhookRoutes";
+import {
+  handleStripeWebhook,
+  stripeWebhookRawMiddleware,
+} from "./routes/webhookRoutes";
 import billingRoutes from "./routes/billing";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Stripe webhook must see the raw body — register before helmet/cors/json/urlencoded.
+app.post("/api/stripe/webhook", stripeWebhookRawMiddleware, handleStripeWebhook);
+
 // Middleware
 app.use(helmet());
-const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '');
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
-  .split(',')
+const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, "");
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
+  .split(",")
   .map(normalizeOrigin)
   .filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Non-browser requests (curl, server-to-server) won't send an Origin header.
       if (!origin) return callback(null, true);
 
       const normalized = normalizeOrigin(origin);
@@ -35,43 +38,38 @@ app.use(
     credentials: true,
   }),
 );
-app.use(morgan('dev'));
-app.use('/api/stripe', webhookRoutes);
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/billing', billingRoutes);
-app.use('/api/stripe', stripeRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/billing", billingRoutes);
+app.use("/api/stripe", stripeRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(500).json({ 
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  console.error("Error:", err);
+  res.status(500).json({
+    error: "Internal server error",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: "Route not found" });
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 export default app;
-
-
-
-

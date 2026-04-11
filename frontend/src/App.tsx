@@ -105,7 +105,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
           {!user && (
             <>
               <button className="btn btn-ghost btn-small" onClick={onSignInClick}>
-                Log in
+                Log In
               </button>
               <button
                 className="btn btn-primary btn-small"
@@ -143,16 +143,15 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
                   >
                     Settings
                   </a>
-                  <a
-                    href="#logout"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleLogout();
                       setIsMenuOpen(false);
                     }}
                   >
                     Logout
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -587,7 +586,10 @@ const AppContent: React.FC = () => {
               <p>dductly is made for small business owners, solo entrepreneurs, freelancers, independent contractors, and anyone running their own operation who wants a smarter way to manage their money and stay on top of their deductions.</p>
 
               <h4>How much does dductly cost?</h4>
-              <p>dductly is $7/month or $60/year — that's two months free when you go annual. One plan, all features included.</p>
+              <p>
+                dductly is $8.50/month (billed monthly) or $78/year (billed yearly)—about $6.50/month when you pay
+                annually. Pricing includes the fee to connect your bank. One plan, all features included.
+              </p>
 
               <h3>Getting Started</h3>
 
