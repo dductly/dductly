@@ -23,7 +23,9 @@ CREATE POLICY "Users can view own fc sync"
   FOR SELECT
   USING (auth.uid() = user_id);
 
--- Synced transactions (Stripe transaction id = fctxn_...)
+-- Synced transactions (Stripe transaction id = fctxn_...).
+-- Unlinking a bank in the app calls Stripe disconnect only — we do NOT delete historical rows here;
+-- ingestion stops because sync skips disconnected accounts.
 CREATE TABLE IF NOT EXISTS public.financial_connection_transactions (
   stripe_transaction_id TEXT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,

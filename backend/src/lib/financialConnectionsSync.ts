@@ -40,6 +40,9 @@ export async function resolveUserIdForStripeCustomer(
 /**
  * Pulls Financial Connections transactions after a refresh completes and upserts into Supabase.
  * See https://docs.stripe.com/financial-connections/transactions
+ *
+ * If the FC account is disconnected (user unlinked the bank), returns without writing — existing
+ * `financial_connection_transactions` rows are never deleted by this function.
  */
 export async function syncFinancialConnectionTransactions(params: {
   stripe: Stripe;
@@ -50,6 +53,20 @@ export async function syncFinancialConnectionTransactions(params: {
   currentTransactionRefreshId: string | null | undefined;
 }): Promise<{ insertedOrUpdated: number }> {
   const { stripe, supabase, fcAccountId, userId, currentTransactionRefreshId } = params;
+
+  try {
+    const fcAccount = await stripe.financialConnections.accounts.retrieve(fcAccountId);
+    if (fcAccount.status === "disconnected") {
+      return { insertedOrUpdated: 0 };
+    }
+  } catch (e) {
+    console.warn(
+      "syncFinancialConnectionTransactions: skip sync (account missing or inaccessible after unlink?)",
+      fcAccountId,
+      e instanceof Error ? e.message : e
+    );
+    return { insertedOrUpdated: 0 };
+  }
 
   const { data: syncRow } = await supabase
     .from("financial_connections_account_sync")

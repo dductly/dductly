@@ -86,6 +86,18 @@ const syncFinancialConnectionTransactions = async (params: {
 
   const { fcAccountId, userId, currentTransactionRefreshId } = params;
 
+  try {
+    const fcAccount = await stripe.financialConnections.accounts.retrieve(fcAccountId);
+    if (fcAccount.status === "disconnected") return;
+  } catch (e) {
+    console.warn(
+      "syncFinancialConnectionTransactions: skip (account missing or inaccessible)",
+      fcAccountId,
+      e instanceof Error ? e.message : e
+    );
+    return;
+  }
+
   const { data: syncRow } = await supabaseAdmin
     .from("financial_connections_account_sync")
     .select("last_transaction_refresh_id")

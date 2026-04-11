@@ -18,6 +18,17 @@ export type LinkedFinancialAccount = {
   status: string | null;
 };
 
+/** Human-readable label for tables (matches Settings-style naming: institution · account · last4). */
+export function formatLinkedFinancialAccountLabel(a: LinkedFinancialAccount): string {
+  const institution = a.institutionName?.trim() || "Bank";
+  const segments = [
+    institution,
+    a.displayName?.trim() || null,
+    a.last4 ? `····${a.last4}` : null,
+  ].filter((s): s is string => Boolean(s));
+  return segments.join(" · ");
+}
+
 export async function createFinancialConnectionsSession(
   accessToken: string
 ): Promise<FinancialConnectionsSessionResponse> {

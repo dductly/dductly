@@ -74,6 +74,7 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
         (i.description || "").toLowerCase().includes(q) ||
         (i.category || "").toLowerCase().includes(q) ||
         (i.payment_method || "").toLowerCase().includes(q) ||
+        (i.bankMeta?.linkedAccountLabel || "").toLowerCase().includes(q) ||
         totalAmount.toString().toLowerCase().includes(q);
       if (!matchesText) return false;
     }
@@ -491,7 +492,20 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                       <td>{income.customer}</td>
                       {/* <td>{income.market}</td> */}
                       <td><span className="description-cell">{income.description}</span></td>
-                      <td>{income.source === "bank" ? "Bank (synced)" : income.payment_method}</td>
+                      <td>
+                        <span
+                          className="description-cell"
+                          title={
+                            income.source === "bank"
+                              ? income.bankMeta?.linkedAccountLabel || "Bank (synced)"
+                              : income.payment_method
+                          }
+                        >
+                          {income.source === "bank"
+                            ? income.bankMeta?.linkedAccountLabel ?? "Bank (synced)"
+                            : income.payment_method}
+                        </span>
+                      </td>
                       <td>{formatCurrency(income.amount + (income.tip || 0))}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="menu-wrapper">
@@ -655,7 +669,9 @@ const IncomePage: React.FC<IncomeProps> = ({ onNavigate }) => {
                   <div className="form-group">
                     <label>Payment Method</label>
                     <div className="form-input" style={{ backgroundColor: 'var(--off-white)', cursor: 'default' }}>
-                      {viewingIncome.payment_method}
+                      {viewingIncome.source === "bank"
+                        ? viewingIncome.bankMeta?.linkedAccountLabel ?? "Bank (synced)"
+                        : viewingIncome.payment_method}
                     </div>
                   </div>
                   <div className="form-group">

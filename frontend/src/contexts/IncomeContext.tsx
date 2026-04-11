@@ -9,6 +9,11 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { hasBillingApiBaseUrl } from "../services/billingService";
+import {
+  fetchLinkedFinancialAccounts,
+  formatLinkedFinancialAccountLabel,
+} from "../services/financialConnectionsService";
 import type { Attachment } from "../services/storageService";
 import {
   FC_TRANSACTIONS_SYNCED_EVENT,
@@ -36,6 +41,7 @@ export interface Income {
     stripeTransactionId: string;
     currency: string;
     status: string | null;
+    linkedAccountLabel?: string;
   };
 }
 
@@ -62,7 +68,7 @@ interface IncomeContextType {
 const IncomeContext = createContext<IncomeContextType | undefined>(undefined);
 
 export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [manualIncomes, setManualIncomes] = useState<Income[]>([]);
   const [bankIncomeRows, setBankIncomeRows] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +103,8 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
     setLoading(true);
-    const [incRes, fcRes] = await Promise.all([
+    const token = session?.access_token;
+    const [incRes, fcRes, linkedAccounts] = await Promise.all([
       supabase.from("income").select("*").eq("user_id", user.id).order("income_date", { ascending: false }),
       supabase
         .from("financial_connection_transactions")
@@ -106,7 +113,18 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
+      (async (): Promise<{ id: string; label: string }[]> => {
+        if (!token || !hasBillingApiBaseUrl()) return [];
+        try {
+          const accounts = await fetchLinkedFinancialAccounts(token);
+          return accounts.map((a) => ({ id: a.id, label: formatLinkedFinancialAccountLabel(a) }));
+        } catch {
+          return [];
+        }
+      })(),
     ]);
+
+    const accountLabelById = new Map(linkedAccounts.map((x) => [x.id, x.label]));
 
     if (incRes.error) console.error("Error loading income:", incRes.error);
     else setManualIncomes((incRes.data as Income[]) || []);
@@ -119,13 +137,18 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const out: Income[] = [];
       for (const row of rows) {
         const inc = fcTransactionToIncome(row);
-        if (inc) out.push(inc);
+        if (!inc) continue;
+        if (inc.bankMeta) {
+          const label = accountLabelById.get(row.stripe_fc_account_id);
+          inc.bankMeta = { ...inc.bankMeta, ...(label ? { linkedAccountLabel: label } : {}) };
+        }
+        out.push(inc);
       }
       setBankIncomeRows(out);
     }
 
     setLoading(false);
-  }, [user]);
+  }, [user, session?.access_token]);
 
   useEffect(() => {
     void reloadLedger();

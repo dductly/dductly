@@ -293,6 +293,9 @@ router.post(
         });
       }
 
+      // Stripe stops new FC data for this account. We intentionally do not DELETE rows from
+      // `financial_connection_transactions` — historical synced transactions stay in Supabase;
+      // syncFinancialConnectionTransactions skips disconnected accounts so ingestion stops forward.
       await stripe.financialConnections.accounts.disconnect(accountId.trim());
 
       return res.json({ ok: true });

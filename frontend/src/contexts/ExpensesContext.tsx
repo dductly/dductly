@@ -9,6 +9,11 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { hasBillingApiBaseUrl } from "../services/billingService";
+import {
+  fetchLinkedFinancialAccounts,
+  formatLinkedFinancialAccountLabel,
+} from "../services/financialConnectionsService";
 import type { Attachment } from "../services/storageService";
 import {
   FC_TRANSACTIONS_SYNCED_EVENT,
@@ -34,6 +39,8 @@ export interface Expense {
     stripeTransactionId: string;
     currency: string;
     status: string | null;
+    /** From GET /financial-connections-accounts (institution · account · last4). */
+    linkedAccountLabel?: string;
   };
 }
 
@@ -60,7 +67,7 @@ interface ExpensesContextType {
 const ExpensesContext = createContext<ExpensesContextType | undefined>(undefined);
 
 export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [manualExpenses, setManualExpenses] = useState<Expense[]>([]);
   const [bankExpenseRows, setBankExpenseRows] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +102,8 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     setLoading(true);
-    const [expRes, fcRes] = await Promise.all([
+    const token = session?.access_token;
+    const [expRes, fcRes, linkedAccounts] = await Promise.all([
       supabase.from("expenses").select("*").eq("user_id", user.id).order("expense_date", { ascending: false }),
       supabase
         .from("financial_connection_transactions")
@@ -104,7 +112,18 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
+      (async (): Promise<{ id: string; label: string }[]> => {
+        if (!token || !hasBillingApiBaseUrl()) return [];
+        try {
+          const accounts = await fetchLinkedFinancialAccounts(token);
+          return accounts.map((a) => ({ id: a.id, label: formatLinkedFinancialAccountLabel(a) }));
+        } catch {
+          return [];
+        }
+      })(),
     ]);
+
+    const accountLabelById = new Map(linkedAccounts.map((x) => [x.id, x.label]));
 
     if (expRes.error) console.error("Error loading expenses:", expRes.error);
     else setManualExpenses((expRes.data as Expense[]) || []);
@@ -117,13 +136,18 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       const out: Expense[] = [];
       for (const row of rows) {
         const e = fcTransactionToExpense(row);
-        if (e) out.push(e);
+        if (!e) continue;
+        if (e.bankMeta) {
+          const label = accountLabelById.get(row.stripe_fc_account_id);
+          e.bankMeta = { ...e.bankMeta, ...(label ? { linkedAccountLabel: label } : {}) };
+        }
+        out.push(e);
       }
       setBankExpenseRows(out);
     }
 
     setLoading(false);
-  }, [user]);
+  }, [user, session?.access_token]);
 
   useEffect(() => {
     void reloadLedger();
