@@ -105,7 +105,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
           {!user && (
             <>
               <button className="btn btn-ghost btn-small" onClick={onSignInClick}>
-                Log in
+                Log In
               </button>
               <button
                 className="btn btn-primary btn-small"
