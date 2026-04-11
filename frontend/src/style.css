@@ -4772,6 +4772,36 @@
   color: white !important;
 }
 
+/* Collapsed summary (Settings → Bank connections) */
+.settings-bank-connections-toggle {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.settings-bank-connections-toggle:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .settings-bank-connections-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-medium);
+}
+
+[data-theme="dark"] .settings-bank-connections-toggle:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
 /* Linked bank rows (Settings → Bank connections) */
 .settings-bank-link-row {
   background: rgba(0, 0, 0, 0.02);
