@@ -1622,6 +1622,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   <ul style={{ color: 'var(--text-medium)', fontSize: '0.9375rem', marginTop: '12px', paddingLeft: '20px' }}>
                     <li>All expenses ({expenses.length} entries)</li>
                     <li>All income records ({incomes.length} entries)</li>
+                    <li>Linked bank connections at Stripe and synced bank transactions stored for your account</li>
                     <li>Your account information</li>
                   </ul>
                 </div>

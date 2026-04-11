@@ -1,5 +1,6 @@
 import express from 'express';
 import supabase from '../lib/supabaseClient';
+import { purgeUserBillingAndBankData } from '../lib/accountDeletionCleanup';
 import { authenticateUser, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -173,7 +174,8 @@ router.post('/change-password', async (req: AuthRequest, res) => {
 
 /**
  * DELETE /api/user/account
- * Delete the current user's account
+ * Deletes bank links at Stripe, FC rows, ledger data, billing row, profile, and auth user.
+ * Requires Supabase service role on the server for auth.admin.deleteUser.
  */
 router.delete('/account', async (req: AuthRequest, res) => {
   try {
@@ -186,10 +188,8 @@ router.delete('/account', async (req: AuthRequest, res) => {
       });
     }
 
-    // Delete profile from profiles table
-    // Note: The auth user will be deleted via database cascade (ON DELETE CASCADE)
-    // If you need to delete the auth user directly, create a database function
-    // with SECURITY DEFINER instead of using service role keys
+    await purgeUserBillingAndBankData(supabase, userId);
+
     const { error: profileError } = await supabase
       .from('profiles')
       .delete()
@@ -202,8 +202,14 @@ router.delete('/account', async (req: AuthRequest, res) => {
       });
     }
 
-    // The auth user should be deleted automatically via CASCADE
-    // If you need explicit auth user deletion, use a database function
+    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+    if (authDeleteError) {
+      return res.status(400).json({
+        error: 'Delete Failed',
+        message: authDeleteError.message,
+      });
+    }
+
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Account deletion error:', error);
