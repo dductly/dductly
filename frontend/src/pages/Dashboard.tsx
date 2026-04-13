@@ -99,6 +99,27 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                   <p>All your finances and receipts in one place</p>
                 </div>
               </div>
+              <div className="step-item">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <h3>Connect your bank</h3>
+                  <p>
+                    Go to{' '}
+                    <a
+                      href="#settings"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onNavigate('settings');
+                      }}
+                      className="link"
+                    >
+                      Settings
+                    </a>
+                    {' '}
+                    to link your business bank through Stripe and sync transactions into your ledger.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
