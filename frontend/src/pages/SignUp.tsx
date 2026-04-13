@@ -14,7 +14,6 @@ import {
 } from "../services/billingService";
 import { STANDARD_SUBSCRIPTION_CARD } from "../constants/subscriptionMarketing";
 import { SIGNUP_PLAN_STEP_SECTION } from "../constants/signupPlanStep";
-import { markBankPromptEligibleAfterSignup } from "../lib/bankConnectionPrompt";
 import { STORAGE_POST_SIGNUP_EMAIL } from "../lib/signupEmailFlow";
 
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
@@ -196,9 +195,6 @@ const SignUp: React.FC<SignUpProps> = ({
 
     // Persist a flag so `/confirm-email` doesn't immediately bounce back to Home.
     markPostSignupEmail();
-    if (signedUpUser?.id) {
-      markBankPromptEligibleAfterSignup(signedUpUser.id);
-    }
 
     posthog?.capture("user_signed_up", {
       email,

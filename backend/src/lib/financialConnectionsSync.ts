@@ -1,6 +1,68 @@
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type FcTransactionRefreshPollOutcome = "succeeded" | "failed" | "pending";
+
+/**
+ * Poll Stripe until each account’s transaction_refresh leaves `pending` or missing refresh,
+ * or until `deadlineMs` elapses. Used before listing FC transactions (which requires a
+ * successful refresh). See Account.transaction_refresh in Stripe API docs.
+ */
+export async function pollFcAccountsTransactionRefresh(
+  stripe: Stripe,
+  fcAccountIds: string[],
+  options: { deadlineMs: number; pollIntervalMs: number }
+): Promise<Map<string, { outcome: FcTransactionRefreshPollOutcome; refreshId: string | null }>> {
+  const results = new Map<string, { outcome: FcTransactionRefreshPollOutcome; refreshId: string | null }>();
+  for (const id of fcAccountIds) {
+    results.set(id, { outcome: "pending", refreshId: null });
+  }
+
+  const { deadlineMs, pollIntervalMs } = options;
+  const deadline = Date.now() + deadlineMs;
+
+  const updateFromRetrieve = async (id: string) => {
+    const acc = await stripe.financialConnections.accounts.retrieve(id);
+    if (acc.status === "disconnected") {
+      results.set(id, { outcome: "failed", refreshId: null });
+      return;
+    }
+    const tr = acc.transaction_refresh;
+    if (!tr || typeof tr !== "object") {
+      results.set(id, { outcome: "pending", refreshId: null });
+      return;
+    }
+    const trObj = tr as { id?: string; status?: string };
+    const status = trObj.status;
+    const refreshId = trObj.id ?? null;
+    if (status === "succeeded") {
+      results.set(id, { outcome: "succeeded", refreshId });
+    } else if (status === "failed") {
+      results.set(id, { outcome: "failed", refreshId });
+    } else {
+      results.set(id, { outcome: "pending", refreshId });
+    }
+  };
+
+  for (;;) {
+    const pendingIds = [...results.entries()]
+      .filter(([, v]) => v.outcome === "pending")
+      .map(([k]) => k);
+    if (pendingIds.length === 0) break;
+
+    await Promise.all(pendingIds.map((id) => updateFromRetrieve(id)));
+
+    const anyStillPending = [...results.values()].some((v) => v.outcome === "pending");
+    if (!anyStillPending) break;
+    if (Date.now() >= deadline) break;
+    const sleepMs = Math.min(pollIntervalMs, Math.max(0, deadline - Date.now()));
+    if (sleepMs <= 0) break;
+    await new Promise((r) => setTimeout(r, sleepMs));
+  }
+
+  return results;
+}
+
 const unixToIso = (unix?: number | null): string | null => {
   if (unix == null || unix === 0) return null;
   return new Date(unix * 1000).toISOString();

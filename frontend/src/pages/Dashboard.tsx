@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
-import BankConnectionModal from "../components/BankConnectionModal";
-import { shouldShowBankConnectModal } from "../lib/bankConnectionPrompt";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -12,15 +10,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGuideClick }) => {
-  const { user, session } = useAuth();
-  const [bankConnectOpen, setBankConnectOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    if (shouldShowBankConnectModal(user.id)) {
-      setBankConnectOpen(true);
-    }
-  }, [user?.id]);
+  const { user } = useAuth();
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
 
@@ -42,13 +32,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
 
   return (
     <div className="page">
-      <BankConnectionModal
-        open={bankConnectOpen}
-        onOpenChange={setBankConnectOpen}
-        accessToken={session?.access_token}
-        userId={user?.id}
-        purpose="firstVisit"
-      />
       <section className="section dashboard">
         <div className="dashboard-header">
           <h1 className="section-title">
@@ -114,6 +97,27 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
                 <div className="step-content">
                   <h3>Stay Organized</h3>
                   <p>All your finances and receipts in one place</p>
+                </div>
+              </div>
+              <div className="step-item">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <h3>Connect your bank</h3>
+                  <p>
+                    Go to{' '}
+                    <a
+                      href="#settings"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onNavigate('settings');
+                      }}
+                      className="link"
+                    >
+                      Settings
+                    </a>
+                    {' '}
+                    to link your business bank through Stripe and sync transactions into your ledger.
+                  </p>
                 </div>
               </div>
             </div>

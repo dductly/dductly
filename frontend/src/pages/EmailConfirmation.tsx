@@ -6,7 +6,6 @@ import {
   STORAGE_SIGNUP_CHECKOUT_COMPLETE,
   STORAGE_SIGNUP_NOTICE,
 } from "../lib/signupEmailFlow";
-import { activateBankPromptForFirstDashboardVisit } from "../lib/bankConnectionPrompt";
 
 interface EmailConfirmationProps {
   onNavigate: (page: string) => void;
@@ -96,9 +95,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
           } = await supabase.auth.getSession();
           if (session?.user?.email_confirmed_at) {
             setIsVerified(true);
-            if (session.user.id) {
-              activateBankPromptForFirstDashboardVisit(session.user.id);
-            }
             window.history.replaceState({}, "", window.location.pathname);
           } else {
             setError(
@@ -109,9 +105,6 @@ const EmailConfirmation: React.FC<EmailConfirmationProps> = ({ onNavigate }) => 
           setIsVerifying(false);
         } else if (user?.email_confirmed_at) {
           setIsVerified(true);
-          if (user.id) {
-            activateBankPromptForFirstDashboardVisit(user.id);
-          }
         }
       } catch (err) {
         console.error("Error verifying email:", err);
