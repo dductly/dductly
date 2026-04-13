@@ -3,7 +3,11 @@ import Stripe from "stripe";
 import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "../middleware/auth";
 import supabase from "../lib/supabaseClient";
 import { resolveClientBaseUrl } from "../lib/resolveClientBaseUrl";
-import { getOrCreateStripeCustomerId } from "../lib/stripeCustomer";
+import {
+  getOrCreateStripeCustomerId,
+  getValidStoredStripeCustomerId,
+  stripeCustomerProfileFromAuthUser,
+} from "../lib/stripeCustomer";
 import {
   pollFcAccountsTransactionRefresh,
   syncFinancialConnectionTransactions,
@@ -60,9 +64,17 @@ router.post("/create-checkout-session", authenticateUserOrPendingSignup, async (
       });
     }
 
-    const customerId = await getOrCreateStripeCustomerId(stripe, userId, email || userEmail, {
-      billing_plan: selectedPlan,
-    });
+    const customerId = await getOrCreateStripeCustomerId(
+      stripe,
+      userId,
+      {
+        ...stripeCustomerProfileFromAuthUser(req.user),
+        email: (email?.trim() || userEmail || req.user?.email)?.trim() || undefined,
+      },
+      {
+        billing_plan: selectedPlan,
+      }
+    );
 
     // Ensure we store the user's selected plan immediately, even if webhooks
     // haven't been delivered yet (common in local dev).
@@ -156,12 +168,15 @@ router.post("/financial-connections-session", authenticateUser, async (req: Auth
     }
 
     const userId = req.user?.id;
-    const email = req.user?.email;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
     }
 
-    const customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+    const customerId = await getOrCreateStripeCustomerId(
+      stripe,
+      userId,
+      stripeCustomerProfileFromAuthUser(req.user)
+    );
 
     // `return_url` is optional (Stripe: webview / OAuth return only). Omitting it avoids
     // url_invalid for local http://localhost — embedded `collectFinancialConnectionsAccounts` does not need it.
@@ -208,17 +223,13 @@ router.get("/financial-connections-accounts", authenticateUser, async (req: Auth
       return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
     }
 
-    const { data: row, error: lookupError } = await supabase
-      .from("billing_subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (lookupError) {
-      return res.status(500).json({ error: "Lookup Failed", message: lookupError.message });
+    let customerId: string;
+    try {
+      customerId = (await getValidStoredStripeCustomerId(stripe, userId)) ?? "";
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Lookup failed";
+      return res.status(500).json({ error: "Lookup Failed", message });
     }
-
-    const customerId = row?.stripe_customer_id as string | undefined;
     if (!customerId) {
       return res.json({ accounts: [] as unknown[] });
     }
@@ -270,17 +281,13 @@ router.post(
         return res.status(400).json({ error: "Bad Request", message: "Missing account id" });
       }
 
-      const { data: row, error: lookupError } = await supabase
-        .from("billing_subscriptions")
-        .select("stripe_customer_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (lookupError) {
-        return res.status(500).json({ error: "Lookup Failed", message: lookupError.message });
+      let customerId: string;
+      try {
+        customerId = (await getValidStoredStripeCustomerId(stripe, userId)) ?? "";
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "Lookup failed";
+        return res.status(500).json({ error: "Lookup Failed", message });
       }
-
-      const customerId = row?.stripe_customer_id as string | undefined;
       if (!customerId) {
         return res.status(400).json({ error: "No Customer", message: "No Stripe customer for this user yet." });
       }
@@ -330,10 +337,13 @@ router.post(
         return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
       }
 
-      const email = req.user?.email;
       let customerId: string;
       try {
-        customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+        customerId = await getOrCreateStripeCustomerId(
+          stripe,
+          userId,
+          stripeCustomerProfileFromAuthUser(req.user)
+        );
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : "Could not resolve Stripe customer";
         return res.status(500).json({ error: "Stripe Customer", message });
@@ -385,14 +395,17 @@ router.post("/financial-connections-sync-from-stripe", authenticateUser, async (
     }
 
     const userId = req.user?.id;
-    const email = req.user?.email;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized", message: "User ID missing from auth context" });
     }
 
     let customerId: string;
     try {
-      customerId = await getOrCreateStripeCustomerId(stripe, userId, email);
+      customerId = await getOrCreateStripeCustomerId(
+        stripe,
+        userId,
+        stripeCustomerProfileFromAuthUser(req.user)
+      );
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Could not resolve Stripe customer";
       return res.status(500).json({ error: "Stripe Customer", message });
