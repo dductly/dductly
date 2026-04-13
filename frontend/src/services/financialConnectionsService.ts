@@ -89,36 +89,50 @@ export async function subscribeFinancialConnectionsTransactions(accessToken: str
       Authorization: `Bearer ${accessToken}`,
     },
   });
+  const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    console.warn(
-      "Financial Connections transaction subscribe:",
-      (body as { message?: string }).message || response.statusText
+    throw new Error(
+      (body as { message?: string }).message || response.statusText || "Could not enable bank transaction sync"
     );
   }
 }
 
+/** Max rounds × ~14s server poll + gap — covers slow initial FC transaction refreshes without one huge HTTP request. */
+const FC_SYNC_MAX_ROUNDS = 40;
+const FC_SYNC_RETRY_GAP_MS = 2_500;
+
 /**
  * Pulls FC transactions from Stripe into Supabase (same data webhooks would write).
- * Call after subscribe; helps when webhooks are not reachable (e.g. localhost).
+ * Call after subscribe. Retries while Stripe’s transaction refresh is still pending (short poll per request on the server).
  */
 export async function syncFinancialConnectionsFromStripe(accessToken: string): Promise<void> {
   if (!hasBillingApiBaseUrl() || !API_BASE) {
     return;
   }
-  const response = await fetch(`${API_BASE}/api/stripe/financial-connections-sync-from-stripe`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  if (!response.ok) {
+
+  for (let round = 0; round < FC_SYNC_MAX_ROUNDS; round++) {
+    const response = await fetch(`${API_BASE}/api/stripe/financial-connections-sync-from-stripe`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     const body = await response.json().catch(() => ({}));
-    console.warn(
-      "Financial Connections sync from Stripe:",
-      (body as { message?: string }).message || response.statusText
-    );
+    if (!response.ok) {
+      throw new Error(
+        (body as { message?: string }).message || response.statusText || "Could not sync bank transactions"
+      );
+    }
+    const pending = Boolean((body as { pending?: boolean }).pending);
+    if (!pending) {
+      return;
+    }
+    await new Promise((r) => setTimeout(r, FC_SYNC_RETRY_GAP_MS));
   }
+
+  throw new Error(
+    "Stripe is still gathering transactions for your bank. Wait a few minutes, refresh the page, or try again from Settings."
+  );
 }
 
 export async function disconnectFinancialAccount(

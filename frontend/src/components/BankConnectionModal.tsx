@@ -34,6 +34,7 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
   connectActionLabel,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState("Opening…");
   const [error, setError] = useState<string | null>(null);
 
   const finishFirstVisitPrompt = () => {
@@ -55,6 +56,7 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
       return;
     }
     setLoading(true);
+    setLoadingLabel("Opening Stripe…");
     setError(null);
     try {
       const { error: fcError } = await collectFinancialConnectionsAccounts(accessToken);
@@ -62,14 +64,18 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
         setError(fcError.message);
         return;
       }
+      setLoadingLabel("Gathering transactions…");
       await subscribeFinancialConnectionsTransactions(accessToken);
       await syncFinancialConnectionsFromStripe(accessToken);
       window.dispatchEvent(new CustomEvent(FC_TRANSACTIONS_SYNCED_EVENT));
       finishFirstVisitPrompt();
       onLinked?.();
       onOpenChange(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong while syncing your bank.");
     } finally {
       setLoading(false);
+      setLoadingLabel("Opening…");
     }
   };
 
@@ -94,10 +100,22 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
         <h2 id="bank-connect-title" className="modal-title">
           {purpose === "firstVisit" ? "Connect your bank" : "Bank connections"}
         </h2>
-        <p className="modal-subtitle" style={{ marginBottom: "1rem", lineHeight: 1.55 }}>
+        <p className="modal-subtitle" style={{ marginBottom: "0.75rem", lineHeight: 1.55 }}>
           {purpose === "firstVisit"
             ? "Link your business bank account so we can help populate your dashboard with transactions. You can skip for now and connect later in Settings."
-            : "Securely link your bank through Stripe to pull in transactions and balances. Full import into your ledger is rolling out next."}
+            : "Securely link your bank through Stripe to pull in transactions and balances."}
+        </p>
+        <p
+          className="modal-subtitle"
+          style={{
+            marginBottom: "1rem",
+            lineHeight: 1.55,
+            fontSize: "0.9rem",
+            color: "var(--text-medium, #5c5c5c)",
+          }}
+        >
+          After you connect, please be patient while Stripe gathers your transactions from your bank. This can take up
+          to a minute; the window may stay open until the first sync finishes.
         </p>
         {error && (
           <p style={{ color: "#c33", fontSize: "0.9rem", marginBottom: "0.75rem" }} role="alert">
@@ -120,7 +138,7 @@ const BankConnectionModal: React.FC<BankConnectionModalProps> = ({
             onClick={() => void handleConnect()}
             disabled={loading}
           >
-            {loading ? "Opening…" : connectActionLabel ?? "Connect bank"}
+            {loading ? loadingLabel : connectActionLabel ?? "Connect bank"}
           </button>
           {purpose === "firstVisit" && (
             <button

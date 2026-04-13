@@ -4,7 +4,10 @@ import { authenticateUser, authenticateUserOrPendingSignup, AuthRequest } from "
 import supabase from "../lib/supabaseClient";
 import { resolveClientBaseUrl } from "../lib/resolveClientBaseUrl";
 import { getOrCreateStripeCustomerId } from "../lib/stripeCustomer";
-import { syncFinancialConnectionTransactions } from "../lib/financialConnectionsSync";
+import {
+  pollFcAccountsTransactionRefresh,
+  syncFinancialConnectionTransactions,
+} from "../lib/financialConnectionsSync";
 import { getStripe } from "../services/stripeService";
 
 const router = express.Router();
@@ -401,35 +404,64 @@ router.post("/financial-connections-sync-from-stripe", authenticateUser, async (
     });
 
     let insertedOrUpdated = 0;
-    let accountsWithTransactions = 0;
+    const fcAccountIds = list.data
+      .filter((a) => a.status !== "disconnected" && a.permissions?.includes("transactions"))
+      .map((a) => a.id);
 
-    for (const account of list.data) {
-      if (account.status === "disconnected") continue;
-      if (!account.permissions?.includes("transactions")) continue;
-      accountsWithTransactions += 1;
+    const accountsWithTransactions = fcAccountIds.length;
 
-      const refreshId =
-        account.transaction_refresh &&
-        typeof account.transaction_refresh === "object" &&
-        "id" in account.transaction_refresh
-          ? (account.transaction_refresh as { id: string }).id
-          : null;
+    if (fcAccountIds.length === 0) {
+      return res.json({
+        ok: true,
+        pending: false,
+        accountsChecked: list.data.length,
+        accountsWithTransactionsPermission: 0,
+        insertedOrUpdated: 0,
+      });
+    }
+
+    /** Short window per HTTP request; client retries while `pending` is true (avoids long-held connections). */
+    const pollResults = await pollFcAccountsTransactionRefresh(stripe, fcAccountIds, {
+      deadlineMs: 14_000,
+      pollIntervalMs: 2_000,
+    });
+
+    let refreshStillPending = false;
+    const refreshFailedAccountIds: string[] = [];
+
+    for (const fcAccountId of fcAccountIds) {
+      const polled = pollResults.get(fcAccountId);
+      if (!polled || polled.outcome === "pending") {
+        refreshStillPending = true;
+        continue;
+      }
+      if (polled.outcome === "failed") {
+        refreshFailedAccountIds.push(fcAccountId);
+        console.warn(
+          "[FC sync] transaction_refresh failed for account",
+          fcAccountId,
+          "(skipping transactions.list for this account)"
+        );
+        continue;
+      }
 
       const result = await syncFinancialConnectionTransactions({
         stripe,
         supabase,
-        fcAccountId: account.id,
+        fcAccountId,
         userId,
-        currentTransactionRefreshId: refreshId,
+        currentTransactionRefreshId: polled.refreshId,
       });
       insertedOrUpdated += result.insertedOrUpdated;
     }
 
     return res.json({
       ok: true,
+      pending: refreshStillPending,
       accountsChecked: list.data.length,
       accountsWithTransactionsPermission: accountsWithTransactions,
       insertedOrUpdated,
+      refreshFailedAccountIds,
     });
   } catch (err: unknown) {
     console.error(err);

@@ -816,8 +816,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   className="settings-hint"
                   style={{ marginBottom: "12px", lineHeight: 1.5, paddingLeft: 24, paddingRight: 24 }}
                 >
-                  Link your business bank accounts securely through Stripe to sync transactions and balances. Automatic
-                  entry import into dductly is coming soon; linked accounts are stored with your Stripe customer.
+                  Link your business bank accounts securely through Stripe to sync transactions and balances. After you
+                  connect an account, please be patient while Stripe gathers transactions—it can take up to a minute before
+                  they appear in your ledger.
                 </p>
                 {linkedBanksLoading && (
                   <p className="settings-hint" style={{ marginBottom: "12px", paddingLeft: 24, paddingRight: 24 }}>
