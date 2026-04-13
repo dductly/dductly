@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useExpenses } from "../contexts/ExpensesContext";
 import { useIncome } from "../contexts/IncomeContext";
-import BankConnectionModal from "../components/BankConnectionModal";
-import { shouldShowBankConnectModal } from "../lib/bankConnectionPrompt";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -12,15 +10,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGuideClick }) => {
-  const { user, session } = useAuth();
-  const [bankConnectOpen, setBankConnectOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    if (shouldShowBankConnectModal(user.id)) {
-      setBankConnectOpen(true);
-    }
-  }, [user?.id]);
+  const { user } = useAuth();
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
 
@@ -42,13 +32,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
 
   return (
     <div className="page">
-      <BankConnectionModal
-        open={bankConnectOpen}
-        onOpenChange={setBankConnectOpen}
-        accessToken={session?.access_token}
-        userId={user?.id}
-        purpose="firstVisit"
-      />
       <section className="section dashboard">
         <div className="dashboard-header">
           <h1 className="section-title">

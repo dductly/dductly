@@ -1147,8 +1147,6 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
         open={bankConnectionModalOpen}
         onOpenChange={setBankConnectionModalOpen}
         accessToken={session?.access_token}
-        userId={user?.id}
-        purpose="settings"
         onLinked={() => {
           setBankConnectionsListExpanded(true);
           void refreshLinkedBankAccounts();
