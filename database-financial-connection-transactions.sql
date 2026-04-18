@@ -6,6 +6,13 @@
 -- Populated when Stripe sends financial_connections.account.refreshed_transactions
 -- (your Node webhook and/or Supabase `stripe-webhook` Edge Function — same DB writes).
 
+-- Where the row was ingested from (extend enum later if you add more sources).
+DO $$ BEGIN
+  CREATE TYPE public.fc_transaction_ledger_source AS ENUM ('stripe_financial_connections');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
 -- Per-account cursor for incremental transaction_refresh[after] pulls
 CREATE TABLE IF NOT EXISTS public.financial_connections_account_sync (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -37,6 +44,8 @@ CREATE TABLE IF NOT EXISTS public.financial_connection_transactions (
   transacted_at TIMESTAMP WITH TIME ZONE,
   posted_at TIMESTAMP WITH TIME ZONE,
   stripe_transaction_refresh_id TEXT,
+  ledger_source public.fc_transaction_ledger_source NOT NULL DEFAULT 'stripe_financial_connections',
+  linked_account_label TEXT,
   raw JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

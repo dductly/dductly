@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { buildFcAccountLedgerLabel } from "./fcAccountLedgerLabel";
 
 export type FcTransactionRefreshPollOutcome = "succeeded" | "failed" | "pending";
 
@@ -116,11 +117,13 @@ export async function syncFinancialConnectionTransactions(params: {
 }): Promise<{ insertedOrUpdated: number }> {
   const { stripe, supabase, fcAccountId, userId, currentTransactionRefreshId } = params;
 
+  let linkedAccountLabel: string;
   try {
     const fcAccount = await stripe.financialConnections.accounts.retrieve(fcAccountId);
     if (fcAccount.status === "disconnected") {
       return { insertedOrUpdated: 0 };
     }
+    linkedAccountLabel = buildFcAccountLedgerLabel(fcAccount);
   } catch (e) {
     console.warn(
       "syncFinancialConnectionTransactions: skip sync (account missing or inaccessible after unlink?)",
@@ -179,6 +182,8 @@ export async function syncFinancialConnectionTransactions(params: {
             typeof tx.transaction_refresh === "string"
               ? tx.transaction_refresh
               : (tx.transaction_refresh as { id?: string } | null)?.id ?? null,
+          ledger_source: "stripe_financial_connections",
+          linked_account_label: linkedAccountLabel,
           raw: tx as unknown as Record<string, unknown>,
           updated_at: new Date().toISOString(),
         },

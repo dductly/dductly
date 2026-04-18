@@ -103,27 +103,19 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setLoading(true);
     const token = session?.access_token;
-    const [expRes, fcRes, linkedAccounts] = await Promise.all([
+
+    // Load ledger from Supabase first. Do not block on Stripe (linked-accounts API) — that call can be
+    // slow or fail while disconnected; cached FC transactions and manual rows should still appear.
+    const [expRes, fcRes] = await Promise.all([
       supabase.from("expenses").select("*").eq("user_id", user.id).order("expense_date", { ascending: false }),
       supabase
         .from("financial_connection_transactions")
         .select(
-          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at,ledger_source,linked_account_label"
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
-      (async (): Promise<{ id: string; label: string }[]> => {
-        if (!token || !hasBillingApiBaseUrl()) return [];
-        try {
-          const accounts = await fetchLinkedFinancialAccounts(token);
-          return accounts.map((a) => ({ id: a.id, label: formatLinkedFinancialAccountLabel(a) }));
-        } catch {
-          return [];
-        }
-      })(),
     ]);
-
-    const accountLabelById = new Map(linkedAccounts.map((x) => [x.id, x.label]));
 
     if (expRes.error) console.error("Error loading expenses:", expRes.error);
     else setManualExpenses((expRes.data as Expense[]) || []);
@@ -137,16 +129,35 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       for (const row of rows) {
         const e = fcTransactionToExpense(row);
         if (!e) continue;
-        if (e.bankMeta) {
-          const label = accountLabelById.get(row.stripe_fc_account_id);
-          e.bankMeta = { ...e.bankMeta, ...(label ? { linkedAccountLabel: label } : {}) };
-        }
         out.push(e);
       }
       setBankExpenseRows(out);
     }
 
     setLoading(false);
+
+    if (token && hasBillingApiBaseUrl()) {
+      void (async () => {
+        try {
+          const accounts = await fetchLinkedFinancialAccounts(token);
+          const accountLabelById = new Map(
+            accounts.map((a) => [a.id, formatLinkedFinancialAccountLabel(a)] as const)
+          );
+          setBankExpenseRows((prev) =>
+            prev.map((e) => {
+              const meta = e.bankMeta;
+              if (!meta?.stripeFcAccountId) return e;
+              if (meta.linkedAccountLabel) return e;
+              const label = accountLabelById.get(meta.stripeFcAccountId);
+              if (!label) return e;
+              return { ...e, bankMeta: { ...meta, linkedAccountLabel: label } };
+            })
+          );
+        } catch {
+          /* labels optional */
+        }
+      })();
+    }
   }, [user, session?.access_token]);
 
   useEffect(() => {

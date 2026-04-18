@@ -104,27 +104,17 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     setLoading(true);
     const token = session?.access_token;
-    const [incRes, fcRes, linkedAccounts] = await Promise.all([
+
+    const [incRes, fcRes] = await Promise.all([
       supabase.from("income").select("*").eq("user_id", user.id).order("income_date", { ascending: false }),
       supabase
         .from("financial_connection_transactions")
         .select(
-          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at,ledger_source,linked_account_label"
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
-      (async (): Promise<{ id: string; label: string }[]> => {
-        if (!token || !hasBillingApiBaseUrl()) return [];
-        try {
-          const accounts = await fetchLinkedFinancialAccounts(token);
-          return accounts.map((a) => ({ id: a.id, label: formatLinkedFinancialAccountLabel(a) }));
-        } catch {
-          return [];
-        }
-      })(),
     ]);
-
-    const accountLabelById = new Map(linkedAccounts.map((x) => [x.id, x.label]));
 
     if (incRes.error) console.error("Error loading income:", incRes.error);
     else setManualIncomes((incRes.data as Income[]) || []);
@@ -138,16 +128,35 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       for (const row of rows) {
         const inc = fcTransactionToIncome(row);
         if (!inc) continue;
-        if (inc.bankMeta) {
-          const label = accountLabelById.get(row.stripe_fc_account_id);
-          inc.bankMeta = { ...inc.bankMeta, ...(label ? { linkedAccountLabel: label } : {}) };
-        }
         out.push(inc);
       }
       setBankIncomeRows(out);
     }
 
     setLoading(false);
+
+    if (token && hasBillingApiBaseUrl()) {
+      void (async () => {
+        try {
+          const accounts = await fetchLinkedFinancialAccounts(token);
+          const accountLabelById = new Map(
+            accounts.map((a) => [a.id, formatLinkedFinancialAccountLabel(a)] as const)
+          );
+          setBankIncomeRows((prev) =>
+            prev.map((i) => {
+              const meta = i.bankMeta;
+              if (!meta?.stripeFcAccountId) return i;
+              if (meta.linkedAccountLabel) return i;
+              const label = accountLabelById.get(meta.stripeFcAccountId);
+              if (!label) return i;
+              return { ...i, bankMeta: { ...meta, linkedAccountLabel: label } };
+            })
+          );
+        } catch {
+          /* labels optional */
+        }
+      })();
+    }
   }, [user, session?.access_token]);
 
   useEffect(() => {

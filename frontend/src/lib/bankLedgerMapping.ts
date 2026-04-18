@@ -1,6 +1,9 @@
 import type { Expense } from "../contexts/ExpensesContext";
 import type { Income } from "../contexts/IncomeContext";
 
+/** Ingestion source for rows in `financial_connection_transactions` (Postgres enum). */
+export type FcTransactionLedgerSource = "stripe_financial_connections";
+
 /** Supabase row shape for `financial_connection_transactions` */
 export type FinancialConnectionTransactionRow = {
   stripe_transaction_id: string;
@@ -12,6 +15,9 @@ export type FinancialConnectionTransactionRow = {
   status: string | null;
   transacted_at: string | null;
   posted_at?: string | null;
+  ledger_source?: FcTransactionLedgerSource | null;
+  /** Set at Stripe sync time (institution · account · last4); avoids live FC account list calls. */
+  linked_account_label?: string | null;
 };
 
 const BANK_CATEGORY = "bank-sync";
@@ -68,6 +74,9 @@ export function fcTransactionToExpense(row: FinancialConnectionTransactionRow): 
       stripeTransactionId: row.stripe_transaction_id,
       currency: row.currency,
       status: row.status,
+      ...(row.linked_account_label?.trim()
+        ? { linkedAccountLabel: row.linked_account_label.trim() }
+        : {}),
     },
   };
 }
@@ -99,6 +108,9 @@ export function fcTransactionToIncome(row: FinancialConnectionTransactionRow): I
       stripeTransactionId: row.stripe_transaction_id,
       currency: row.currency,
       status: row.status,
+      ...(row.linked_account_label?.trim()
+        ? { linkedAccountLabel: row.linked_account_label.trim() }
+        : {}),
     },
   };
 }
