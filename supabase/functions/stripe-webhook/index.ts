@@ -19,6 +19,21 @@ const toIsoFromUnix = (value?: number | null): string | null => {
   return new Date(value * 1000).toISOString();
 };
 
+/** Matches backend `buildFcAccountLedgerLabel` / frontend `formatLinkedFinancialAccountLabel`. */
+const buildFcAccountLedgerLabel = (acc: {
+  institution_name?: string | null;
+  display_name?: string | null;
+  last4?: string | null;
+}): string => {
+  const institution = acc.institution_name?.trim() || "Bank";
+  const segments = [
+    institution,
+    acc.display_name?.trim() || null,
+    acc.last4 ? `····${acc.last4}` : null,
+  ].filter((s): s is string => Boolean(s));
+  return segments.join(" · ");
+};
+
 const PROFILE_FREE_TRIAL = "free_trial";
 const PROFILE_STANDARD_MONTHLY = "standard_monthly";
 const PROFILE_STANDARD_YEARLY = "standard_yearly";
@@ -86,9 +101,11 @@ const syncFinancialConnectionTransactions = async (params: {
 
   const { fcAccountId, userId, currentTransactionRefreshId } = params;
 
+  let linkedAccountLabel: string;
   try {
     const fcAccount = await stripe.financialConnections.accounts.retrieve(fcAccountId);
     if (fcAccount.status === "disconnected") return;
+    linkedAccountLabel = buildFcAccountLedgerLabel(fcAccount);
   } catch (e) {
     console.warn(
       "syncFinancialConnectionTransactions: skip (account missing or inaccessible)",
@@ -140,6 +157,8 @@ const syncFinancialConnectionTransactions = async (params: {
           transacted_at: transactedAt,
           posted_at: postedAt,
           stripe_transaction_refresh_id: txRefresh,
+          ledger_source: "stripe_financial_connections",
+          linked_account_label: linkedAccountLabel,
           raw: tx as unknown as Record<string, unknown>,
           updated_at: new Date().toISOString(),
         },

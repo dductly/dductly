@@ -110,7 +110,7 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       supabase
         .from("financial_connection_transactions")
         .select(
-          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at,ledger_source,linked_account_label"
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
@@ -144,11 +144,12 @@ export const IncomeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           );
           setBankIncomeRows((prev) =>
             prev.map((i) => {
-              const id = i.bankMeta?.stripeFcAccountId;
-              if (!id) return i;
-              const label = accountLabelById.get(id);
-              if (!label || i.bankMeta?.linkedAccountLabel === label) return i;
-              return { ...i, bankMeta: { ...i.bankMeta, linkedAccountLabel: label } };
+              const meta = i.bankMeta;
+              if (!meta?.stripeFcAccountId) return i;
+              if (meta.linkedAccountLabel) return i;
+              const label = accountLabelById.get(meta.stripeFcAccountId);
+              if (!label) return i;
+              return { ...i, bankMeta: { ...meta, linkedAccountLabel: label } };
             })
           );
         } catch {

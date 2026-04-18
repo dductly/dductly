@@ -111,7 +111,7 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
       supabase
         .from("financial_connection_transactions")
         .select(
-          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at"
+          "stripe_transaction_id,user_id,stripe_fc_account_id,amount,currency,description,status,transacted_at,posted_at,ledger_source,linked_account_label"
         )
         .eq("user_id", user.id)
         .order("transacted_at", { ascending: false }),
@@ -145,11 +145,12 @@ export const ExpensesProvider: React.FC<{ children: ReactNode }> = ({ children }
           );
           setBankExpenseRows((prev) =>
             prev.map((e) => {
-              const id = e.bankMeta?.stripeFcAccountId;
-              if (!id) return e;
-              const label = accountLabelById.get(id);
-              if (!label || e.bankMeta?.linkedAccountLabel === label) return e;
-              return { ...e, bankMeta: { ...e.bankMeta, linkedAccountLabel: label } };
+              const meta = e.bankMeta;
+              if (!meta?.stripeFcAccountId) return e;
+              if (meta.linkedAccountLabel) return e;
+              const label = accountLabelById.get(meta.stripeFcAccountId);
+              if (!label) return e;
+              return { ...e, bankMeta: { ...meta, linkedAccountLabel: label } };
             })
           );
         } catch {
