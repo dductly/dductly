@@ -77,23 +77,25 @@ const AppCarousel: React.FC = () => {
         <div className="app-carousel-right">
           <button className="phone-arrow" onClick={() => go(active - 1)} aria-label="Previous">‹</button>
 
-          <div className="phone-mockup" onClick={() => setLightbox(true)} title="Click to enlarge">
-            <div className="phone-btn-vol-up" />
-            <div className="phone-btn-vol-down" />
-            <div className="phone-btn-power" />
-            <div className="phone-notch" />
-            <div className="phone-screen">
-              {SLIDES.map((slide, i) => (
-                <img
-                  key={i}
-                  src={slide.src}
-                  alt={slide.label}
-                  className={`phone-slide${i === active ? " active" : ""}`}
-                />
-              ))}
-              <div className="phone-tap-hint">tap to expand</div>
+          <div className="mockup-with-hint">
+            <div className="phone-mockup" onClick={() => setLightbox(true)} title="Click to enlarge">
+              <div className="phone-btn-vol-up" />
+              <div className="phone-btn-vol-down" />
+              <div className="phone-btn-power" />
+              <div className="phone-notch" />
+              <div className="phone-screen">
+                {SLIDES.map((slide, i) => (
+                  <img
+                    key={i}
+                    src={slide.src}
+                    alt={slide.label}
+                    className={`phone-slide${i === active ? " active" : ""}`}
+                  />
+                ))}
+              </div>
+              <div className="phone-home-bar" />
             </div>
-            <div className="phone-home-bar" />
+            <p className="mockup-tap-hint">tap to expand</p>
           </div>
 
           <button className="phone-arrow" onClick={() => go(active + 1)} aria-label="Next">›</button>

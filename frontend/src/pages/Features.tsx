@@ -117,23 +117,26 @@ const Features: React.FC = () => {
         <div className="app-carousel-right">
           <button className="phone-arrow" onClick={prev} aria-label="Previous">‹</button>
 
-          <div className="browser-mockup" onClick={() => setExpanded(true)} title="Click to expand"style={{ cursor: "pointer" }}>
-            <div className="browser-bar">
-              <div className="browser-dots">
-                <span className="browser-dot dot-red" />
-                <span className="browser-dot dot-yellow" />
-                <span className="browser-dot dot-green" />
+          <div className="mockup-with-hint">
+            <div className="browser-mockup" onClick={() => setExpanded(true)} title="Click to expand" style={{ cursor: "pointer" }}>
+              <div className="browser-bar">
+                <div className="browser-dots">
+                  <span className="browser-dot dot-red" />
+                  <span className="browser-dot dot-yellow" />
+                  <span className="browser-dot dot-green" />
+                </div>
+                <div className="browser-url">dductly.com</div>
               </div>
-              <div className="browser-url">dductly.com</div>
+              <div className="browser-screen">
+                <img
+                  key={current}
+                  src={features[current].img}
+                  alt={features[current].title}
+                  className="browser-screenshot"
+                />
+              </div>
             </div>
-            <div className="browser-screen">
-              <img
-                key={current}
-                src={features[current].img}
-                alt={features[current].title}
-                className="browser-screenshot"
-              />
-            </div>
+            <p className="mockup-tap-hint">tap to expand</p>
           </div>
 
           <button className="phone-arrow" onClick={next} aria-label="Next">›</button>
