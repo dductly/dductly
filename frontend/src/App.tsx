@@ -14,6 +14,7 @@ import Stats from "./pages/Stats";
 import TaxInsights from "./pages/TaxInsights";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import AppCarousel from "./pages/AppCarousel";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import InactivityWarningModal from "./components/InactivityWarningModal";
@@ -529,8 +530,9 @@ const AppContent: React.FC = () => {
         return (
           <>
             <Home onNavigate={handleNavigate} />
-            <Services />
+            <AppCarousel />
             <Features />
+            <Services />
             <Contact onNavigate={handleNavigate} />
           </>
         );

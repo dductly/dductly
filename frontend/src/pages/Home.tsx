@@ -11,7 +11,22 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       <div className="hero-left">
         <div className="bubble-1"></div>
         <div className="bubble-2"></div>
-        <div className="kicker">Built for business Owners</div>
+        <div className="kicker-row">
+          <div className="kicker">Built for business Owners</div>
+          <a
+            href="https://apps.apple.com/us/app/dductly/id6761790510"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="app-store-badge"
+            aria-label="Download on the App Store"
+          >
+            <img
+              src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
+              alt="Download on the App Store"
+              className="app-store-img"
+            />
+          </a>
+        </div>
         <h1>Making your life easier, one expense at a time.</h1>
         <p className="sub">
           At dductly, we believe small businesses are the heart of every community. Our mission is to simplify the day-to-day of running a business, so you can focus on what matters most: your customers, your growth, and doing what you love.
