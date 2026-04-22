@@ -557,6 +557,13 @@
     opacity: 0.5;
     animation: float 4s ease-in-out infinite reverse;
   }
+  .kicker-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
   .kicker{
     letter-spacing:.15em;
     font-size:18px;
@@ -600,11 +607,364 @@
     max-width:50ch;
   }
   .cta-row{
-    margin-top:12px; 
-    display:flex; 
-    gap:16px; 
-    flex-wrap:wrap; 
+    margin-top:12px;
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
     align-items:center;
+  }
+  .app-store-badge {
+    display: inline-flex;
+    align-self: flex-start;
+    width: fit-content;
+    border-radius: 13px;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, opacity 0.3s ease;
+    box-shadow: 0 4px 16px rgba(139, 174, 214, 0.25);
+    opacity: 0.92;
+    text-decoration: none;
+  }
+  .app-store-badge:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 28px rgba(78, 123, 181, 0.35);
+    opacity: 1;
+  }
+  .app-store-badge:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .app-store-img {
+    height: 44px;
+    width: auto;
+    display: block;
+  }
+
+  /* ── App Carousel — standalone section + card ── */
+  .app-carousel-section {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 32px) clamp(24px, 4vw, 40px);
+    display: flex;
+    justify-content: center;
+  }
+
+  .app-carousel-card {
+    position: relative;
+    width: 100%;
+    background: var(--white);
+    border-radius: 20px;
+    border: 6px solid var(--sage-green);
+    box-shadow: 0 12px 40px rgba(168, 197, 232, 0.2);
+    padding: clamp(24px, 3vw, 40px);
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 3vw, 32px);
+    overflow: hidden;
+  }
+
+  .app-carousel-card-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: var(--cornflower-blue);
+    border-radius: 14px 14px 0 0;
+  }
+
+  /* Left text */
+  .app-carousel-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .app-carousel-eyebrow {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--deep-blue);
+    margin: 0;
+  }
+  .app-carousel-heading {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--market-brown);
+    margin: 0;
+    line-height: 1.15;
+    text-shadow: 2px 2px 4px rgba(168, 197, 232, 0.4);
+  }
+  .app-carousel-slide-info {
+    background: var(--pale-blue);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--cornflower-blue);
+  }
+  .app-carousel-slide-label {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--market-brown);
+    margin: 0 0 6px;
+  }
+  .app-carousel-slide-desc {
+    font-size: 0.92rem;
+    color: var(--text-medium);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .app-carousel-dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .app-carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--powder-blue);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+  }
+  .app-carousel-dot.active {
+    background: var(--deep-blue);
+    width: 18px;
+    border-radius: 3px;
+  }
+
+  /* Right: phone + arrows */
+  .app-carousel-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── Phone mockup — slim, natural ── */
+  .phone-mockup {
+    position: relative;
+    width: 180px;
+    height: 370px;
+    background: linear-gradient(160deg, #2a2a2e 0%, #1a1a1d 60%, #111113 100%);
+    border-radius: 38px;
+    padding: 13px 10px;
+    box-shadow:
+      0 0 0 1.5px rgba(255,255,255,0.12),
+      0 0 0 2.5px #111,
+      0 20px 50px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .phone-mockup:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+      0 0 0 1.5px rgba(255,255,255,0.16),
+      0 0 0 2.5px #111,
+      0 28px 60px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+  }
+
+  /* Volume buttons — thin, flush */
+  .phone-btn-vol-up,
+  .phone-btn-vol-down {
+    position: absolute;
+    left: -2px;
+    width: 2px;
+    background: linear-gradient(to right, #555, #3a3a3a);
+    border-radius: 1px 0 0 1px;
+  }
+  .phone-btn-vol-up   { top: 80px;  height: 28px; }
+  .phone-btn-vol-down { top: 120px; height: 28px; }
+
+  /* Power button — thin, flush */
+  .phone-btn-power {
+    position: absolute;
+    right: -2px;
+    top: 98px;
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(to left, #555, #3a3a3a);
+    border-radius: 0 1px 1px 0;
+  }
+
+  /* Dynamic island — pill shape */
+  .phone-notch {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52px;
+    height: 14px;
+    background: #0a0a0b;
+    border-radius: 10px;
+    z-index: 10;
+  }
+
+  /* Screen */
+  .phone-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #000;
+  }
+  .phone-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1.02);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+  }
+  .phone-slide.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .phone-tap-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    background: rgba(0,0,0,0.35);
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Home indicator */
+  .phone-home-bar {
+    position: absolute;
+    bottom: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: rgba(255,255,255,0.28);
+    border-radius: 2px;
+    z-index: 10;
+  }
+
+  /* ── Laptop mockup — modern thin-bezel ── */
+  /* ── Browser chrome mockup ── */
+  .browser-mockup {
+    position: relative;
+    width: 340px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.08),
+      0 12px 36px rgba(78, 123, 181, 0.18),
+      0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .browser-mockup:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.08),
+      0 20px 48px rgba(78, 123, 181, 0.26),
+      0 8px 20px rgba(0,0,0,0.14);
+  }
+  .browser-bar {
+    background: #f0f0f0;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  .browser-dots {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .browser-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+  }
+  .dot-red    { background: #ff5f57; }
+  .dot-yellow { background: #ffbd2e; }
+  .dot-green  { background: #28c840; }
+  .browser-url {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    color: #666;
+    font-family: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .browser-screen {
+    height: 240px;
+    background: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    cursor: default;
+  }
+  .browser-screen::-webkit-scrollbar {
+    width: 4px;
+  }
+  .browser-screen::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+  .browser-screen::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 2px;
+  }
+  .browser-screenshot {
+    width: 100%;
+    height: auto;
+    display: block;
+    animation: browserFadeIn 0.35s ease;
+  }
+  @keyframes browserFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Nav arrows */
+  .phone-arrow {
+    background: var(--white);
+    border: 1.5px solid var(--primary-blue);
+    color: var(--deep-blue);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    box-shadow: 0 2px 8px rgba(139, 174, 214, 0.2);
+    flex-shrink: 0;
+  }
+  .phone-arrow:hover {
+    background: var(--primary-blue);
+    color: var(--white);
+    transform: scale(1.1);
   }
   .btn{
     appearance:none; 
@@ -692,25 +1052,15 @@
   
   .hero-right{
     border-radius: 20px;
-    overflow:hidden;
+    overflow: hidden;
     box-shadow: 0 12px 40px rgba(168, 197, 232, 0.2);
     background: var(--white);
-    display:grid; 
-    place-items:center;
-    padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 40px) clamp(12px, 1.5vw, 20px) clamp(24px, 3vw, 40px); 
+    display: grid;
+    place-items: center;
+    padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 40px) clamp(12px, 1.5vw, 20px) clamp(24px, 3vw, 40px);
     min-height: auto;
-    border: 6px solid var(--sage-green);
+    border: 1px solid var(--border-light);
     position: relative;
-  }
-  .hero-right::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: var(--cornflower-blue);
-    border-radius: 20px 20px 0 0;
   }
   .hero-right .bubble-1 {
     position: absolute;
@@ -1370,6 +1720,15 @@
   margin-bottom: 32px;
   overflow: visible;
 }
+.section-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--deep-blue);
+  text-align: center;
+  margin: 0 0 10px;
+}
 .section-title{
   color: var(--poppy-red);
   font-weight:900;
@@ -1570,46 +1929,48 @@
 /* Lightbox */
 .carousel-lightbox {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 40px 24px;
+  padding: 24px 16px;
   cursor: pointer;
-  overflow-y: auto;
 }
 
 .lightbox-scroll-container {
-  max-width: 90vw;
+  position: relative;
   cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lightbox-image {
-  width: 100%;
+  max-height: 78vh;
+  max-width: min(360px, 88vw);
+  width: auto;
   height: auto;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
   display: block;
 }
 
 .lightbox-close {
   position: fixed;
-  top: 20px;
-  right: 28px;
-  background: rgba(0, 0, 0, 0.6);
-  border: none;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
   color: white;
-  font-size: 2.5rem;
+  font-size: 1.4rem;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-  width: 44px;
-  height: 44px;
+  transition: background 0.2s ease;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1618,7 +1979,62 @@
 }
 
 .lightbox-close:hover {
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Web screenshot lightbox — full height, scrollable */
+.carousel-lightbox:has(.lightbox-image-web) {
+  align-items: flex-start;
+  overflow-y: auto;
+}
+.lightbox-image-web {
+  max-height: none;
+  max-width: min(720px, 90vw);
+  width: 100%;
+  border-radius: 12px;
+}
+
+.lightbox-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  z-index: 10000;
+}
+.lightbox-arrow:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.lightbox-arrow-left  { left: 16px; }
+.lightbox-arrow-right { right: 16px; }
+
+.lightbox-label {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 10px 0 0;
+}
+
+@media (max-width: 480px) {
+  .lightbox-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 1.5rem;
+  }
+  .lightbox-arrow-left  { left: 6px; }
+  .lightbox-arrow-right { right: 6px; }
 }
 
 @media (max-width: 640px) {
@@ -2875,6 +3291,11 @@
     align-items: center;
     justify-content: center;
   }
+  .kicker-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
   .cta-row {
     flex-direction: column;
     gap: 12px;
@@ -2882,6 +3303,60 @@
   .cta-row .btn {
     width: 100%;
     justify-content: center;
+  }
+  .app-store-img {
+    height: 40px;
+  }
+  .app-carousel-card {
+    flex-direction: column;
+    gap: 20px;
+    padding: clamp(20px, 4vw, 28px);
+  }
+  .app-carousel-text {
+    align-items: center;
+    text-align: center;
+  }
+  .app-carousel-slide-info {
+    text-align: left;
+  }
+  .app-carousel-dots {
+    justify-content: center;
+  }
+  .app-store-badge {
+    align-self: center;
+  }
+  .app-carousel-right {
+    justify-content: center;
+    width: 100%;
+  }
+  .phone-mockup {
+    width: 170px;
+    height: 350px;
+    border-radius: 36px;
+    padding: 12px 9px;
+  }
+  .phone-screen {
+    border-radius: 27px;
+  }
+  .phone-btn-vol-up   { top: 74px;  height: 26px; }
+  .phone-btn-vol-down { top: 110px; height: 26px; }
+  .phone-btn-power    { top: 90px;  height: 36px; }
+  .phone-notch {
+    width: 46px;
+    height: 12px;
+    top: 12px;
+  }
+  .phone-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 1.3rem;
+  }
+  .browser-mockup {
+    width: 100%;
+    max-width: 300px;
+  }
+  .browser-screen {
+    height: 190px;
   }
 }
 
