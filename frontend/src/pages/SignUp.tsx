@@ -403,7 +403,7 @@ const SignUp: React.FC<SignUpProps> = ({
 
  return (
    <div className="page">
-     <section className="section">
+     <section className="section signup-section">
        <div className="signup-container">
          <div className="signup-wizard">
            <div className="wizard-header">
