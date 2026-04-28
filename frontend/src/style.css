@@ -127,6 +127,40 @@
     color: #A0AEC0;
   }
 
+  /* Dark mode signup wizard should use dark surfaces */
+  [data-theme="dark"] .signup-form {
+    background: #1f2c3d;
+    border: 1px solid rgba(144, 205, 244, 0.2);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  [data-theme="dark"] .signup-form .step-title,
+  [data-theme="dark"] .signup-form .form-group label {
+    color: #e6edf7;
+  }
+
+  [data-theme="dark"] .signup-form .field-hint {
+    color: #a7b3c7;
+  }
+
+  [data-theme="dark"] .signup-form select,
+  [data-theme="dark"] .signup-form .textarea-input {
+    background: #2d3748;
+    color: #f7fafc;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  [data-theme="dark"] .signup-form select:focus,
+  [data-theme="dark"] .signup-form .textarea-input:focus {
+    background: #374151;
+    border-color: var(--harvest-orange);
+  }
+
+  [data-theme="dark"] .signup-form .textarea-input::placeholder,
+  [data-theme="dark"] .signup-form select option {
+    color: #a0aec0;
+  }
+
   /* Dark mode expenses/income tables */
   [data-theme="dark"] .expenses-table-container {
     background: #1A202C;
