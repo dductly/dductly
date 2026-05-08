@@ -1606,6 +1606,481 @@
     }
   }
   
+  /* ── Where to Sell ── */
+  .wts-page {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .wts-notice {
+    background: var(--pale-blue);
+    border: 1px solid var(--primary-blue);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 0.88rem;
+    color: var(--text-medium);
+    text-align: center;
+  }
+  .wts-notice-link {
+    color: var(--deep-blue);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .wts-notice-link:hover { text-decoration: underline; }
+  .wts-header {
+    text-align: center;
+  }
+  .wts-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--deep-blue);
+    margin: 0 0 8px;
+  }
+  .wts-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: var(--text-dark);
+    margin: 0 0 12px;
+  }
+  .wts-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-medium);
+    max-width: 55ch;
+    margin: 0 auto;
+  }
+  /* Filters */
+  .wts-filters-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .wts-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .wts-search-icon {
+    position: absolute;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-light);
+    pointer-events: none;
+  }
+  .wts-search {
+    width: 100%;
+    padding: 12px 40px 12px 44px;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background: var(--off-white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .wts-search:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(168, 197, 232, 0.2);
+  }
+  .wts-search-clear {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-light);
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+  .wts-search-clear:hover { color: var(--text-dark); }
+  .wts-filter-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .wts-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 140px;
+  }
+  .wts-filter-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .wts-select {
+    padding: 9px 12px;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    background: var(--off-white);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .wts-select:focus { border-color: var(--primary-blue); }
+  .wts-clear-btn {
+    background: none;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: 9px 16px;
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    cursor: pointer;
+    align-self: flex-end;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .wts-clear-btn:hover {
+    background: var(--pale-blue);
+    color: var(--text-dark);
+    border-color: var(--primary-blue);
+  }
+  /* Section */
+  .wts-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .wts-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .wts-section-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .wts-section-sub {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    margin: 0;
+  }
+  /* Featured grid */
+  .wts-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .wts-featured-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-top: 4px solid var(--primary-blue);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .wts-featured-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(139, 174, 214, 0.18);
+  }
+  /* Regular grid */
+  .wts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .wts-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .wts-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  /* Card internals */
+  .wts-featured-top,
+  .wts-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wts-type-icon { font-size: 1.3rem; }
+  .wts-type-icon-sm { font-size: 1.1rem; }
+  .wts-type-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--deep-blue);
+    background: var(--pale-blue);
+    border-radius: 20px;
+    padding: 3px 10px;
+    letter-spacing: 0.03em;
+  }
+  .wts-type-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-medium);
+  }
+  .wts-bookmark {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-light);
+    line-height: 1;
+    padding: 2px 4px;
+    transition: color 0.2s, transform 0.15s;
+  }
+  .wts-bookmark:hover { color: var(--deep-blue); transform: scale(1.2); }
+  .wts-bookmark.saved { color: #f59e0b; }
+  .wts-card-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .wts-card-location {
+    font-size: 0.82rem;
+    color: var(--text-medium);
+    margin: 0;
+  }
+  .wts-card-desc {
+    font-size: 0.88rem;
+    color: var(--text-medium);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .wts-booth-info {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--deep-blue);
+    background: var(--pale-blue);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin: 0;
+  }
+  .wts-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .wts-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-medium);
+    background: var(--off-white);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 2px 9px;
+  }
+  .wts-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    flex-wrap: wrap;
+  }
+  .wts-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .wts-card-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .wts-btn-primary {
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 7px 16px;
+    border-radius: 20px;
+    background: var(--deep-blue);
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+  .wts-btn-primary:hover {
+    background: var(--primary-blue);
+    transform: translateY(-1px);
+  }
+  .wts-btn-ghost {
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-medium);
+    color: var(--text-medium);
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .wts-btn-ghost:hover {
+    background: var(--pale-blue);
+    border-color: var(--primary-blue);
+    color: var(--text-dark);
+  }
+  .wts-saved-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-medium);
+    background: var(--off-white);
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+  .wts-saved-btn:hover {
+    background: var(--pale-blue);
+    border-color: var(--primary-blue);
+    color: var(--text-dark);
+  }
+  .wts-saved-btn.active {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+  .wts-category-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .wts-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    background: var(--off-white);
+    cursor: pointer;
+    transition: background 0.15s;
+    width: 100%;
+    text-align: left;
+  }
+  .wts-category-header:hover {
+    background: var(--pale-blue);
+  }
+  .wts-category-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wts-collapse-icon {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+  }
+  .wts-category-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .wts-category-count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--deep-blue);
+    background: var(--pale-blue);
+    border-radius: 20px;
+    padding: 2px 9px;
+  }
+  .wts-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-medium);
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .wts-disclaimer-box {
+    background: var(--off-white);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wts-disclaimer-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .wts-disclaimer-text {
+    font-size: 0.82rem;
+    color: var(--text-medium);
+    line-height: 1.6;
+    margin: 0;
+  }
+  /* Resources dropdown in nav */
+  .resources-menu {
+    position: relative;
+  }
+  .resources-menu .dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 180px;
+  }
+  /* Dark mode */
+  [data-theme="dark"] .wts-search,
+  [data-theme="dark"] .wts-select {
+    background: var(--off-white);
+    color: var(--text-dark);
+    border-color: var(--border-medium);
+  }
+  [data-theme="dark"] .wts-filters-card,
+  [data-theme="dark"] .wts-featured-card,
+  [data-theme="dark"] .wts-card {
+    background: var(--white);
+    border-color: var(--border-light);
+  }
+  [data-theme="dark"] .wts-tag {
+    background: var(--off-white);
+    border-color: var(--border-medium);
+  }
+  [data-theme="dark"] .wts-booth-info {
+    background: var(--pale-blue);
+  }
+
   /* Footer */
   .footer{
     max-width:var(--maxw);

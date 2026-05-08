@@ -21,6 +21,7 @@ import InactivityWarningModal from "./components/InactivityWarningModal";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Support from "./pages/Support";
+import WhereToSell from "./pages/WhereToSell";
 // Using real AuthContext with Supabase
 // Using MockAuthContext for testing without Supabase
 // To switch to real Supabase, change this import to: import { AuthProvider } from "./contexts/AuthContext";
@@ -83,7 +84,7 @@ const Nav: React.FC<NavProps> = ({ onNavigate, onSignInClick }) => {
 
         <div className="menu">
           {/* Dark Mode Toggle */}
-          <button 
+          <button
             className="theme-toggle" 
             onClick={toggleDarkMode}
             aria-label="Toggle dark mode"
@@ -548,6 +549,8 @@ const AppContent: React.FC = () => {
         return <TaxInsights onNavigate={handleNavigate} />;
       case 'settings':
         return <Settings onNavigate={handleNavigate} />;
+      case 'where-to-sell':
+        return <WhereToSell onNavigate={handleNavigate} />;
       default:
         // Show dashboard if user is logged in, otherwise show public home page
         if (user) {
