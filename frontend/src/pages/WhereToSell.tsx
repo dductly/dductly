@@ -323,19 +323,68 @@ const TYPES = ["All Types", "Farmers Market", "Pop-Up Event", "Vendor Booth", "B
 const STATUSES = ["All Statuses", "Open", "Rolling Applications", "Check Website"] as const;
 const LOCATIONS = ["All Locations", "Salt Lake City, UT", "Millcreek, UT", "Provo, UT", "Park City, UT", "Murray, UT", "Murray & South Jordan, UT", "Utah County, UT", "Sandy, UT", "Bountiful, UT", "West Point, UT", "Utah (Statewide)", "Online"] as const;
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  "Open": { bg: "#d1fae5", color: "#065f46" },
-  "Rolling Applications": { bg: "#dbeafe", color: "#1e40af" },
-  "Check Website": { bg: "#fef3c7", color: "#92400e" },
+const STATUS_CLASS: Record<string, string> = {
+  "Open": "wts-status--open",
+  "Rolling Applications": "wts-status--rolling",
+  "Check Website": "wts-status--check",
 };
 
-const TYPE_ICONS: Record<string, string> = {
-  "Farmers Market": "🌿",
-  "Pop-Up Event": "🎪",
-  "Vendor Booth": "🏪",
-  "Boutique Space": "✨",
-  "Online Platform": "💻",
+const PinIcon = () => (
+  <svg className="wts-pin-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11.5 5C11.5 8 7 11.5 7 11.5C7 11.5 2.5 8 2.5 5C2.5 2.549 4.549 0.5 7 0.5C9.451 0.5 11.5 2.549 11.5 5Z"/>
+    <circle cx="7" cy="5" r="1.5"/>
+    <path d="M11.0773 10H12L13.5 13.5H0.5L2 10H2.9227"/>
+  </svg>
+);
+
+const TYPE_ICON_SVG: Record<string, React.ReactNode> = {
+  "Farmers Market": (
+    <svg className="wts-svg-icon" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.21423 18.2144V27.8572C3.21423 28.1414 3.32712 28.4139 3.52805 28.6149C3.72897 28.8157 4.0015 28.9286 4.28566 28.9286H25.7142C25.9984 28.9286 26.2709 28.8157 26.4719 28.6149C26.6727 28.4139 26.7857 28.1414 26.7857 27.8572V18.2144"/>
+      <path d="M17.1428 18.2144V28.9286"/>
+      <path d="M3.21423 21.4287H17.1428"/>
+      <path d="M1.07141 8.57153L4.2857 1.07153H25.7143L28.9286 8.57153H1.07141Z"/>
+      <path d="M10.2428 8.57153V10.7144C10.2428 11.851 9.79132 12.9411 8.98758 13.7448C8.18385 14.5486 7.09376 15.0001 5.95713 15.0001H5.35713C4.22049 15.0001 3.1304 14.5486 2.32668 13.7448C1.52294 12.9411 1.07141 11.851 1.07141 10.7144V8.57153"/>
+      <path d="M19.8214 8.57153V10.7144C19.8214 11.851 19.3699 12.9411 18.5662 13.7448C17.7625 14.5486 16.6724 15.0001 15.5357 15.0001H14.4643C13.3277 15.0001 12.2376 14.5486 11.4339 13.7448C10.6301 12.9411 10.1786 11.851 10.1786 10.7144V8.57153"/>
+      <path d="M28.9286 8.57153V10.7144C28.9286 11.851 28.4771 12.9411 27.6733 13.7448C26.8695 14.5486 25.7794 15.0001 24.6428 15.0001H24.1071C22.9706 15.0001 21.8805 14.5486 21.0767 13.7448C20.2729 12.9411 19.8214 11.851 19.8214 10.7144V8.57153"/>
+    </svg>
+  ),
+  "Pop-Up Event": (
+    <svg className="wts-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  ),
+  "Boutique Space": (
+    <svg className="wts-svg-icon" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M26.4857 12.8573H3.5142C3.20775 12.8546 2.9043 12.9178 2.62431 13.0425C2.34435 13.1671 2.09439 13.3504 1.89129 13.5799C1.68818 13.8094 1.53667 14.0798 1.44698 14.3729C1.35728 14.6659 1.33149 14.9748 1.37134 15.2787L2.93563 27.0643C3.00362 27.5831 3.25907 28.0592 3.65381 28.4025C4.04854 28.746 4.55529 28.9331 5.07849 28.9286H24.8786C25.4016 28.9331 25.9084 28.746 26.3031 28.4025C26.6979 28.0592 26.9533 27.5831 27.0214 27.0643L28.5857 15.2787C28.6249 14.9784 28.6003 14.6732 28.5131 14.3831C28.4259 14.0931 28.2782 13.8248 28.0798 13.596C27.8814 13.3672 27.6366 13.1831 27.3619 13.0557C27.0872 12.9284 26.7885 12.8607 26.4857 12.8573Z"/>
+      <path d="M9.64282 18.2144V23.5715"/>
+      <path d="M15 18.2144V23.5715"/>
+      <path d="M20.3572 18.2144V23.5715"/>
+      <path d="M20.3142 3.30029C21.5978 3.52206 22.7738 4.15699 23.6635 5.10852C24.5533 6.06004 25.1078 7.27611 25.2428 8.57172L25.7143 12.8574"/>
+      <path d="M4.28577 12.8573L4.7572 8.57159C4.90102 7.28365 5.45945 6.07732 6.34837 5.1343C7.2373 4.19127 8.40856 3.56262 9.68577 3.34302"/>
+      <path d="M20.3571 3.7501C20.3571 4.10185 20.2878 4.45018 20.1532 4.77514C20.0186 5.10013 19.8213 5.39541 19.5726 5.64413C19.3238 5.89288 19.0286 6.09017 18.7036 6.22478C18.3786 6.3594 18.0303 6.42868 17.6785 6.42868H12.3214C11.611 6.42868 10.9297 6.14646 10.4274 5.64413C9.92504 5.1418 9.64282 4.4605 9.64282 3.7501C9.64282 3.0397 9.92504 2.3584 10.4274 1.85607C10.9297 1.35374 11.611 1.07153 12.3214 1.07153H17.6785C18.3889 1.07153 19.0702 1.35374 19.5726 1.85607C20.0749 2.3584 20.3571 3.0397 20.3571 3.7501Z"/>
+    </svg>
+  ),
+  "Vendor Booth": (
+    <svg className="wts-svg-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M0.90625 10.6797C0.90625 11.232 1.35397 11.6797 1.90625 11.6797H12.0938C12.646 11.6797 13.0938 11.232 13.0938 10.6797V8.84C12.2835 8.62035 11.6875 7.87977 11.6875 7C11.6875 6.12023 12.2835 5.37965 13.0938 5.16V3.32031C13.0938 2.76803 12.646 2.32031 12.0938 2.32031H1.90625C1.35397 2.32031 0.90625 2.76803 0.90625 3.32031V5.15583C1.72446 5.37015 2.32812 6.11458 2.32812 7C2.32812 7.88542 1.72446 8.62985 0.90625 8.84417V10.6797Z"/>
+      <path d="M9.10938 2.32812V3.96876"/>
+      <path d="M9.10938 6.17969V7.82031"/>
+      <path d="M9.10938 10.0391V11.6797"/>
+    </svg>
+  ),
+  "Online Platform": (
+    <svg className="wts-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  ),
 };
+
 
 interface WhereToSellProps {
   onNavigate?: (page: string) => void;
@@ -347,9 +396,9 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
   const [locationFilter, setLocationFilter] = useState("All Locations");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [showSaved, setShowSaved] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [featuredCollapsed, setFeaturedCollapsed] = useState(false);
 
   const toggleSave = (id: string) => {
     setSaved(prev => {
@@ -384,16 +433,15 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
     });
   }, [search, typeFilter, locationFilter, statusFilter, showSaved, saved]);
 
-  const featured = OPPORTUNITIES.filter(o => o.featured);
   const hasFilters = search || typeFilter !== "All Types" || locationFilter !== "All Locations" || statusFilter !== "All Statuses" || showSaved;
 
   const CATEGORY_ORDER = ["Farmers Market", "Pop-Up Event", "Boutique Space", "Vendor Booth", "Online Platform"] as const;
   const CATEGORY_LABELS: Record<string, string> = {
-    "Farmers Market": "🌿 Farmers Markets",
-    "Pop-Up Event": "🎪 Pop-Up & Seasonal Events",
-    "Boutique Space": "✨ Permanent Retail Spaces",
-    "Vendor Booth": "🏪 Expos & Fairs",
-    "Online Platform": "💻 Online Platforms",
+    "Farmers Market": "Farmers Markets",
+    "Pop-Up Event": "Pop-Up & Seasonal Events",
+    "Boutique Space": "Permanent Retail Spaces",
+    "Vendor Booth": "Expos & Fairs",
+    "Online Platform": "Online Platforms",
   };
 
   const grouped = useMemo(() => {
@@ -412,7 +460,7 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
 
       {/* Location notice */}
       <div className="wts-notice">
-        📍 We're starting with Utah — more locations coming soon! If you'd like to see your area added, <a href="mailto:admin@dductly.com" className="wts-notice-link">let us know</a>.
+        <PinIcon /> We're starting with Utah — more locations coming soon! If you'd like to see your area added, <a href="mailto:admin@dductly.com" className="wts-notice-link">let us know</a>.
       </div>
 
       {/* Header */}
@@ -442,24 +490,20 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
           )}
         </div>
         <div className="wts-filter-row">
-          <div className="wts-filter-group">
-            <label className="wts-filter-label">Location</label>
-            <select className="wts-select" value={locationFilter} onChange={e => setLocationFilter(e.target.value)}>
-              {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-          <div className="wts-filter-group">
-            <label className="wts-filter-label">Type</label>
-            <select className="wts-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-              {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className="wts-filter-group">
-            <label className="wts-filter-label">Status</label>
-            <select className="wts-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
+          <button
+            className={`wts-filter-toggle${showFilters ? " active" : ""}`}
+            onClick={() => setShowFilters(f => !f)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:14,height:14}}>
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+            </svg>
+            Filters
+            {(typeFilter !== "All Types" || locationFilter !== "All Locations" || statusFilter !== "All Statuses") && (
+              <span className="wts-filter-badge">
+                {[typeFilter !== "All Types", locationFilter !== "All Locations", statusFilter !== "All Statuses"].filter(Boolean).length}
+              </span>
+            )}
+          </button>
           <button
             className={`wts-saved-btn${showSaved ? " active" : ""}`}
             onClick={() => setShowSaved(!showSaved)}
@@ -468,63 +512,33 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
           </button>
           {hasFilters && (
             <button className="wts-clear-btn" onClick={() => { setSearch(""); setTypeFilter("All Types"); setLocationFilter("All Locations"); setStatusFilter("All Statuses"); setShowSaved(false); }}>
-              Clear filters
+              Clear all
             </button>
           )}
         </div>
-      </div>
-
-      {/* Featured */}
-      {!hasFilters && (
-        <div className="wts-section">
-          <button className="wts-category-header" onClick={() => setFeaturedCollapsed(c => !c)}>
-            <h2 className="wts-section-title" style={{ margin: 0 }}>Featured Opportunities</h2>
-            <div className="wts-category-header-right">
-              <span className="wts-section-sub" style={{ margin: 0 }}>Handpicked for Summer 2026</span>
-              <span className="wts-collapse-icon">{featuredCollapsed ? "▸" : "▾"}</span>
+        {showFilters && (
+          <div className="wts-dropdowns">
+            <div className="wts-filter-group">
+              <label className="wts-filter-label">Location</label>
+              <select className="wts-select" value={locationFilter} onChange={e => setLocationFilter(e.target.value)}>
+                {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
             </div>
-          </button>
-          {!featuredCollapsed && (
-          <div className="wts-featured-grid">
-            {featured.map(o => (
-              <div key={o.id} className="wts-featured-card">
-                <div className="wts-featured-top">
-                  <span className="wts-type-icon">{TYPE_ICONS[o.type]}</span>
-                  <span className="wts-type-badge">{o.type}</span>
-                  <button
-                    className={`wts-bookmark${saved.has(o.id) ? " saved" : ""}`}
-                    onClick={() => toggleSave(o.id)}
-                    aria-label={saved.has(o.id) ? "Unsave" : "Save"}
-                  >
-                    {saved.has(o.id) ? "★" : "☆"}
-                  </button>
-                </div>
-                <h3 className="wts-card-name">{o.name}</h3>
-                <p className="wts-card-location">📍 {o.location}{o.season ? ` · ${o.season}` : ""}</p>
-                <p className="wts-card-desc">{o.description}</p>
-                {o.boothInfo && <p className="wts-booth-info">{o.boothInfo}</p>}
-                <div className="wts-tags">
-                  {o.tags.map(t => <span key={t} className="wts-tag">{t}</span>)}
-                </div>
-                <div className="wts-card-footer">
-                  <span className="wts-status" style={STATUS_COLORS[o.status]}>
-                    {o.status}
-                  </span>
-                  <div className="wts-card-actions">
-                    <a href={o.websiteUrl} target="_blank" rel="noopener noreferrer" className="wts-btn-ghost">
-                      Learn More
-                    </a>
-                    <a href={o.applyUrl} target="_blank" rel="noopener noreferrer" className="wts-btn-primary">
-                      Apply
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div className="wts-filter-group">
+              <label className="wts-filter-label">Type</label>
+              <select className="wts-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="wts-filter-group">
+              <label className="wts-filter-label">Status</label>
+              <select className="wts-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* All Opportunities — grouped by category */}
       <div className="wts-section">
@@ -546,7 +560,10 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
           grouped.map(group => (
             <div key={group.type} className="wts-category-group">
               <button className="wts-category-header" onClick={() => toggleCollapse(group.type)}>
-                <h3 className="wts-category-title">{group.label}</h3>
+                <h3 className="wts-category-title">
+                  {TYPE_ICON_SVG[group.type]}
+                  {group.label}
+                </h3>
                 <div className="wts-category-header-right">
                   <span className="wts-category-count">{group.items.length}</span>
                   <span className="wts-collapse-icon">{collapsed.has(group.type) ? "▸" : "▾"}</span>
@@ -566,11 +583,11 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
                           {saved.has(o.id) ? "★" : "☆"}
                         </button>
                       </div>
-                      <p className="wts-card-location">📍 {o.location}{o.season ? ` · ${o.season}` : ""}</p>
+                      <p className="wts-card-location"><PinIcon /> {o.location}{o.season ? ` · ${o.season}` : ""}</p>
                       <p className="wts-card-desc">{o.description}</p>
                       {o.boothInfo && <p className="wts-booth-info">{o.boothInfo}</p>}
                       <div className="wts-card-footer">
-                        <span className="wts-status" style={STATUS_COLORS[o.status]}>
+                        <span className={`wts-status ${STATUS_CLASS[o.status]}`}>
                           {o.status}
                         </span>
                         <div className="wts-card-actions">
@@ -593,7 +610,13 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
 
       {/* Footer note */}
       <div className="wts-disclaimer-box">
-        <p className="wts-disclaimer-title">📌 A note before you apply</p>
+        <p className="wts-disclaimer-title">
+          <svg className="wts-pin-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11.5 5.03108C11.5055 4.22784 11.296 3.43776 10.8931 2.74285C10.4902 2.04795 9.9086 1.47356 9.20876 1.07931C8.50891 0.68506 7.71628 0.485325 6.91318 0.50084C6.11007 0.516354 5.32575 0.746553 4.64165 1.16754C3.95755 1.58852 3.39861 2.18495 3.02284 2.89489C2.64708 3.60484 2.46819 4.40242 2.50476 5.20485C2.54132 6.00727 2.79201 6.78528 3.23078 7.45811C3.66956 8.13094 4.28043 8.67405 4.99998 9.03108V10.5311C4.99998 10.6637 5.05266 10.7909 5.14643 10.8846C5.2402 10.9784 5.36738 11.0311 5.49998 11.0311H8.49999C8.63259 11.0311 8.75977 10.9784 8.85354 10.8846C8.94731 10.7909 8.99999 10.6637 8.99999 10.5311V9.03108C9.74746 8.6628 10.3774 8.09336 10.8191 7.38675C11.2607 6.68013 11.4965 5.86434 11.5 5.03108Z"/>
+            <path d="M5 13.5H9"/>
+          </svg>
+          A note before you apply
+        </p>
         <p className="wts-disclaimer-text">
           All listings are real and verified, but application windows may have closed. Always confirm current availability on the organizer's website before applying. dductly is not affiliated with any listed organization.
         </p>
