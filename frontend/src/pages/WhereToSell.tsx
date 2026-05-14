@@ -12,6 +12,7 @@ interface Opportunity {
   websiteUrl: string;
   featured?: boolean;
   season?: string;
+  hours?: string;
   boothInfo?: string;
 }
 
@@ -27,7 +28,8 @@ const OPPORTUNITIES: Opportunity[] = [
     applyUrl: "https://www.slcfarmersmarket.org/apply",
     websiteUrl: "https://www.slcfarmersmarket.org",
     featured: true,
-    season: "June – October",
+    season: "June 6 – Oct 24, 2026",
+    hours: "Sat 8am–2pm",
     boothInfo: "$50 application fee · $780 full season or $40/day for a 10×10 booth",
   },
   {
@@ -41,7 +43,8 @@ const OPPORTUNITIES: Opportunity[] = [
     applyUrl: "https://www.provofarmersmarket.com/sell",
     websiteUrl: "https://www.provofarmersmarket.com",
     featured: true,
-    season: "May – October",
+    season: "June – Oct 2026",
+    hours: "Sat 9am–2pm",
     boothInfo: "Utah County Health permit required for food vendors",
   },
   {
@@ -68,7 +71,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Check Website",
     applyUrl: "https://www.saltlakecounty.gov/wheeler-farm/vendor-opportunities/",
     websiteUrl: "https://www.saltlakecounty.gov/wheeler-farm/",
-    season: "Sundays, May 17 – Oct 11, 2026 · 9am–1pm",
+    season: "May 17 – Oct 11, 2026",
+    hours: "Sun 9am–1pm",
     boothInfo: "$35 non-refundable application fee · 6351 S 900 E, Murray UT",
   },
   {
@@ -82,7 +86,8 @@ const OPPORTUNITIES: Opportunity[] = [
     applyUrl: "https://sunsetfarmersmarkets.com/utah-county-application",
     websiteUrl: "https://sunsetfarmersmarkets.com",
     featured: true,
-    season: "Summer",
+    season: "Springville: Mon evenings June 22–Oct 26 · Draper: Tue evenings July 21–Oct 13 · Orem & Lindon: TBD",
+    hours: "Evening markets (times vary by location)",
     boothInfo: "Free to apply · $35 enrollment fee after acceptance · covers Springville, Draper, Orem & Lindon",
   },
   {
@@ -95,7 +100,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Open",
     applyUrl: "https://9thwestfarmersmarket.org/vendors/",
     websiteUrl: "https://9thwestfarmersmarket.org",
-    season: "Sundays, June 14 – Oct 11, 2026 · 10am–3pm",
+    season: "June 14 – Oct 11, 2026",
+    hours: "Sun 10am–3pm",
     boothInfo: "1060 S 900 W, Salt Lake City · contact pres@9thwestfarmersmarket.org",
   },
   {
@@ -108,7 +114,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Check Website",
     applyUrl: "https://parkcityfarmersmarket.com/applications-2/",
     websiteUrl: "https://parkcityfarmersmarket.com",
-    season: "Wednesdays, 12–5pm",
+    season: "Summer 2026",
+    hours: "Wed 12–5pm",
     boothInfo: "$120 Mass Event License fee · liability insurance required · +$100 if applying after April 30",
   },
   {
@@ -148,7 +155,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Open",
     applyUrl: "https://www.utahfarmbureau.org/Food/Farm-Bureau-Farmers-Markets/Farmers-Market-Vendor-Application",
     websiteUrl: "https://www.utahfarmbureau.org/Utah-Farm-Bureau/Food/Farm-Bureau-Farmers-Markets",
-    season: "Murray: Fri & Sat, July 31–Oct 31 · South Jordan: Sat, Aug 9–Oct 10, 2026",
+    season: "Murray: July 31–Oct 31 · South Jordan: Aug 9–Oct 10, 2026",
+    hours: "Murray: Fri & Sat 8am–1pm · South Jordan: Sat 8am–1pm",
     boothInfo: "Food vendors preferred · South Jordan also accepts select artisans",
   },
   {
@@ -187,7 +195,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Rolling Applications",
     applyUrl: "https://bountifulfm.mymarket.org/forms/signup",
     websiteUrl: "https://www.bountifulutah.gov/farmers-market",
-    season: "Thursdays, June 25 – Oct 15, 2026 · 4–8pm",
+    season: "June 25 – Oct 15, 2026",
+    hours: "Thu 4–8pm",
     boothInfo: "No app fee · $17–$27/week · 75 E 200 S, Bountiful UT",
   },
   {
@@ -200,7 +209,8 @@ const OPPORTUNITIES: Opportunity[] = [
     status: "Open",
     applyUrl: "https://millcreekcommon.org/farmersmarketapplication",
     websiteUrl: "https://millcreekcommon.org/farmersmarket",
-    season: "Fridays, July 10 – Oct 30, 2026",
+    season: "July 10 – Oct 30, 2026",
+    hours: "Fri evenings",
     boothInfo: "$25/day or $270 full season · 1354 E Chambers Ave, Millcreek UT",
   },
   {
@@ -328,6 +338,13 @@ const STATUS_CLASS: Record<string, string> = {
   "Rolling Applications": "wts-status--rolling",
   "Check Website": "wts-status--check",
 };
+
+const ClockIcon = () => (
+  <svg className="wts-pin-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="7" cy="7" r="6"/>
+    <path d="M7 3.5V7l2.5 1.5"/>
+  </svg>
+);
 
 const PinIcon = () => (
   <svg className="wts-pin-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -584,6 +601,9 @@ const WhereToSell: React.FC<WhereToSellProps> = ({ onNavigate }) => {
                         </button>
                       </div>
                       <p className="wts-card-location"><PinIcon /> {o.location}{o.season ? ` · ${o.season}` : ""}</p>
+                      {o.type === "Farmers Market" && o.hours && (
+                        <p className="wts-card-hours"><ClockIcon /> {o.hours}</p>
+                      )}
                       <p className="wts-card-desc">{o.description}</p>
                       {o.boothInfo && <p className="wts-booth-info">{o.boothInfo}</p>}
                       <div className="wts-card-footer">
