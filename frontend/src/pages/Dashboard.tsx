@@ -157,6 +157,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onFaqClick, onUserGui
             <h2 className="card-title">Resources</h2>
             <ul className="resource-list">
               <li>
+                <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('where-to-sell'); }} className="link">
+                  Where to Sell
+                </a>
+              </li>
+              <li>
                 <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('contact'); }} className="link">
                   Contact Support
                 </a>

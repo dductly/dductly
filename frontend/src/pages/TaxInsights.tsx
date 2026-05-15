@@ -39,7 +39,7 @@ const SCHEDULE_C_MAP: Record<string, { line: string; tip: string }> = {
   },
   travel: {
     line: "Travel — Line 24a",
-    tip: "Driving to markets, supplier pickups, or client meetings is deductible. Keep a mileage log — the 2025 IRS rate is 70¢ per mile.",
+    tip: "Driving to markets, supplier pickups, or client meetings is deductible. Keep a mileage log — the 2026 IRS rate is 72.5¢ per mile.",
   },
   marketing: {
     line: "Advertising — Line 8",
@@ -59,7 +59,7 @@ const SCHEDULE_C_MAP: Record<string, { line: string; tip: string }> = {
   },
   mileage: {
     line: "Travel — Line 24a",
-    tip: "Mileage logged with dductly is calculated at the 2025 IRS standard rate of 70¢/mile. Keep your trip descriptions as documentation — date, destination, and business purpose are all you need.",
+    tip: "Mileage logged with dductly is calculated at the 2026 IRS standard rate of 72.5¢/mile. Keep your trip descriptions as documentation — date, destination, and business purpose are all you need.",
   },
   other: {
     line: "Other Expenses — Line 27",
@@ -359,7 +359,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
             fontSize: "0.85rem",
             color: "var(--text-medium)",
           }}>
-            <strong>Heads up:</strong> This page is for informational purposes only and is not tax advice. All deductions must be ordinary and necessary for your business. Tax laws vary by situation — always consult a qualified tax professional before filing. Based on current IRS guidance for 2025.
+            <strong>Heads up:</strong> This page is for informational purposes only and is not tax advice. All deductions must be ordinary and necessary for your business. Tax laws vary by situation — always consult a qualified tax professional before filing. Based on current IRS guidance for 2026.
           </div>
 
           {/* ── Tabs ── */}
@@ -475,7 +475,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                         {category === "mileage" && totalMilesMapped > 0 && (
                           <div style={{ fontSize: "0.83rem", color: "var(--text-medium)", marginBottom: "6px" }}>
                             <img src={pinMapIcon} alt="" style={{ width: 14, height: 14, marginRight: 4, verticalAlign: "middle" }} />
-                            <strong style={{ color: "var(--text-dark)" }}>{totalMilesMapped.toLocaleString(undefined, { maximumFractionDigits: 1 })} miles</strong> × $0.70/mile = {formatCurrency(amount)}
+                            <strong style={{ color: "var(--text-dark)" }}>{totalMilesMapped.toLocaleString(undefined, { maximumFractionDigits: 1 })} miles</strong> × $0.725/mile = {formatCurrency(amount)}
                           </div>
                         )}
                         {info && (
@@ -507,7 +507,7 @@ const TaxInsights: React.FC<TaxInsightsProps> = ({ onNavigate }) => {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {missingCategories.map((cat) => {
                       const nudges: Record<string, string> = {
-                        mileage: "Drove for business this year? Use the Mileage Tracker on your Expenses page — log trips and the 70¢/mile deduction is calculated automatically.",
+                        mileage: "Drove for business this year? Use the Mileage Tracker on your Expenses page — log trips and the 72.5¢/mile deduction is calculated automatically.",
                         travel: "Flights, hotels, or other travel for business? The Travel category covers non-mileage travel expenses. Log them under Expenses.",
                         insurance: "Business insurance premiums — liability, product, general — are fully deductible. Log them if you have coverage.",
                         equipment: "Equipment purchases — from display tables to laptops — may qualify for full deduction under Section 179.",

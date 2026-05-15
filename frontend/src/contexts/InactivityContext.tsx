@@ -15,7 +15,7 @@ export { InactivityContext };
 
 // Default timeout options in minutes
 export const TIMEOUT_OPTIONS = [5, 10, 15, 30, 60];
-export const DEFAULT_TIMEOUT_MINUTES = 15;
+export const DEFAULT_TIMEOUT_MINUTES = 10;
 
 export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuth();
@@ -25,7 +25,7 @@ export const InactivityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Timeout durations - use user preference in production, 30s in dev for testing
   const WARNING_TIME = useMemo(() =>
-    import.meta.env.DEV ? 30 * 1000 : userTimeoutMinutes * 60 * 1000,
+    import.meta.env.DEV ? 3 * 60 * 1000 : userTimeoutMinutes * 60 * 1000,
     [userTimeoutMinutes]
   );
   const COUNTDOWN_SECONDS = 120; // 2 minutes
